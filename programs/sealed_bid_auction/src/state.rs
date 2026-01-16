@@ -34,7 +34,6 @@ pub enum MarketStatus {
     Resolved,
 }
 
-
 #[account]
 #[derive(InitSpace)]
 pub struct ConvictionMarket {
@@ -43,6 +42,18 @@ pub struct ConvictionMarket {
     pub index: u64,
 
     pub reward_token_mint: Pubkey,
-    pub current_options: u16,
-    pub max_options: u16
+    pub current_options: u8,
+
+    pub encrypted_state: [[u8; 32]; 10],
+}
+
+
+#[account]
+#[derive(InitSpace)]
+pub struct ConvictionOption {
+    pub bump: u8,
+    pub option_index: u16,
+    pub market: Pubkey,
+    pub state_nonce: u128,
+    pub encrypted_state: [[u8; 32]; 1],
 }

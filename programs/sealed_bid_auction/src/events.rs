@@ -30,3 +30,10 @@ pub struct AuctionResolvedEvent {
     pub payment_amount: u64,
     pub auction_type: AuctionType,
 }
+
+#[event]
+pub struct MarketCreatedEvent {
+    pub market: Pubkey,
+    pub creator: Pubkey,
+    pub index: u64,
+}

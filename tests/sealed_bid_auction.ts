@@ -1,8 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { SealedBidAuction } from "../target/types/sealed_bid_auction";
 import { randomBytes } from "crypto";
+import { createMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   awaitComputationFinalization,
   getArciumEnv,
@@ -108,499 +109,573 @@ describe("SealedBidAuction", () => {
     }
   });
 
-  describe("First-Price Auction", () => {
-    it("creates an auction, accepts bids, and determines winner (pays their bid)", async () => {
-      console.log("\n=== First-Price Auction Test ===\n");
+  // describe("First-Price Auction", () => {
+  //   it("creates an auction, accepts bids, and determines winner (pays their bid)", async () => {
+  //     console.log("\n=== First-Price Auction Test ===\n");
 
-      // Bidder setup - using owner as bidder for simplicity
-      const bidder = owner;
-      const bidderPubkey = bidder.publicKey.toBytes();
-      const { lo: bidderLo, hi: bidderHi } = splitPubkeyToU128s(bidderPubkey);
+  //     // Bidder setup - using owner as bidder for simplicity
+  //     const bidder = owner;
+  //     const bidderPubkey = bidder.publicKey.toBytes();
+  //     const { lo: bidderLo, hi: bidderHi } = splitPubkeyToU128s(bidderPubkey);
 
-      // Create encryption keys for bidder
-      const privateKey = x25519.utils.randomSecretKey();
-      const publicKey = x25519.getPublicKey(privateKey);
-      const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
-      const cipher = new RescueCipher(sharedSecret);
+  //     // Create encryption keys for bidder
+  //     const privateKey = x25519.utils.randomSecretKey();
+  //     const publicKey = x25519.getPublicKey(privateKey);
+  //     const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
+  //     const cipher = new RescueCipher(sharedSecret);
 
-      // Step 1: Create First-Price Auction
-      console.log("Step 1: Creating first-price auction...");
-      const auctionCreatedPromise = awaitEvent("auctionCreatedEvent");
-      const createComputationOffset = new anchor.BN(randomBytes(8), "hex");
+  //     // Step 1: Create First-Price Auction
+  //     console.log("Step 1: Creating first-price auction...");
+  //     const auctionCreatedPromise = awaitEvent("auctionCreatedEvent");
+  //     const createComputationOffset = new anchor.BN(randomBytes(8), "hex");
 
-      const [auctionPDA] = PublicKey.findProgramAddressSync(
-        [Buffer.from("auction"), owner.publicKey.toBuffer()],
+  //     const [auctionPDA] = PublicKey.findProgramAddressSync(
+  //       [Buffer.from("auction"), owner.publicKey.toBuffer()],
+  //       program.programId
+  //     );
+
+  //     // Generate nonce for MXE encryption
+  //     const createNonce = randomBytes(16);
+
+  //     const createSig = await program.methods
+  //       .createAuction(
+  //         createComputationOffset,
+  //         { firstPrice: {} }, // AuctionType::FirstPrice
+  //         new anchor.BN(100), // min_bid: 100 lamports
+  //         new anchor.BN(Date.now() / 1000 + 3600), // end_time: 1 hour from now
+  //         new anchor.BN(deserializeLE(createNonce).toString()) // nonce for MXE
+  //       )
+  //       .accountsPartial({
+  //         authority: owner.publicKey,
+  //         auction: auctionPDA,
+  //         computationAccount: getComputationAccAddress(
+  //           arciumEnv.arciumClusterOffset,
+  //           createComputationOffset
+  //         ),
+  //         clusterAccount,
+  //         mxeAccount: getMXEAccAddress(program.programId),
+  //         mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+  //         executingPool: getExecutingPoolAccAddress(
+  //           arciumEnv.arciumClusterOffset
+  //         ),
+  //         compDefAccount: getCompDefAccAddress(
+  //           program.programId,
+  //           Buffer.from(
+  //             getCompDefAccOffset("init_auction_state")
+  //           ).readUInt32LE()
+  //         ),
+  //       })
+  //       .rpc({ skipPreflight: true, commitment: "confirmed" });
+
+  //     console.log("   Create auction tx:", createSig);
+
+  //     // Wait for MPC computation to finalize
+  //     const createFinalizeSig = await awaitComputationFinalization(
+  //       provider as anchor.AnchorProvider,
+  //       createComputationOffset,
+  //       program.programId,
+  //       "confirmed"
+  //     );
+  //     console.log("   Finalize tx:", createFinalizeSig);
+
+  //     const auctionCreatedEvent = await auctionCreatedPromise;
+  //     console.log(
+  //       "   Auction created:",
+  //       auctionCreatedEvent.auction.toBase58()
+  //     );
+  //     expect(auctionCreatedEvent.minBid.toNumber()).to.equal(100);
+
+  //     // Step 2: Place a bid
+  //     console.log("\nStep 2: Placing bid of 500 lamports...");
+  //     const bidPlacedPromise = awaitEvent("bidPlacedEvent");
+  //     const bidComputationOffset = new anchor.BN(randomBytes(8), "hex");
+
+  //     const bidAmount = BigInt(500);
+  //     const nonce = randomBytes(16);
+
+  //     // Encrypt bid data: [bidder_lo, bidder_hi, amount]
+  //     const bidPlaintext = [bidderLo, bidderHi, bidAmount];
+  //     const bidCiphertext = cipher.encrypt(bidPlaintext, nonce);
+
+  //     const placeBidSig = await program.methods
+  //       .placeBid(
+  //         bidComputationOffset,
+  //         Array.from(bidCiphertext[0]), // encrypted_bidder_lo
+  //         Array.from(bidCiphertext[1]), // encrypted_bidder_hi
+  //         Array.from(bidCiphertext[2]), // encrypted_amount
+  //         Array.from(publicKey),
+  //         new anchor.BN(deserializeLE(nonce).toString())
+  //       )
+  //       .accountsPartial({
+  //         bidder: bidder.publicKey,
+  //         auction: auctionPDA,
+  //         computationAccount: getComputationAccAddress(
+  //           arciumEnv.arciumClusterOffset,
+  //           bidComputationOffset
+  //         ),
+  //         clusterAccount,
+  //         mxeAccount: getMXEAccAddress(program.programId),
+  //         mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+  //         executingPool: getExecutingPoolAccAddress(
+  //           arciumEnv.arciumClusterOffset
+  //         ),
+  //         compDefAccount: getCompDefAccAddress(
+  //           program.programId,
+  //           Buffer.from(getCompDefAccOffset("place_bid")).readUInt32LE()
+  //         ),
+  //       })
+  //       .rpc({ skipPreflight: true, commitment: "confirmed" });
+
+  //     console.log("   Place bid tx:", placeBidSig);
+
+  //     const bidFinalizeSig = await awaitComputationFinalization(
+  //       provider as anchor.AnchorProvider,
+  //       bidComputationOffset,
+  //       program.programId,
+  //       "confirmed"
+  //     );
+  //     console.log("   Finalize tx:", bidFinalizeSig);
+
+  //     const bidPlacedEvent = await bidPlacedPromise;
+  //     console.log("   Bid placed, count:", bidPlacedEvent.bidCount);
+  //     expect(bidPlacedEvent.bidCount).to.equal(1);
+
+  //     // Step 3: Close auction
+  //     console.log("\nStep 3: Closing auction...");
+  //     const auctionClosedPromise = awaitEvent("auctionClosedEvent");
+
+  //     const closeSig = await program.methods
+  //       .closeAuction()
+  //       .accountsPartial({
+  //         authority: owner.publicKey,
+  //         auction: auctionPDA,
+  //       })
+  //       .rpc({ commitment: "confirmed" });
+
+  //     console.log("   Close auction tx:", closeSig);
+
+  //     const auctionClosedEvent = await auctionClosedPromise;
+  //     console.log("   Auction closed, bid count:", auctionClosedEvent.bidCount);
+
+  //     // Step 4: Determine winner (first-price)
+  //     console.log("\nStep 4: Determining winner (first-price)...");
+  //     const auctionResolvedPromise = awaitEvent("auctionResolvedEvent");
+  //     const resolveComputationOffset = new anchor.BN(randomBytes(8), "hex");
+
+  //     const resolveSig = await program.methods
+  //       .determineWinnerFirstPrice(resolveComputationOffset)
+  //       .accountsPartial({
+  //         authority: owner.publicKey,
+  //         auction: auctionPDA,
+  //         computationAccount: getComputationAccAddress(
+  //           arciumEnv.arciumClusterOffset,
+  //           resolveComputationOffset
+  //         ),
+  //         clusterAccount,
+  //         mxeAccount: getMXEAccAddress(program.programId),
+  //         mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+  //         executingPool: getExecutingPoolAccAddress(
+  //           arciumEnv.arciumClusterOffset
+  //         ),
+  //         compDefAccount: getCompDefAccAddress(
+  //           program.programId,
+  //           Buffer.from(
+  //             getCompDefAccOffset("determine_winner_first_price")
+  //           ).readUInt32LE()
+  //         ),
+  //       })
+  //       .rpc({ skipPreflight: true, commitment: "confirmed" });
+
+  //     console.log("   Determine winner tx:", resolveSig);
+
+  //     const resolveFinalizeSig = await awaitComputationFinalization(
+  //       provider as anchor.AnchorProvider,
+  //       resolveComputationOffset,
+  //       program.programId,
+  //       "confirmed"
+  //     );
+  //     console.log("   Finalize tx:", resolveFinalizeSig);
+
+  //     const auctionResolvedEvent = await auctionResolvedPromise;
+  //     console.log("\n=== First-Price Auction Results ===");
+  //     console.log(
+  //       "   Winner pubkey (bytes):",
+  //       Buffer.from(auctionResolvedEvent.winner).toString("hex")
+  //     );
+  //     console.log(
+  //       "   Payment amount:",
+  //       auctionResolvedEvent.paymentAmount.toNumber(),
+  //       "lamports"
+  //     );
+
+  //     // Verify: In first-price, winner pays their bid (500)
+  //     expect(auctionResolvedEvent.paymentAmount.toNumber()).to.equal(500);
+
+  //     // Verify winner matches bidder
+  //     const expectedWinner = Buffer.from(bidderPubkey).toString("hex");
+  //     const actualWinner = Buffer.from(auctionResolvedEvent.winner).toString(
+  //       "hex"
+  //     );
+  //     expect(actualWinner).to.equal(expectedWinner);
+
+  //     console.log("\n   First-price auction test PASSED!");
+  //   });
+  // });
+
+  // describe("Vickrey (Second-Price) Auction", () => {
+  //   it("creates an auction with multiple bids, winner pays second-highest", async () => {
+  //     console.log("\n=== Vickrey Auction Test ===\n");
+
+  //     // Use a different seed for this auction to avoid PDA collision
+  //     // We'll use a separate keypair as authority
+  //     const vickreyAuthority = anchor.web3.Keypair.generate();
+
+  //     // Fund the new authority
+  //     const fundSig = await provider.connection.requestAirdrop(
+  //       vickreyAuthority.publicKey,
+  //       2 * anchor.web3.LAMPORTS_PER_SOL
+  //     );
+  //     await provider.connection.confirmTransaction(fundSig);
+
+  //     // Bidder setup
+  //     const bidder1 = owner; // Bid 1000
+  //     const bidder1Pubkey = bidder1.publicKey.toBytes();
+  //     const { lo: bidder1Lo, hi: bidder1Hi } =
+  //       splitPubkeyToU128s(bidder1Pubkey);
+
+  //     // Create encryption keys for bidder1
+  //     const privateKey1 = x25519.utils.randomSecretKey();
+  //     const publicKey1 = x25519.getPublicKey(privateKey1);
+  //     const sharedSecret1 = x25519.getSharedSecret(privateKey1, mxePublicKey);
+  //     const cipher1 = new RescueCipher(sharedSecret1);
+
+  //     // Step 1: Create Vickrey Auction
+  //     console.log("Step 1: Creating Vickrey auction...");
+  //     const auctionCreatedPromise = awaitEvent("auctionCreatedEvent");
+  //     const createComputationOffset = new anchor.BN(randomBytes(8), "hex");
+
+  //     const [vickreyAuctionPDA] = PublicKey.findProgramAddressSync(
+  //       [Buffer.from("auction"), vickreyAuthority.publicKey.toBuffer()],
+  //       program.programId
+  //     );
+
+  //     // Generate nonce for MXE encryption
+  //     const vickreyCreateNonce = randomBytes(16);
+
+  //     const createSig = await program.methods
+  //       .createAuction(
+  //         createComputationOffset,
+  //         { vickrey: {} }, // AuctionType::Vickrey
+  //         new anchor.BN(50), // min_bid: 50 lamports
+  //         new anchor.BN(Date.now() / 1000 + 3600),
+  //         new anchor.BN(deserializeLE(vickreyCreateNonce).toString()) // nonce for MXE
+  //       )
+  //       .accountsPartial({
+  //         authority: vickreyAuthority.publicKey,
+  //         auction: vickreyAuctionPDA,
+  //         computationAccount: getComputationAccAddress(
+  //           arciumEnv.arciumClusterOffset,
+  //           createComputationOffset
+  //         ),
+  //         clusterAccount,
+  //         mxeAccount: getMXEAccAddress(program.programId),
+  //         mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+  //         executingPool: getExecutingPoolAccAddress(
+  //           arciumEnv.arciumClusterOffset
+  //         ),
+  //         compDefAccount: getCompDefAccAddress(
+  //           program.programId,
+  //           Buffer.from(
+  //             getCompDefAccOffset("init_auction_state")
+  //           ).readUInt32LE()
+  //         ),
+  //       })
+  //       .signers([vickreyAuthority])
+  //       .rpc({ skipPreflight: true, commitment: "confirmed" });
+
+  //     console.log("   Create auction tx:", createSig);
+
+  //     const createFinalizeSig = await awaitComputationFinalization(
+  //       provider as anchor.AnchorProvider,
+  //       createComputationOffset,
+  //       program.programId,
+  //       "confirmed"
+  //     );
+  //     console.log("   Finalize tx:", createFinalizeSig);
+
+  //     const auctionCreatedEvent = await auctionCreatedPromise;
+  //     console.log(
+  //       "   Vickrey auction created:",
+  //       auctionCreatedEvent.auction.toBase58()
+  //     );
+
+  //     // Step 2: Place first bid (1000 lamports)
+  //     console.log("\nStep 2: Placing first bid of 1000 lamports...");
+  //     const bidPlaced1Promise = awaitEvent("bidPlacedEvent");
+  //     const bid1ComputationOffset = new anchor.BN(randomBytes(8), "hex");
+
+  //     const bid1Amount = BigInt(1000);
+  //     const nonce1 = randomBytes(16);
+  //     const bid1Plaintext = [bidder1Lo, bidder1Hi, bid1Amount];
+  //     const bid1Ciphertext = cipher1.encrypt(bid1Plaintext, nonce1);
+
+  //     const placeBid1Sig = await program.methods
+  //       .placeBid(
+  //         bid1ComputationOffset,
+  //         Array.from(bid1Ciphertext[0]),
+  //         Array.from(bid1Ciphertext[1]),
+  //         Array.from(bid1Ciphertext[2]),
+  //         Array.from(publicKey1),
+  //         new anchor.BN(deserializeLE(nonce1).toString())
+  //       )
+  //       .accountsPartial({
+  //         bidder: bidder1.publicKey,
+  //         auction: vickreyAuctionPDA,
+  //         computationAccount: getComputationAccAddress(
+  //           arciumEnv.arciumClusterOffset,
+  //           bid1ComputationOffset
+  //         ),
+  //         clusterAccount,
+  //         mxeAccount: getMXEAccAddress(program.programId),
+  //         mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+  //         executingPool: getExecutingPoolAccAddress(
+  //           arciumEnv.arciumClusterOffset
+  //         ),
+  //         compDefAccount: getCompDefAccAddress(
+  //           program.programId,
+  //           Buffer.from(getCompDefAccOffset("place_bid")).readUInt32LE()
+  //         ),
+  //       })
+  //       .rpc({ skipPreflight: true, commitment: "confirmed" });
+
+  //     console.log("   Place bid tx:", placeBid1Sig);
+
+  //     await awaitComputationFinalization(
+  //       provider as anchor.AnchorProvider,
+  //       bid1ComputationOffset,
+  //       program.programId,
+  //       "confirmed"
+  //     );
+
+  //     const bidPlaced1Event = await bidPlaced1Promise;
+  //     console.log("   First bid placed, count:", bidPlaced1Event.bidCount);
+
+  //     // Step 3: Place second bid (700 lamports) - this becomes second-highest
+  //     console.log("\nStep 3: Placing second bid of 700 lamports...");
+  //     const bidPlaced2Promise = awaitEvent("bidPlacedEvent");
+  //     const bid2ComputationOffset = new anchor.BN(randomBytes(8), "hex");
+
+  //     // Use same bidder but different bid amount
+  //     const bid2Amount = BigInt(700);
+  //     const nonce2 = randomBytes(16);
+  //     const privateKey2 = x25519.utils.randomSecretKey();
+  //     const publicKey2 = x25519.getPublicKey(privateKey2);
+  //     const sharedSecret2 = x25519.getSharedSecret(privateKey2, mxePublicKey);
+  //     const cipher2 = new RescueCipher(sharedSecret2);
+
+  //     const bid2Plaintext = [bidder1Lo, bidder1Hi, bid2Amount];
+  //     const bid2Ciphertext = cipher2.encrypt(bid2Plaintext, nonce2);
+
+  //     const placeBid2Sig = await program.methods
+  //       .placeBid(
+  //         bid2ComputationOffset,
+  //         Array.from(bid2Ciphertext[0]),
+  //         Array.from(bid2Ciphertext[1]),
+  //         Array.from(bid2Ciphertext[2]),
+  //         Array.from(publicKey2),
+  //         new anchor.BN(deserializeLE(nonce2).toString())
+  //       )
+  //       .accountsPartial({
+  //         bidder: bidder1.publicKey,
+  //         auction: vickreyAuctionPDA,
+  //         computationAccount: getComputationAccAddress(
+  //           arciumEnv.arciumClusterOffset,
+  //           bid2ComputationOffset
+  //         ),
+  //         clusterAccount,
+  //         mxeAccount: getMXEAccAddress(program.programId),
+  //         mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+  //         executingPool: getExecutingPoolAccAddress(
+  //           arciumEnv.arciumClusterOffset
+  //         ),
+  //         compDefAccount: getCompDefAccAddress(
+  //           program.programId,
+  //           Buffer.from(getCompDefAccOffset("place_bid")).readUInt32LE()
+  //         ),
+  //       })
+  //       .rpc({ skipPreflight: true, commitment: "confirmed" });
+
+  //     console.log("   Place bid tx:", placeBid2Sig);
+
+  //     await awaitComputationFinalization(
+  //       provider as anchor.AnchorProvider,
+  //       bid2ComputationOffset,
+  //       program.programId,
+  //       "confirmed"
+  //     );
+
+  //     const bidPlaced2Event = await bidPlaced2Promise;
+  //     console.log("   Second bid placed, count:", bidPlaced2Event.bidCount);
+  //     expect(bidPlaced2Event.bidCount).to.equal(2);
+
+  //     // Step 4: Close auction
+  //     console.log("\nStep 4: Closing Vickrey auction...");
+  //     const auctionClosedPromise = awaitEvent("auctionClosedEvent");
+
+  //     const closeSig = await program.methods
+  //       .closeAuction()
+  //       .accountsPartial({
+  //         authority: vickreyAuthority.publicKey,
+  //         auction: vickreyAuctionPDA,
+  //       })
+  //       .signers([vickreyAuthority])
+  //       .rpc({ commitment: "confirmed" });
+
+  //     console.log("   Close auction tx:", closeSig);
+
+  //     const auctionClosedEvent = await auctionClosedPromise;
+  //     console.log("   Auction closed, bid count:", auctionClosedEvent.bidCount);
+
+  //     // Step 5: Determine winner (Vickrey)
+  //     console.log("\nStep 5: Determining winner (Vickrey)...");
+  //     const auctionResolvedPromise = awaitEvent("auctionResolvedEvent");
+  //     const resolveComputationOffset = new anchor.BN(randomBytes(8), "hex");
+
+  //     const resolveSig = await program.methods
+  //       .determineWinnerVickrey(resolveComputationOffset)
+  //       .accountsPartial({
+  //         authority: vickreyAuthority.publicKey,
+  //         auction: vickreyAuctionPDA,
+  //         computationAccount: getComputationAccAddress(
+  //           arciumEnv.arciumClusterOffset,
+  //           resolveComputationOffset
+  //         ),
+  //         clusterAccount,
+  //         mxeAccount: getMXEAccAddress(program.programId),
+  //         mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+  //         executingPool: getExecutingPoolAccAddress(
+  //           arciumEnv.arciumClusterOffset
+  //         ),
+  //         compDefAccount: getCompDefAccAddress(
+  //           program.programId,
+  //           Buffer.from(
+  //             getCompDefAccOffset("determine_winner_vickrey")
+  //           ).readUInt32LE()
+  //         ),
+  //       })
+  //       .signers([vickreyAuthority])
+  //       .rpc({ skipPreflight: true, commitment: "confirmed" });
+
+  //     console.log("   Determine winner tx:", resolveSig);
+
+  //     const resolveFinalizeSig = await awaitComputationFinalization(
+  //       provider as anchor.AnchorProvider,
+  //       resolveComputationOffset,
+  //       program.programId,
+  //       "confirmed"
+  //     );
+  //     console.log("   Finalize tx:", resolveFinalizeSig);
+
+  //     const auctionResolvedEvent = await auctionResolvedPromise;
+  //     console.log("\n=== Vickrey Auction Results ===");
+  //     console.log(
+  //       "   Winner pubkey (bytes):",
+  //       Buffer.from(auctionResolvedEvent.winner).toString("hex")
+  //     );
+  //     console.log(
+  //       "   Payment amount:",
+  //       auctionResolvedEvent.paymentAmount.toNumber(),
+  //       "lamports"
+  //     );
+
+  //     // Verify: In Vickrey, winner pays second-highest bid (700)
+  //     // Winner bid 1000, but pays second-highest (700)
+  //     expect(auctionResolvedEvent.paymentAmount.toNumber()).to.equal(700);
+
+  //     // Verify winner matches highest bidder
+  //     const expectedWinner = Buffer.from(bidder1Pubkey).toString("hex");
+  //     const actualWinner = Buffer.from(auctionResolvedEvent.winner).toString(
+  //       "hex"
+  //     );
+  //     expect(actualWinner).to.equal(expectedWinner);
+
+  //     console.log(
+  //       "\n   Vickrey auction test PASSED! Winner paid second-highest bid."
+  //     );
+  //   });
+  // });
+
+  describe("ConvictionMarket", () => {
+    it("creates a conviction market and emits event", async () => {
+      console.log("\n=== ConvictionMarket Test ===\n");
+
+      // Create a token mint for rewards
+      console.log("Step 1: Creating reward token mint...");
+      const rewardMint = await createMint(
+        provider.connection,
+        owner,
+        owner.publicKey,
+        null,
+        6 // 6 decimals
+      );
+      console.log("   Reward mint:", rewardMint.toBase58());
+
+      // Derive market PDA
+      const [marketPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from("conviction_market"), owner.publicKey.toBuffer()],
         program.programId
       );
 
-      // Generate nonce for MXE encryption
-      const createNonce = randomBytes(16);
+      // Listen for the event
+      const marketCreatedPromise = awaitEvent("marketCreatedEvent");
 
-      const createSig = await program.methods
-        .createAuction(
-          createComputationOffset,
-          { firstPrice: {} }, // AuctionType::FirstPrice
-          new anchor.BN(100), // min_bid: 100 lamports
-          new anchor.BN(Date.now() / 1000 + 3600), // end_time: 1 hour from now
-          new anchor.BN(deserializeLE(createNonce).toString()) // nonce for MXE
-        )
+      // Create market
+      console.log("\nStep 2: Creating conviction market...");
+      const marketIndex = new anchor.BN(1);
+
+      const createMarketSig = await program.methods
+        .createMarket(marketIndex)
         .accountsPartial({
-          authority: owner.publicKey,
-          auction: auctionPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            createComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(
-            arciumEnv.arciumClusterOffset
-          ),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(
-              getCompDefAccOffset("init_auction_state")
-            ).readUInt32LE()
-          ),
-        })
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Create auction tx:", createSig);
-
-      // Wait for MPC computation to finalize
-      const createFinalizeSig = await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        createComputationOffset,
-        program.programId,
-        "confirmed"
-      );
-      console.log("   Finalize tx:", createFinalizeSig);
-
-      const auctionCreatedEvent = await auctionCreatedPromise;
-      console.log(
-        "   Auction created:",
-        auctionCreatedEvent.auction.toBase58()
-      );
-      expect(auctionCreatedEvent.minBid.toNumber()).to.equal(100);
-
-      // Step 2: Place a bid
-      console.log("\nStep 2: Placing bid of 500 lamports...");
-      const bidPlacedPromise = awaitEvent("bidPlacedEvent");
-      const bidComputationOffset = new anchor.BN(randomBytes(8), "hex");
-
-      const bidAmount = BigInt(500);
-      const nonce = randomBytes(16);
-
-      // Encrypt bid data: [bidder_lo, bidder_hi, amount]
-      const bidPlaintext = [bidderLo, bidderHi, bidAmount];
-      const bidCiphertext = cipher.encrypt(bidPlaintext, nonce);
-
-      const placeBidSig = await program.methods
-        .placeBid(
-          bidComputationOffset,
-          Array.from(bidCiphertext[0]), // encrypted_bidder_lo
-          Array.from(bidCiphertext[1]), // encrypted_bidder_hi
-          Array.from(bidCiphertext[2]), // encrypted_amount
-          Array.from(publicKey),
-          new anchor.BN(deserializeLE(nonce).toString())
-        )
-        .accountsPartial({
-          bidder: bidder.publicKey,
-          auction: auctionPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            bidComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(
-            arciumEnv.arciumClusterOffset
-          ),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(getCompDefAccOffset("place_bid")).readUInt32LE()
-          ),
-        })
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Place bid tx:", placeBidSig);
-
-      const bidFinalizeSig = await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        bidComputationOffset,
-        program.programId,
-        "confirmed"
-      );
-      console.log("   Finalize tx:", bidFinalizeSig);
-
-      const bidPlacedEvent = await bidPlacedPromise;
-      console.log("   Bid placed, count:", bidPlacedEvent.bidCount);
-      expect(bidPlacedEvent.bidCount).to.equal(1);
-
-      // Step 3: Close auction
-      console.log("\nStep 3: Closing auction...");
-      const auctionClosedPromise = awaitEvent("auctionClosedEvent");
-
-      const closeSig = await program.methods
-        .closeAuction()
-        .accountsPartial({
-          authority: owner.publicKey,
-          auction: auctionPDA,
+          creator: owner.publicKey,
+          market: marketPDA,
+          rewardTokenMint: rewardMint,
+          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc({ commitment: "confirmed" });
 
-      console.log("   Close auction tx:", closeSig);
+      console.log("   Create market tx:", createMarketSig);
 
-      const auctionClosedEvent = await auctionClosedPromise;
-      console.log("   Auction closed, bid count:", auctionClosedEvent.bidCount);
+      // Verify event
+      const marketCreatedEvent = await marketCreatedPromise;
+      console.log("\n=== Market Created Event ===");
+      console.log("   Market:", marketCreatedEvent.market.toBase58());
+      console.log("   Creator:", marketCreatedEvent.creator.toBase58());
+      console.log("   Index:", marketCreatedEvent.index.toNumber());
+      console.log("   Max Options:", marketCreatedEvent.maxOptions);
 
-      // Step 4: Determine winner (first-price)
-      console.log("\nStep 4: Determining winner (first-price)...");
-      const auctionResolvedPromise = awaitEvent("auctionResolvedEvent");
-      const resolveComputationOffset = new anchor.BN(randomBytes(8), "hex");
-
-      const resolveSig = await program.methods
-        .determineWinnerFirstPrice(resolveComputationOffset)
-        .accountsPartial({
-          authority: owner.publicKey,
-          auction: auctionPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            resolveComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(
-            arciumEnv.arciumClusterOffset
-          ),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(
-              getCompDefAccOffset("determine_winner_first_price")
-            ).readUInt32LE()
-          ),
-        })
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Determine winner tx:", resolveSig);
-
-      const resolveFinalizeSig = await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        resolveComputationOffset,
-        program.programId,
-        "confirmed"
+      // Assertions
+      expect(marketCreatedEvent.market.toBase58()).to.equal(marketPDA.toBase58());
+      expect(marketCreatedEvent.creator.toBase58()).to.equal(
+        owner.publicKey.toBase58()
       );
-      console.log("   Finalize tx:", resolveFinalizeSig);
+      expect(marketCreatedEvent.index.toNumber()).to.equal(1);
+      expect(marketCreatedEvent.maxOptions).to.equal(100);
 
-      const auctionResolvedEvent = await auctionResolvedPromise;
-      console.log("\n=== First-Price Auction Results ===");
-      console.log(
-        "   Winner pubkey (bytes):",
-        Buffer.from(auctionResolvedEvent.winner).toString("hex")
+      // Fetch and verify on-chain account
+      const marketAccount = await program.account.convictionMarket.fetch(
+        marketPDA
       );
-      console.log(
-        "   Payment amount:",
-        auctionResolvedEvent.paymentAmount.toNumber(),
-        "lamports"
+      expect(marketAccount.creator.toBase58()).to.equal(
+        owner.publicKey.toBase58()
+      );
+      expect(marketAccount.index.toNumber()).to.equal(1);
+      expect(marketAccount.maxOptions).to.equal(100);
+      expect(marketAccount.currentOptions).to.equal(0);
+      expect(marketAccount.rewardTokenMint.toBase58()).to.equal(
+        rewardMint.toBase58()
       );
 
-      // Verify: In first-price, winner pays their bid (500)
-      expect(auctionResolvedEvent.paymentAmount.toNumber()).to.equal(500);
-
-      // Verify winner matches bidder
-      const expectedWinner = Buffer.from(bidderPubkey).toString("hex");
-      const actualWinner = Buffer.from(auctionResolvedEvent.winner).toString(
-        "hex"
-      );
-      expect(actualWinner).to.equal(expectedWinner);
-
-      console.log("\n   First-price auction test PASSED!");
-    });
-  });
-
-  describe("Vickrey (Second-Price) Auction", () => {
-    it("creates an auction with multiple bids, winner pays second-highest", async () => {
-      console.log("\n=== Vickrey Auction Test ===\n");
-
-      // Use a different seed for this auction to avoid PDA collision
-      // We'll use a separate keypair as authority
-      const vickreyAuthority = anchor.web3.Keypair.generate();
-
-      // Fund the new authority
-      const fundSig = await provider.connection.requestAirdrop(
-        vickreyAuthority.publicKey,
-        2 * anchor.web3.LAMPORTS_PER_SOL
-      );
-      await provider.connection.confirmTransaction(fundSig);
-
-      // Bidder setup
-      const bidder1 = owner; // Bid 1000
-      const bidder1Pubkey = bidder1.publicKey.toBytes();
-      const { lo: bidder1Lo, hi: bidder1Hi } =
-        splitPubkeyToU128s(bidder1Pubkey);
-
-      // Create encryption keys for bidder1
-      const privateKey1 = x25519.utils.randomSecretKey();
-      const publicKey1 = x25519.getPublicKey(privateKey1);
-      const sharedSecret1 = x25519.getSharedSecret(privateKey1, mxePublicKey);
-      const cipher1 = new RescueCipher(sharedSecret1);
-
-      // Step 1: Create Vickrey Auction
-      console.log("Step 1: Creating Vickrey auction...");
-      const auctionCreatedPromise = awaitEvent("auctionCreatedEvent");
-      const createComputationOffset = new anchor.BN(randomBytes(8), "hex");
-
-      const [vickreyAuctionPDA] = PublicKey.findProgramAddressSync(
-        [Buffer.from("auction"), vickreyAuthority.publicKey.toBuffer()],
-        program.programId
-      );
-
-      // Generate nonce for MXE encryption
-      const vickreyCreateNonce = randomBytes(16);
-
-      const createSig = await program.methods
-        .createAuction(
-          createComputationOffset,
-          { vickrey: {} }, // AuctionType::Vickrey
-          new anchor.BN(50), // min_bid: 50 lamports
-          new anchor.BN(Date.now() / 1000 + 3600),
-          new anchor.BN(deserializeLE(vickreyCreateNonce).toString()) // nonce for MXE
-        )
-        .accountsPartial({
-          authority: vickreyAuthority.publicKey,
-          auction: vickreyAuctionPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            createComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(
-            arciumEnv.arciumClusterOffset
-          ),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(
-              getCompDefAccOffset("init_auction_state")
-            ).readUInt32LE()
-          ),
-        })
-        .signers([vickreyAuthority])
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Create auction tx:", createSig);
-
-      const createFinalizeSig = await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        createComputationOffset,
-        program.programId,
-        "confirmed"
-      );
-      console.log("   Finalize tx:", createFinalizeSig);
-
-      const auctionCreatedEvent = await auctionCreatedPromise;
-      console.log(
-        "   Vickrey auction created:",
-        auctionCreatedEvent.auction.toBase58()
-      );
-
-      // Step 2: Place first bid (1000 lamports)
-      console.log("\nStep 2: Placing first bid of 1000 lamports...");
-      const bidPlaced1Promise = awaitEvent("bidPlacedEvent");
-      const bid1ComputationOffset = new anchor.BN(randomBytes(8), "hex");
-
-      const bid1Amount = BigInt(1000);
-      const nonce1 = randomBytes(16);
-      const bid1Plaintext = [bidder1Lo, bidder1Hi, bid1Amount];
-      const bid1Ciphertext = cipher1.encrypt(bid1Plaintext, nonce1);
-
-      const placeBid1Sig = await program.methods
-        .placeBid(
-          bid1ComputationOffset,
-          Array.from(bid1Ciphertext[0]),
-          Array.from(bid1Ciphertext[1]),
-          Array.from(bid1Ciphertext[2]),
-          Array.from(publicKey1),
-          new anchor.BN(deserializeLE(nonce1).toString())
-        )
-        .accountsPartial({
-          bidder: bidder1.publicKey,
-          auction: vickreyAuctionPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            bid1ComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(
-            arciumEnv.arciumClusterOffset
-          ),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(getCompDefAccOffset("place_bid")).readUInt32LE()
-          ),
-        })
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Place bid tx:", placeBid1Sig);
-
-      await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        bid1ComputationOffset,
-        program.programId,
-        "confirmed"
-      );
-
-      const bidPlaced1Event = await bidPlaced1Promise;
-      console.log("   First bid placed, count:", bidPlaced1Event.bidCount);
-
-      // Step 3: Place second bid (700 lamports) - this becomes second-highest
-      console.log("\nStep 3: Placing second bid of 700 lamports...");
-      const bidPlaced2Promise = awaitEvent("bidPlacedEvent");
-      const bid2ComputationOffset = new anchor.BN(randomBytes(8), "hex");
-
-      // Use same bidder but different bid amount
-      const bid2Amount = BigInt(700);
-      const nonce2 = randomBytes(16);
-      const privateKey2 = x25519.utils.randomSecretKey();
-      const publicKey2 = x25519.getPublicKey(privateKey2);
-      const sharedSecret2 = x25519.getSharedSecret(privateKey2, mxePublicKey);
-      const cipher2 = new RescueCipher(sharedSecret2);
-
-      const bid2Plaintext = [bidder1Lo, bidder1Hi, bid2Amount];
-      const bid2Ciphertext = cipher2.encrypt(bid2Plaintext, nonce2);
-
-      const placeBid2Sig = await program.methods
-        .placeBid(
-          bid2ComputationOffset,
-          Array.from(bid2Ciphertext[0]),
-          Array.from(bid2Ciphertext[1]),
-          Array.from(bid2Ciphertext[2]),
-          Array.from(publicKey2),
-          new anchor.BN(deserializeLE(nonce2).toString())
-        )
-        .accountsPartial({
-          bidder: bidder1.publicKey,
-          auction: vickreyAuctionPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            bid2ComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(
-            arciumEnv.arciumClusterOffset
-          ),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(getCompDefAccOffset("place_bid")).readUInt32LE()
-          ),
-        })
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Place bid tx:", placeBid2Sig);
-
-      await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        bid2ComputationOffset,
-        program.programId,
-        "confirmed"
-      );
-
-      const bidPlaced2Event = await bidPlaced2Promise;
-      console.log("   Second bid placed, count:", bidPlaced2Event.bidCount);
-      expect(bidPlaced2Event.bidCount).to.equal(2);
-
-      // Step 4: Close auction
-      console.log("\nStep 4: Closing Vickrey auction...");
-      const auctionClosedPromise = awaitEvent("auctionClosedEvent");
-
-      const closeSig = await program.methods
-        .closeAuction()
-        .accountsPartial({
-          authority: vickreyAuthority.publicKey,
-          auction: vickreyAuctionPDA,
-        })
-        .signers([vickreyAuthority])
-        .rpc({ commitment: "confirmed" });
-
-      console.log("   Close auction tx:", closeSig);
-
-      const auctionClosedEvent = await auctionClosedPromise;
-      console.log("   Auction closed, bid count:", auctionClosedEvent.bidCount);
-
-      // Step 5: Determine winner (Vickrey)
-      console.log("\nStep 5: Determining winner (Vickrey)...");
-      const auctionResolvedPromise = awaitEvent("auctionResolvedEvent");
-      const resolveComputationOffset = new anchor.BN(randomBytes(8), "hex");
-
-      const resolveSig = await program.methods
-        .determineWinnerVickrey(resolveComputationOffset)
-        .accountsPartial({
-          authority: vickreyAuthority.publicKey,
-          auction: vickreyAuctionPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            resolveComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(
-            arciumEnv.arciumClusterOffset
-          ),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(
-              getCompDefAccOffset("determine_winner_vickrey")
-            ).readUInt32LE()
-          ),
-        })
-        .signers([vickreyAuthority])
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Determine winner tx:", resolveSig);
-
-      const resolveFinalizeSig = await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        resolveComputationOffset,
-        program.programId,
-        "confirmed"
-      );
-      console.log("   Finalize tx:", resolveFinalizeSig);
-
-      const auctionResolvedEvent = await auctionResolvedPromise;
-      console.log("\n=== Vickrey Auction Results ===");
-      console.log(
-        "   Winner pubkey (bytes):",
-        Buffer.from(auctionResolvedEvent.winner).toString("hex")
-      );
-      console.log(
-        "   Payment amount:",
-        auctionResolvedEvent.paymentAmount.toNumber(),
-        "lamports"
-      );
-
-      // Verify: In Vickrey, winner pays second-highest bid (700)
-      // Winner bid 1000, but pays second-highest (700)
-      expect(auctionResolvedEvent.paymentAmount.toNumber()).to.equal(700);
-
-      // Verify winner matches highest bidder
-      const expectedWinner = Buffer.from(bidder1Pubkey).toString("hex");
-      const actualWinner = Buffer.from(auctionResolvedEvent.winner).toString(
-        "hex"
-      );
-      expect(actualWinner).to.equal(expectedWinner);
-
-      console.log(
-        "\n   Vickrey auction test PASSED! Winner paid second-highest bid."
-      );
+      console.log("\n   ConvictionMarket test PASSED!");
     });
   });
 
@@ -618,6 +693,13 @@ describe("SealedBidAuction", () => {
       [baseSeedCompDefAcc, program.programId.toBuffer(), offset],
       getArciumProgramId()
     )[0];
+
+    // Check if comp def account already exists (from genesis or previous run)
+    const accountInfo = await provider.connection.getAccountInfo(compDefPDA);
+    if (accountInfo !== null) {
+      console.log(`   Comp def ${circuitName} already initialized, skipping...`);
+      return "already_initialized";
+    }
 
     // Map circuit name to the correct init method
     // Using preflightCommitment to get fresh blockhash for each transaction

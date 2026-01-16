@@ -84,4 +84,17 @@ mod circuits {
         }
         .reveal()
     }
+
+    // Conviction market option state - tracks total stake for an option
+    pub struct OptionState {
+        pub total_stake: u64,
+    }
+
+    #[instruction]
+    pub fn init_option_state(mxe: Mxe) -> Enc<Mxe, OptionState> {
+        let initial_state = OptionState {
+            total_stake: 0,
+        };
+        mxe.from_arcis(initial_state)
+    }
 }
