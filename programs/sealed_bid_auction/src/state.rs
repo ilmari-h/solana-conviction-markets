@@ -1,46 +1,27 @@
 use anchor_lang::prelude::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
-pub enum AuctionType {
-    FirstPrice,
-    Vickrey,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
-pub enum AuctionStatus {
-    Open,
-    Closed,
-    Resolved,
-}
-
-#[account]
-#[derive(InitSpace)]
-pub struct Auction {
-    pub bump: u8,
-    pub authority: Pubkey,
-    pub auction_type: AuctionType,
-    pub status: AuctionStatus,
-    pub min_bid: u64,
-    pub end_time: i64,
-    pub bid_count: u8,
-    pub state_nonce: u128,
-    pub encrypted_state: [[u8; 32]; 10],
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
-pub enum MarketStatus {
-    Open,
-    Closed,
-    Resolved,
-}
-
 #[account]
 #[derive(InitSpace)]
 pub struct ConvictionMarket {
     pub bump: u8,
-    pub creator: Pubkey,
-    pub index: u64,
+    pub creator: Pubkey,      // part of PDA seed
+    pub index: u64,           // part of PDA seed
     pub reward_token_mint: Pubkey,
+    pub reward_token_amount: u64,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct VoteToken {
+    pub bump: u8,
+    pub owner: Pubkey,
     pub state_nonce: u128,
-    pub encrypted_state: [[u8; 32]; 10],
+    pub encrypted_state: [[u8; 32]; 1],  // encrypted token amount
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct VoteTokenVault {
+    pub bump: u8,
+    pub bought_lamports: u64,
 }
