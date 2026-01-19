@@ -13,7 +13,6 @@ pub use error::ErrorCode;
 pub use instructions::*;
 pub use state::*;
 
-pub const COMP_DEF_OFFSET_INIT_MARKET_STATE: u32 = comp_def_offset("init_market_state");
 pub const COMP_DEF_OFFSET_INIT_VOTE_TOKEN_ACCOUNT: u32 = comp_def_offset("init_vote_token_account");
 pub const COMP_DEF_OFFSET_CALCULATE_VOTE_TOKEN_BALANCE: u32 = comp_def_offset("calculate_vote_token_balance");
 pub const COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES: u32 = comp_def_offset("buy_conviction_market_shares");
@@ -23,10 +22,6 @@ declare_id!("HFd2ZC5pGNY8RrUFXxbreawK5UCa617qaJEfo1aUhdU7");
 #[arcium_program]
 pub mod sealed_bid_auction {
     use super::*;
-
-    pub fn init_market_state_comp_def(ctx: Context<InitMarketStateCompDef>) -> Result<()> {
-        instructions::init_market_state_comp_def(ctx)
-    }
 
     pub fn init_vote_token_account_comp_def(ctx: Context<InitVoteTokenAccountCompDef>) -> Result<()> {
         instructions::init_vote_token_account_comp_def(ctx)
