@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { SealedBidAuction } from "../target/types/sealed_bid_auction";
+import { ConvictionMarket } from "../target/types/conviction_market";
 import { randomBytes } from "crypto";
 import {
   awaitComputationFinalization,
@@ -33,7 +33,7 @@ function getClusterAccount(): PublicKey {
 describe("ConvictionMarket", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace
-    .SealedBidAuction as Program<SealedBidAuction>;
+    .ConvictionMarket as Program<ConvictionMarket>;
   const provider = anchor.getProvider();
 
   type Event = anchor.IdlEvents<(typeof program)["idl"]>;
@@ -663,7 +663,7 @@ describe("ConvictionMarket", () => {
   type CompDefs =  "init_vote_token_account" | "calculate_vote_token_balance" | "buy_conviction_market_shares" | "init_market_shares"
 
   async function initCompDef(
-    program: Program<SealedBidAuction>,
+    program: Program<ConvictionMarket>,
     owner: anchor.web3.Keypair,
     circuitName: CompDefs
   ): Promise<string> {

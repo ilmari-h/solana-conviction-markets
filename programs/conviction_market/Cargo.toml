@@ -1,12 +1,12 @@
 [package]
-name = "sealed_bid_auction"
+name = "conviction_market"
 version = "0.1.0"
-description = "Created with Arcium & Anchor"
+description = "Conviction voting market with encrypted votes using Arcium"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "sealed_bid_auction"
+name = "conviction_market"
 
 [features]
 default = []

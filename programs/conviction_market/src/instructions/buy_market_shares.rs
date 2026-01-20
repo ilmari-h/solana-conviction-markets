@@ -74,6 +74,7 @@ pub fn buy_market_shares(
 
     // TODO: how to share with authorized reader? Just share the shared secret?
     // This is NOT the actual account pubkey but an ephemeral pubkey
+    // Perhaps no need to pass another pubkey - sufficient to share the shared secret with observer.
     authorized_reader_pubkey: [u8; 32],
     input_nonce_authorized_reader: u128,
 ) -> Result<()> {
