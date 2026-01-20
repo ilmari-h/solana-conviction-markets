@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::state::VoteToken;
+use crate::state::VoteTokenAccount;
 use crate::COMP_DEF_OFFSET_INIT_VOTE_TOKEN_ACCOUNT;
 use crate::{ID, ID_CONST, SignerAccount};
 
@@ -22,11 +22,11 @@ pub struct InitVoteTokenAccount<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + VoteToken::INIT_SPACE,
+        space = 8 + VoteTokenAccount::INIT_SPACE,
         seeds = [b"vote_token_account", owner.key().as_ref()],
         bump,
     )]
-    pub vote_token_account: Account<'info, VoteToken>,
+    pub vote_token_account: Account<'info, VoteTokenAccount>,
 
     // Arcium accounts
     #[account(
@@ -114,7 +114,7 @@ pub struct InitVoteTokenAccountCallback<'info> {
     /// CHECK: instructions_sysvar
     pub instructions_sysvar: AccountInfo<'info>,
     #[account(mut)]
-    pub vote_token: Account<'info, VoteToken>,
+    pub vote_token: Account<'info, VoteTokenAccount>,
 }
 
 pub fn init_vote_token_account_callback(

@@ -59,3 +59,22 @@ pub fn buy_conviction_market_shares_comp_def(ctx: Context<BuyConvictionMarketSha
     init_comp_def(ctx.accounts, None, None)?;
     Ok(())
 }
+
+#[init_computation_definition_accounts("init_market_shares", payer)]
+#[derive(Accounts)]
+pub struct InitMarketSharesCompDef<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut, address = derive_mxe_pda!())]
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
+    #[account(mut)]
+    /// CHECK: comp_def_account, checked by arcium program.
+    pub comp_def_account: UncheckedAccount<'info>,
+    pub arcium_program: Program<'info, Arcium>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn init_market_shares_comp_def(ctx: Context<InitMarketSharesCompDef>) -> Result<()> {
+    init_comp_def(ctx.accounts, None, None)?;
+    Ok(())
+}

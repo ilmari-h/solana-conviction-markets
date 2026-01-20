@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct ConvictionMarket {
+    pub encrypted_available_shares: [[u8; 32]; 1],
     pub bump: u8,
     pub creator: Pubkey,      // part of PDA seed
     pub index: u64,           // part of PDA seed
@@ -22,16 +23,21 @@ pub struct ConvictionMarket {
 
     pub selected_option: Option<u16>,
 
-    pub reward_amount: u64,
+    pub state_nonce: u128,
+
+    pub total_shares: u64,
 }
 
 #[account]
 #[derive(InitSpace)]
-pub struct VoteToken {
+pub struct VoteTokenAccount {
     pub encrypted_state: [[u8; 32]; 1],  // encrypted token amount
     pub bump: u8,
     pub owner: Pubkey,
     pub state_nonce: u128,
+
+    pub encrypted_state_disclosure: [[u8; 32];1],
+    pub state_nonce_disclosure: u128,
 }
 
 #[account]

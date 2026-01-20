@@ -16,6 +16,7 @@ pub use state::*;
 pub const COMP_DEF_OFFSET_INIT_VOTE_TOKEN_ACCOUNT: u32 = comp_def_offset("init_vote_token_account");
 pub const COMP_DEF_OFFSET_CALCULATE_VOTE_TOKEN_BALANCE: u32 = comp_def_offset("calculate_vote_token_balance");
 pub const COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES: u32 = comp_def_offset("buy_conviction_market_shares");
+pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 
 declare_id!("HFd2ZC5pGNY8RrUFXxbreawK5UCa617qaJEfo1aUhdU7");
 
@@ -31,15 +32,29 @@ pub mod sealed_bid_auction {
         instructions::calculate_vote_token_balance_comp_def(ctx)
     }
 
+    pub fn init_market_shares_comp_def(ctx: Context<InitMarketSharesCompDef>) -> Result<()> {
+        instructions::init_market_shares_comp_def(ctx)
+    }
+
     pub fn create_market(
         ctx: Context<CreateMarket>,
         market_index: u64,
+        computation_offset: u64,
         max_options: u16,
-        reward_amount: u64,
+        total_shares: u64,
         time_to_stake: u64,
         time_to_reveal: u64,
+        nonce: u128,
     ) -> Result<()> {
-        instructions::create_market(ctx, market_index, max_options, reward_amount, time_to_stake, time_to_reveal)
+        instructions::create_market(ctx, market_index, computation_offset, max_options, total_shares, time_to_stake, time_to_reveal, nonce)
+    }
+
+    #[arcium_callback(encrypted_ix = "init_market_shares")]
+    pub fn init_market_shares_callback(
+        ctx: Context<InitMarketSharesCallback>,
+        output: SignedComputationOutputs<InitMarketSharesOutput>,
+    ) -> Result<()> {
+        instructions::init_market_shares_callback(ctx, output)
     }
 
     pub fn add_market_option(
@@ -98,8 +113,20 @@ pub mod sealed_bid_auction {
         selected_option_ciphertext: [u8; 32],
         user_pubkey: [u8; 32],
         input_nonce: u128,
+
+        authorized_reader_pubkey: [u8; 32],
+        authorized_reader_nonce: u128,
     ) -> Result<()> {
-        instructions::buy_market_shares(ctx, computation_offset, amount_ciphertext, selected_option_ciphertext, user_pubkey, input_nonce)
+        instructions::buy_market_shares(
+            ctx,
+            computation_offset,
+            amount_ciphertext,
+            selected_option_ciphertext,
+            user_pubkey,
+            input_nonce,
+            authorized_reader_pubkey,
+            authorized_reader_nonce
+        )
     }
 
     #[arcium_callback(encrypted_ix = "buy_conviction_market_shares")]

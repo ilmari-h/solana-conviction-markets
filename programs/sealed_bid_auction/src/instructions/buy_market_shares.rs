@@ -4,7 +4,7 @@ use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
 use crate::instructions::mint_vote_tokens::VOTE_TOKEN_ACCOUNT_SEED;
-use crate::state::{ConvictionMarket, ConvictionMarketShare, VoteToken};
+use crate::state::{ConvictionMarket, VoteTokenAccount};
 use crate::COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES;
 use crate::{ID, ID_CONST, SignerAccount};
 
@@ -23,11 +23,10 @@ pub struct BuyMarketShares<'info> {
     pub market: Account<'info, ConvictionMarket>,
 
     #[account(
-        mut,
         seeds = [VOTE_TOKEN_ACCOUNT_SEED, signer.key().as_ref()],
-        bump = user_vote_token_account.bump,
+        bump
     )]
-    pub user_vote_token_account: Account<'info, VoteToken>,
+    pub user_vta: Account<'info, VoteTokenAccount>,
 
     // Arcium accounts
     #[account(
@@ -67,22 +66,42 @@ pub fn buy_market_shares(
     computation_offset: u64,
     amount_ciphertext: [u8; 32],
     selected_option_ciphertext: [u8; 32],
+
     user_pubkey: [u8; 32],
-    input_nonce: u128,
+    input_nonce_user: u128,
+
+    // Optional voluntary disclosure - to opt out, pass user's own pubkey.
+
+    // TODO: how to share with authorized reader? Just share the shared secret?
+    // This is NOT the actual account pubkey but an ephemeral pubkey
+    authorized_reader_pubkey: [u8; 32],
+    input_nonce_authorized_reader: u128,
 ) -> Result<()> {
-    let user_vta_key = ctx.accounts.user_vote_token_account.key();
-    let user_vta_nonce = ctx.accounts.user_vote_token_account.state_nonce;
+    let user_vta_key = ctx.accounts.user_vta.key();
+    let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
+
+    let market_key = ctx.accounts.market.key();
+    let market_state_nonce = ctx.accounts.market.state_nonce;
 
     // Build args for encrypted computation
-    // Circuit signature: buy_conviction_market_shares(input_ctx, user_vta_ctx) -> bool
     let args = ArgBuilder::new()
+        // User's trade input
         .x25519_pubkey(user_pubkey)
-        .plaintext_u128(input_nonce)
+        .plaintext_u128(input_nonce_user)
         .encrypted_u64(amount_ciphertext)
         .encrypted_u16(selected_option_ciphertext)
 
+        // Voluntary disclosure
+        .x25519_pubkey(authorized_reader_pubkey)
+        .plaintext_u128(input_nonce_authorized_reader)
+
+        // User's VTA
         .plaintext_u128(user_vta_nonce)
         .account(user_vta_key, 8, 32 * 1)
+
+        // Available market shares
+        .plaintext_u128(market_state_nonce)
+        .account(market_key, 8, 32 * 1)
         .build();
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
@@ -99,6 +118,10 @@ pub fn buy_market_shares(
                   &[                                                                                                                
                       CallbackAccount {                                                                                             
                           pubkey: user_vta_key,                                                                                     
+                          is_writable: true,                                                                                        
+                      },                                                                                                            
+                      CallbackAccount {                                                                                             
+                          pubkey: market_key,                                                                                     
                           is_writable: true,                                                                                        
                       },                                                                                                            
                   ],  
@@ -128,26 +151,44 @@ pub struct BuyConvictionMarketSharesCallback<'info> {
 
     // Callback accounts
     #[account(mut)]
-    pub user_vote_token_account: Account<'info, VoteToken>,
+    pub user_vote_token_account: Account<'info, VoteTokenAccount>,
+
+    #[account(mut)]
+    pub market: Account<'info, ConvictionMarket>,
 }
 
 pub fn buy_conviction_market_shares_callback(
     ctx: Context<BuyConvictionMarketSharesCallback>,
     output: SignedComputationOutputs<BuyConvictionMarketSharesOutput>,
 ) -> Result<()> {
-    // Output is just bool (true = error/insufficient balance)
-    let has_error: bool = match output.verify_output(
+
+    let res = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
         Ok(BuyConvictionMarketSharesOutput { field_0 }) => field_0,
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
+    let has_error = res.field_0;
+    let new_user_balance = res.field_1;
+    let new_market_shares = res.field_2;
+    let new_user_balance_disclosed = res.field_3;
 
     if has_error {
         return Err(ErrorCode::SharePurchaseFailed.into());
     }
-    ctx.accounts.user_vote_token_account.state_nonce = 0;
+
+    // Update user balance
+    ctx.accounts.user_vote_token_account.state_nonce = new_user_balance.nonce;
+    ctx.accounts.user_vote_token_account.encrypted_state = new_user_balance.ciphertexts;
+
+    // Update market shares
+    ctx.accounts.market.state_nonce = new_market_shares.nonce;
+    ctx.accounts.market.encrypted_available_shares = new_market_shares.ciphertexts;
+
+    // Update voluntary disclosure fields
+    ctx.accounts.user_vote_token_account.encrypted_state_disclosure = new_user_balance_disclosed.ciphertexts;
+    ctx.accounts.user_vote_token_account.state_nonce_disclosure = new_user_balance_disclosed.nonce;
 
     Ok(())
 }

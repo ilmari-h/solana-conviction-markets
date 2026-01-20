@@ -74,6 +74,7 @@ describe("ConvictionMarket", () => {
       await initCompDef(program, owner, "init_vote_token_account");
       await initCompDef(program, owner, "calculate_vote_token_balance");
       await initCompDef(program, owner, "buy_conviction_market_shares");
+      await initCompDef(program, owner, "init_market_shares");
 
       compDefsInitialized = true;
     }
@@ -83,9 +84,11 @@ describe("ConvictionMarket", () => {
     it("creates a market, adds options, funds and opens it", async () => {
       console.log("\n=== Market Creation and Setup Test ===\n");
 
+      const PRICE_PER_SHARE_LAMPORTS = 1_000_000; // Must match Rust constant
       const marketIndex = new anchor.BN(1);
       const maxOptions = 5; // u16
-      const rewardAmount = new anchor.BN(LAMPORTS_PER_SOL); // 1 SOL reward
+      const totalShares = new anchor.BN(1000); // 1000 shares
+      const fundingLamports = totalShares.toNumber() * PRICE_PER_SHARE_LAMPORTS; // = 1 SOL
       const timeToStake = new anchor.BN(3600); // 1 hour
       const timeToReveal = new anchor.BN(1800); // 30 minutes
 
@@ -103,11 +106,34 @@ describe("ConvictionMarket", () => {
       console.log("Step 1: Creating conviction market...");
       const marketCreatedPromise = awaitEvent("marketCreatedEvent");
 
+      const marketNonce = randomBytes(16);
+      const marketComputationOffset = new anchor.BN(randomBytes(8), "hex");
+
       const createMarketSig = await program.methods
-        .createMarket(marketIndex, maxOptions, rewardAmount, timeToStake, timeToReveal)
+        .createMarket(
+          marketIndex,
+          marketComputationOffset,
+          maxOptions,
+          totalShares,
+          timeToStake,
+          timeToReveal,
+          new anchor.BN(deserializeLE(marketNonce).toString())
+        )
         .accountsPartial({
           creator: owner.publicKey,
           market: marketPDA,
+          computationAccount: getComputationAccAddress(
+            arciumEnv.arciumClusterOffset,
+            marketComputationOffset
+          ),
+          clusterAccount,
+          mxeAccount: getMXEAccAddress(program.programId),
+          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+          executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
+          compDefAccount: getCompDefAccAddress(
+            program.programId,
+            Buffer.from(getCompDefAccOffset("init_market_shares")).readUInt32LE()
+          ),
         })
         .rpc({ skipPreflight: true, commitment: "confirmed" });
 
@@ -115,6 +141,15 @@ describe("ConvictionMarket", () => {
 
       const marketCreatedEvent = await marketCreatedPromise;
       console.log("   Market created:", marketCreatedEvent.market.toBase58());
+
+      console.log("   Waiting for MPC computation to finalize...");
+      await awaitComputationFinalization(
+        provider as anchor.AnchorProvider,
+        marketComputationOffset,
+        program.programId,
+        "confirmed"
+      );
+      console.log("   Market encrypted state initialized!");
 
       // Verify market state
       let marketAccount = await program.account.convictionMarket.fetch(marketPDA);
@@ -165,14 +200,15 @@ describe("ConvictionMarket", () => {
       // ========== STEP 3: Fund and Open Market ==========
       console.log("\nStep 3: Funding and opening market...");
       console.log("   Market PDA:", marketPDA.toBase58());
-      console.log("   Reward amount:", rewardAmount.toNumber());
+      console.log("   Total shares:", totalShares.toNumber());
+      console.log("   Funding lamports:", fundingLamports);
 
-      // Transfer reward_amount to market PDA (same pattern as airdrop confirmation)
+      // Transfer total_shares * PRICE_PER_SHARE_LAMPORTS to market PDA
       const fundTx = new anchor.web3.Transaction().add(
         SystemProgram.transfer({
           fromPubkey: owner.publicKey,
           toPubkey: marketPDA,
-          lamports: rewardAmount.toNumber(),
+          lamports: fundingLamports,
         })
       );
       fundTx.feePayer = owner.publicKey;
@@ -185,7 +221,7 @@ describe("ConvictionMarket", () => {
       });
       console.log("   Fund tx sent:", fundSig);
       await provider.connection.confirmTransaction(fundSig, "confirmed");
-      console.log("   Funded market with 1 SOL");
+      console.log("   Funded market with", fundingLamports / LAMPORTS_PER_SOL, "SOL");
 
       // Open market with timestamp 10 seconds in the future
       const currentSlot = await provider.connection.getSlot();
@@ -208,48 +244,9 @@ describe("ConvictionMarket", () => {
       expect(marketAccount.openTimestamp!.toNumber()).to.equal(openTimestamp.toNumber());
       console.log("   Market open_timestamp set to:", openTimestamp.toNumber());
 
-      // ========== STEP 4: Initialize vote token account for market ==========
-      console.log("\nStep 4: Initializing vote token account for market...");
 
-      const marketVtaNonce = randomBytes(16);
-      const marketVtaComputationOffset = new anchor.BN(randomBytes(8), "hex");
-
-      const initMarketVtaSig = await program.methods
-        .initVoteTokenAccount(
-          marketVtaComputationOffset,
-          new anchor.BN(deserializeLE(marketVtaNonce).toString())
-        )
-        .accountsPartial({
-          signer: owner.publicKey,
-          owner: marketPDA,
-          computationAccount: getComputationAccAddress(
-            arciumEnv.arciumClusterOffset,
-            marketVtaComputationOffset
-          ),
-          clusterAccount,
-          mxeAccount: getMXEAccAddress(program.programId),
-          mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-          executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
-          compDefAccount: getCompDefAccAddress(
-            program.programId,
-            Buffer.from(getCompDefAccOffset("init_vote_token_account")).readUInt32LE()
-          ),
-        })
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
-
-      console.log("   Init market VTA tx:", initMarketVtaSig);
-
-      console.log("   Waiting for MPC computation to finalize...");
-      await awaitComputationFinalization(
-        provider as anchor.AnchorProvider,
-        marketVtaComputationOffset,
-        program.programId,
-        "confirmed"
-      );
-      console.log("   Market vote token account initialized!");
-
-      // ========== STEP 5: Create buyer and initialize their vote token account ==========
-      console.log("\nStep 5: Setting up buyer...");
+      // ========== STEP 4: Create buyer and initialize their vote token account ==========
+      console.log("\nStep 4: Setting up buyer...");
 
       const buyer = anchor.web3.Keypair.generate();
 
@@ -294,7 +291,7 @@ describe("ConvictionMarket", () => {
           ),
         })
         .signers([buyer])
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
+        .rpc({ skipPreflight: false, commitment: "confirmed" });
 
       console.log("   Init buyer VTA tx:", initBuyerVtaSig);
 
@@ -307,8 +304,8 @@ describe("ConvictionMarket", () => {
       );
       console.log("   Buyer vote token account initialized!");
 
-      // ========== STEP 6: Buyer mints vote tokens ==========
-      console.log("\nStep 6: Buyer minting vote tokens...");
+      // ========== STEP 5: Buyer mints vote tokens ==========
+      console.log("\nStep 5: Buyer minting vote tokens...");
 
       const mintAmount = 100;
       const mintComputationOffset = new anchor.BN(randomBytes(8), "hex");
@@ -331,7 +328,7 @@ describe("ConvictionMarket", () => {
           ),
         })
         .signers([buyer])
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
+        .rpc({ skipPreflight: false, commitment: "confirmed" });
 
       console.log("   Mint tx:", mintSig);
 
@@ -344,8 +341,8 @@ describe("ConvictionMarket", () => {
       );
       console.log("   Buyer minted", mintAmount, "vote tokens!");
 
-      // ========== STEP 7: Buy market shares with encrypted inputs ==========
-      console.log("\nStep 7: Buying market shares with encrypted inputs...");
+      // ========== STEP 6: Buy market shares with encrypted inputs ==========
+      console.log("\nStep 6: Buying market shares with encrypted inputs...");
 
       // Generate X25519 keypair for encryption
       const privateKey = x25519.utils.randomPrivateKey();
@@ -366,28 +363,21 @@ describe("ConvictionMarket", () => {
 
       const buySharesComputationOffset = new anchor.BN(randomBytes(8), "hex");
 
-      // Derive user share PDA
-      const [userSharePDA] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("conviction_market_share"),
-          marketPDA.toBuffer(),
-          buyer.publicKey.toBuffer(),
-        ],
-        program.programId
-      );
-
       const buySharesSig = await program.methods
         .buyMarketShares(
           buySharesComputationOffset,
           Array.from(ciphertexts[0]),
           Array.from(ciphertexts[1]),
           Array.from(publicKey),
-          new anchor.BN(deserializeLE(inputNonce).toString())
+          new anchor.BN(deserializeLE(inputNonce).toString()),
+
+          // TODO: can we share with another user's pubkey? Or how to share shared secret?
+          Array.from(publicKey),
+          new anchor.BN(deserializeLE(randomBytes(16)).toString()),
         )
         .accountsPartial({
           signer: buyer.publicKey,
           market: marketPDA,
-          userVoteTokenAccount: buyerVoteTokenPDA,
           computationAccount: getComputationAccAddress(
             arciumEnv.arciumClusterOffset,
             buySharesComputationOffset
@@ -402,7 +392,7 @@ describe("ConvictionMarket", () => {
           ),
         })
         .signers([buyer])
-        .rpc({ skipPreflight: true, commitment: "confirmed" });
+        .rpc({ commitment: "confirmed" });
 
       console.log("   Buy shares tx:", buySharesSig);
 
@@ -670,7 +660,7 @@ describe("ConvictionMarket", () => {
     });
   });
 
-  type CompDefs =  "init_vote_token_account" | "calculate_vote_token_balance" | "buy_conviction_market_shares"
+  type CompDefs =  "init_vote_token_account" | "calculate_vote_token_balance" | "buy_conviction_market_shares" | "init_market_shares"
 
   async function initCompDef(
     program: Program<SealedBidAuction>,
@@ -721,6 +711,17 @@ describe("ConvictionMarket", () => {
       case "buy_conviction_market_shares":
         sig = await program.methods
           .buyConvictionMarketSharesCompDef()
+          .accounts({
+            compDefAccount: compDefPDA,
+            payer: owner.publicKey,
+            mxeAccount: getMXEAccAddress(program.programId),
+          })
+          .signers([owner])
+          .rpc({ preflightCommitment: "confirmed" });
+        break;
+      case "init_market_shares":
+        sig = await program.methods
+          .initMarketSharesCompDef()
           .accounts({
             compDefAccount: compDefPDA,
             payer: owner.publicKey,
