@@ -18,7 +18,7 @@ pub const COMP_DEF_OFFSET_CALCULATE_VOTE_TOKEN_BALANCE: u32 = comp_def_offset("c
 pub const COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES: u32 = comp_def_offset("buy_conviction_market_shares");
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 
-declare_id!("BgtctFuJh2C2dhRQKcz4yrKvYqPrztMJPiEiQdshwUpG");
+declare_id!("B3qmjxz1iA7ho4bZaEgj2gSXaM5LoPxNRD5EYqTQ1BU8");
 
 #[arcium_program]
 pub mod conviction_market {
@@ -45,8 +45,9 @@ pub mod conviction_market {
         time_to_stake: u64,
         time_to_reveal: u64,
         nonce: u128,
+        select_authority: Option<Pubkey>,
     ) -> Result<()> {
-        instructions::create_market(ctx, market_index, computation_offset, max_options, total_shares, time_to_stake, time_to_reveal, nonce)
+        instructions::create_market(ctx, market_index, computation_offset, max_options, total_shares, time_to_stake, time_to_reveal, nonce, select_authority)
     }
 
     #[arcium_callback(encrypted_ix = "init_market_shares")]
@@ -67,6 +68,10 @@ pub mod conviction_market {
 
     pub fn open_market(ctx: Context<OpenMarket>, open_timestamp: u64) -> Result<()> {
         instructions::open_market(ctx, open_timestamp)
+    }
+
+    pub fn select_option(ctx: Context<SelectOption>, option_index: u16) -> Result<()> {
+        instructions::select_option(ctx, option_index)
     }
 
     pub fn init_vote_token_account(

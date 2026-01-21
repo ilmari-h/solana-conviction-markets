@@ -20,6 +20,7 @@ pub struct BuyMarketShares<'info> {
 
     #[account(
         constraint = market.open_timestamp.is_some() @ ErrorCode::MarketNotOpen,
+        constraint = market.selected_option.is_none() @ ErrorCode::WinnerAlreadySelected,
     )]
     pub market: Account<'info, ConvictionMarket>,
 
@@ -72,13 +73,23 @@ pub fn buy_market_shares(
     input_nonce_user: u128,
 
     // Optional voluntary disclosure - to opt out, pass user's own pubkey.
-
-    // TODO: how to share with authorized reader? Just share the shared secret?
-    // This is NOT the actual account pubkey but an ephemeral pubkey
-    // Perhaps no need to pass another pubkey - sufficient to share the shared secret with observer.
+    // TODO: save this on market creation and enforce that the passed key matches it
+    // Add a flag to market init that enforces if this is required for the market
     authorized_reader_pubkey: [u8; 32],
     input_nonce_authorized_reader: u128,
 ) -> Result<()> {
+    // Enforce staking period is active
+    let market = &ctx.accounts.market;
+    let open_timestamp = market.open_timestamp.ok_or_else(|| ErrorCode::MarketNotOpen)?;
+    let clock = Clock::get()?;
+    let current_timestamp = clock.unix_timestamp as u64;
+    let stake_end_timestamp = open_timestamp + market.time_to_stake;
+
+    require!(
+        current_timestamp >= open_timestamp && current_timestamp <= stake_end_timestamp,
+        ErrorCode::StakingNotActive
+    );
+
     let user_vta_key = ctx.accounts.user_vta.key();
     let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
 

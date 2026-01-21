@@ -5,6 +5,7 @@ pub mod init_comp_defs;
 pub mod init_vote_token_account;
 pub mod mint_vote_tokens;
 pub mod open_market;
+pub mod select_option;
 
 pub use add_market_option::*;
 pub use buy_market_shares::*;
@@ -13,3 +14,4 @@ pub use init_comp_defs::*;
 pub use init_vote_token_account::*;
 pub use mint_vote_tokens::*;
 pub use open_market::*;
+pub use select_option::*;

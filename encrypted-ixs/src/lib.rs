@@ -16,12 +16,6 @@ mod circuits {
         pub shares: u64,
     }
 
-    // User's share position in a conviction market
-    pub struct UserMarketSharePosition {
-        pub share_amount: u64,
-        pub selected_option: u16,
-    }
-
     // User input for buying market shares (encrypted)
     pub struct BuySharesInput {
         pub amount: u64,

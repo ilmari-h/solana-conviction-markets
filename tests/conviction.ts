@@ -117,7 +117,8 @@ describe("ConvictionMarket", () => {
           totalShares,
           timeToStake,
           timeToReveal,
-          new anchor.BN(deserializeLE(marketNonce).toString())
+          new anchor.BN(deserializeLE(marketNonce).toString()),
+          null
         )
         .accountsPartial({
           creator: owner.publicKey,
@@ -226,7 +227,7 @@ describe("ConvictionMarket", () => {
       // Open market with timestamp 10 seconds in the future
       const currentSlot = await provider.connection.getSlot();
       const currentTimestamp = await provider.connection.getBlockTime(currentSlot);
-      const openTimestamp = new anchor.BN(currentTimestamp! + 10);
+      const openTimestamp = new anchor.BN(currentTimestamp + 10);
 
       const openMarketSig = await program.methods
         .openMarket(openTimestamp)
@@ -344,6 +345,17 @@ describe("ConvictionMarket", () => {
       // ========== STEP 6: Buy market shares with encrypted inputs ==========
       console.log("\nStep 6: Buying market shares with encrypted inputs...");
 
+      // Wait for staking period to be active
+      const currentSlotBeforeBuy = await provider.connection.getSlot();
+      const currentTimestampBeforeBuy = await provider.connection.getBlockTime(currentSlotBeforeBuy);
+      const targetTimestamp = openTimestamp.toNumber() + 3; // 3 second safety buffer
+
+      if (currentTimestampBeforeBuy! < targetTimestamp) {
+        const sleepMs = (targetTimestamp - currentTimestampBeforeBuy!) * 1000;
+        console.log(`   Waiting ${sleepMs}ms for staking period to start...`);
+        await new Promise((resolve) => setTimeout(resolve, sleepMs));
+      }
+
       // Generate X25519 keypair for encryption
       const privateKey = x25519.utils.randomPrivateKey();
       const publicKey = x25519.getPublicKey(privateKey);
@@ -359,7 +371,6 @@ describe("ConvictionMarket", () => {
 
       // Encrypt both fields together as a struct (BuySharesInput { amount: u64, selected_option: u16 })
       const ciphertexts = cipher.encrypt([buySharesAmount, selectedOption], inputNonce);
-      // ciphertexts[0] = encrypted amount, ciphertexts[1] = encrypted selected_option
 
       const buySharesComputationOffset = new anchor.BN(randomBytes(8), "hex");
 

@@ -14,6 +14,7 @@ use crate::{ID, ID_CONST, ArciumSignerAccount};
 pub struct CreateMarket<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
+
     #[account(
         init,
         payer = creator,
@@ -65,6 +66,7 @@ pub fn create_market(
     time_to_stake: u64,
     time_to_reveal: u64,
     nonce: u128,
+    select_authority: Option<Pubkey>,
 ) -> Result<()> {
     let market = &mut ctx.accounts.market;
     market.bump = ctx.bumps.market;
@@ -77,6 +79,7 @@ pub fn create_market(
     market.time_to_reveal = time_to_reveal;
     market.selected_option = None;
     market.state_nonce = 0;
+    market.select_authority = select_authority;
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 

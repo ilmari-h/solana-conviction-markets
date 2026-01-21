@@ -14,7 +14,7 @@ pub struct ConvictionMarket {
     // What actions are possible depends on current timestamp in relation to
     // `open_timestamp`, `time_to_stake` and `time_to_reveal`
     pub open_timestamp: Option<u64>,
-    
+
     // Seconds from open_timestamp
     pub time_to_stake: u64,
 
@@ -26,6 +26,9 @@ pub struct ConvictionMarket {
     pub state_nonce: u128,
 
     pub total_shares: u64,
+
+    // Optional authority that can select the winning option (same rights as creator)
+    pub select_authority: Option<Pubkey>,
 }
 
 #[account]

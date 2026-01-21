@@ -74,7 +74,7 @@ pub fn mint_vote_tokens(
 
     let lamports_amount = trade_amount
         .checked_mul(PRICE_PER_VOTE_TOKEN_LAMPORTS)
-        .ok_or(ErrorCode::InsufficientBalance)?;
+        .ok_or_else(|| ErrorCode::InsufficientBalance)?;
 
     // Selling: actual transfer happens in callback if successful
     if buy {
