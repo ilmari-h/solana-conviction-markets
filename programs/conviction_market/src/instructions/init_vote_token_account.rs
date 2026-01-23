@@ -1,3 +1,5 @@
+// TODO: dont think we need this arcium pattern here - could just do regular old account init
+
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;

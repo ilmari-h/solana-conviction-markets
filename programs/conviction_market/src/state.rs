@@ -52,6 +52,7 @@ pub struct ShareAccount {
     pub encrypted_state_disclosure: [[u8; 32];2],
     pub state_nonce_disclosure: u128,
 
+    pub revealed_in_time: bool,
     pub revealed_amount: Option<u64>,
     pub revealed_option: Option<u16>,
 }

@@ -17,6 +17,7 @@ pub const COMP_DEF_OFFSET_INIT_VOTE_TOKEN_ACCOUNT: u32 = comp_def_offset("init_v
 pub const COMP_DEF_OFFSET_CALCULATE_VOTE_TOKEN_BALANCE: u32 = comp_def_offset("calculate_vote_token_balance");
 pub const COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES: u32 = comp_def_offset("buy_conviction_market_shares");
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
+pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 
 declare_id!("Art6D716XwHHTNUcseMU1aG3gQt9utuaVU6T4zxhBCnt");
 
@@ -147,5 +148,25 @@ pub mod conviction_market {
         output: SignedComputationOutputs<BuyConvictionMarketSharesOutput>,
     ) -> Result<()> {
         instructions::buy_conviction_market_shares_callback(ctx, output)
+    }
+
+    pub fn reveal_shares_comp_def(ctx: Context<RevealSharesCompDef>) -> Result<()> {
+        instructions::reveal_shares_comp_def(ctx)
+    }
+
+    pub fn reveal_shares(
+        ctx: Context<RevealShares>,
+        computation_offset: u64,
+        option_index: u16,
+    ) -> Result<()> {
+        instructions::reveal_shares(ctx, computation_offset, option_index)
+    }
+
+    #[arcium_callback(encrypted_ix = "reveal_shares")]
+    pub fn reveal_shares_callback(
+        ctx: Context<RevealSharesCallback>,
+        output: SignedComputationOutputs<RevealSharesOutput>,
+    ) -> Result<()> {
+        instructions::reveal_shares_callback(ctx, output)
     }
 }
