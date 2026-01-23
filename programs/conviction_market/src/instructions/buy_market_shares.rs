@@ -126,6 +126,7 @@ pub fn buy_market_shares(
         .account(market_key, 8, 32 * 1)
 
         // Share account context (Mxe for output encryption)
+        .x25519_pubkey(user_pubkey)
         .plaintext_u128(ctx.accounts.share_account.state_nonce)
         .build();
 

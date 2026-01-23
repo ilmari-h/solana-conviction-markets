@@ -93,12 +93,12 @@ mod circuits {
         shares_recipient_ctx: Shared,
         user_vta_ctx: Enc<Mxe, VoteTokenBalance>,
         market_shares_ctx: Enc<Mxe, MarketShareState>,
-        share_account_ctx: Mxe,
+        share_account_ctx: Shared,
     ) -> (
         bool,
         Enc<Mxe, VoteTokenBalance>,
         Enc<Mxe, MarketShareState>,
-        Enc<Mxe, SharePurchase>,
+        Enc<Shared, SharePurchase>,
         Enc<Shared, SharePurchase>
     ) {
         let input = input_ctx.to_arcis();

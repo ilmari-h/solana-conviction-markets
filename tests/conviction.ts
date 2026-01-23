@@ -396,6 +396,7 @@ describe("ConvictionMarket", () => {
       const ciphertexts = cipher.encrypt([buySharesAmount, selectedOption], inputNonce);
 
       const buySharesComputationOffset = new anchor.BN(randomBytes(8), "hex");
+      const disclosureNonce = new anchor.BN(deserializeLE( randomBytes(16)));
 
       const buySharesSig = await program.methods
         .buyMarketShares(
@@ -406,7 +407,7 @@ describe("ConvictionMarket", () => {
           new anchor.BN(deserializeLE(inputNonce).toString()),
 
           Array.from(publicKey),
-          new anchor.BN(deserializeLE(randomBytes(16)).toString()),
+          disclosureNonce,
         )
         .accountsPartial({
           signer: buyer.publicKey,
@@ -436,15 +437,27 @@ describe("ConvictionMarket", () => {
         program.programId,
         "confirmed"
       );
+      console.log("   Shares purchased!");
 
-      // // Verify user share account was created
-      // const userShareAccount = await program.account.convictionMarketShare.fetch(userSharePDA);
-      // expect(userShareAccount.owner.toBase58()).to.equal(buyer.publicKey.toBase58());
-      // expect(userShareAccount.market.toBase58()).to.equal(marketPDA.toBase58());
-      // console.log("   User share account created!");
-      // console.log("   Encrypted state stored:", userShareAccount.encryptedState.length, "ciphertexts");
+      // ========== STEP 7: Verify share account ==========
+      console.log("\nStep 7: Verifying share account...");
 
-      // console.log("\n   Market creation, setup, and share purchase test PASSED!");
+      // Fetch the share account
+      const shareAccount = await program.account.shareAccount.fetch(buyerShareAccountPDA);
+
+      // Verify share account propperties
+      expect(shareAccount.owner.toBase58()).to.equal(buyer.publicKey.toBase58());
+      expect(shareAccount.market.toBase58()).to.equal(marketPDA.toBase58());
+
+      const decryptedShareValues = cipher.decrypt(
+        shareAccount.encryptedState,
+        Uint8Array.from(
+          shareAccount.stateNonce.toArray("le", 16)
+        )
+      );
+      expect(decryptedShareValues[0]).to.equal(buySharesAmount);
+      expect(decryptedShareValues[1]).to.equal(selectedOption);
+
     });
   });
 
