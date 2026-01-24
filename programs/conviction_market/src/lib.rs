@@ -161,10 +161,9 @@ pub mod conviction_market {
     pub fn reveal_shares(
         ctx: Context<RevealShares>,
         computation_offset: u64,
-        option_index: u16,
         user_pubkey: [u8; 32],
     ) -> Result<()> {
-        instructions::reveal_shares(ctx, computation_offset, option_index, user_pubkey)
+        instructions::reveal_shares(ctx, computation_offset, user_pubkey)
     }
 
     #[arcium_callback(encrypted_ix = "reveal_shares")]

@@ -30,8 +30,6 @@ pub enum ErrorCode {
     WinnerAlreadySelected,
     #[msg("Shares already revealed")]
     AlreadyRevealed,
-    #[msg("Option index does not match encrypted value")]
-    OptionMismatch,
     #[msg("Staking period not over")]
     MarketNotResolved,
     #[msg("Shares not yet revealed")]

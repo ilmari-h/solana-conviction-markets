@@ -4,9 +4,8 @@ use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
 use crate::instructions::buy_market_shares::SHARE_ACCOUNT_SEED;
-use crate::instructions::increment_option_tally::OPTION_TALLY_SEED;
 use crate::instructions::mint_vote_tokens::VOTE_TOKEN_ACCOUNT_SEED;
-use crate::state::{ConvictionMarket, OptionTally, ShareAccount, VoteTokenAccount};
+use crate::state::{ConvictionMarket, ShareAccount, VoteTokenAccount};
 use crate::COMP_DEF_OFFSET_REVEAL_SHARES;
 use crate::{ArciumSignerAccount, ID, ID_CONST};
 
@@ -31,16 +30,19 @@ pub fn reveal_shares_comp_def(ctx: Context<RevealSharesCompDef>) -> Result<()> {
 
 #[queue_computation_accounts("reveal_shares", signer)]
 #[derive(Accounts)]
-#[instruction(computation_offset: u64, option_index: u16)]
+#[instruction(computation_offset: u64)]
 pub struct RevealShares<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
+
+    /// CHECK: Any account, this operation is permissionless.
+    pub owner: UncheckedAccount<'info>,
 
     pub market: Box<Account<'info, ConvictionMarket>>,
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref()],
         bump = share_account.bump,
         constraint = share_account.revealed_amount.is_none() @ ErrorCode::AlreadyRevealed,
     )]
@@ -48,7 +50,7 @@ pub struct RevealShares<'info> {
 
     #[account(
         mut,
-        seeds = [VOTE_TOKEN_ACCOUNT_SEED, signer.key().as_ref()],
+        seeds = [VOTE_TOKEN_ACCOUNT_SEED, owner.key().as_ref()],
         bump = user_vta.bump,
     )]
     pub user_vta: Box<Account<'info, VoteTokenAccount>>,
@@ -86,10 +88,12 @@ pub struct RevealShares<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
+
+// This operation is permissionless:
+// after the staking period has ended and an option has been selected, anyone can reveal anyones vote.
 pub fn reveal_shares(
     ctx: Context<RevealShares>,
     computation_offset: u64,
-    option_index: u16,
     user_pubkey: [u8; 32],
 ) -> Result<()> {
 
@@ -121,7 +125,6 @@ pub fn reveal_shares(
         .plaintext_u128(user_vta_nonce)
         .account(user_vta_key, 8, 32 * 1)
         // Plaintext option index for verification
-        .plaintext_u16(option_index)
         .plaintext_bool(revealed_in_time)
         .build();
 
@@ -145,10 +148,6 @@ pub fn reveal_shares(
                     pubkey: user_vta_key,
                     is_writable: true,
                 },
-                // CallbackAccount {
-                //     pubkey: ctx.accounts.option_tally.key(),
-                //     is_writable: true,
-                // },
             ],
         )?],
         1,
@@ -193,15 +192,10 @@ pub fn reveal_shares_callback(
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
 
-    let option_mismatch = res.field_0;
-    let revealed_amount = res.field_1;
-    let revealed_option = res.field_2;
-    let new_user_balance = res.field_3;
-    let revealed_in_time = res.field_4;
-
-    if option_mismatch {
-        return Err(ErrorCode::OptionMismatch.into());
-    }
+    let revealed_amount = res.field_0;
+    let revealed_option = res.field_1;
+    let new_user_balance = res.field_2;
+    let revealed_in_time = res.field_3;
 
     // Update share account with revealed values
     ctx.accounts.share_account.revealed_amount = Some(revealed_amount);

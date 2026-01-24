@@ -146,16 +146,14 @@ mod circuits {
         )
     }
 
-    // Reveal shares: decrypt share account and verify claimed option matches
+    // Reveal shares: decrypt share account
     // Returns: (option_mismatch, revealed_amount, revealed_option, updated_vta_balance)
     #[instruction]
     pub fn reveal_shares(
         share_account_ctx: Enc<Shared, SharePurchase>,
         user_vta_ctx: Enc<Mxe, VoteTokenBalance>,
-        plaintext_option_index: u16,
         plaintext_revealed_in_time: bool
     ) -> (
-        bool,                           // error (option mismatch)
         u64,                            // revealed_amount
         u16,                            // revealed_option
         Enc<Mxe, VoteTokenBalance>,     // updated VTA balance
@@ -164,15 +162,11 @@ mod circuits {
         let share_data = share_account_ctx.to_arcis();
         let mut user_balance = user_vta_ctx.to_arcis();
 
-        // Verify claimed option matches encrypted option
-        let option_mismatch = share_data.selected_option != plaintext_option_index;
 
         // Only credit balance if option matches
-        let amount_to_credit = if option_mismatch { 0 } else { share_data.amount };
-        user_balance.amount = user_balance.amount + amount_to_credit;
+        user_balance.amount = user_balance.amount + share_data.amount;
 
         (
-            option_mismatch.reveal(),
             share_data.amount.reveal(),
             share_data.selected_option.reveal(),
             user_vta_ctx.owner.from_arcis(user_balance),

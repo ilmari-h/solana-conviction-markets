@@ -491,10 +491,11 @@ describe("ConvictionMarket", () => {
       const revealComputationOffset = new anchor.BN(randomBytes(8), "hex");
 
       const revealSharesSig = await program.methods
-        .revealShares(revealComputationOffset, selectedOptionIndex, Array.from(publicKey))
+        .revealShares(revealComputationOffset, Array.from(publicKey))
         .accountsPartial({
-          signer: buyer.publicKey,
+          signer: buyer.publicKey, // Could be anyone
           market: marketPDA,
+          owner: buyer.publicKey,
           shareAccount: buyerShareAccountPDA,
           userVta: buyerVoteTokenPDA,
           computationAccount: getComputationAccAddress(
