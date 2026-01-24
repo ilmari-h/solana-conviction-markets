@@ -72,7 +72,8 @@ describe("ConvictionMarket", () => {
       console.log("\n=== Initializing Computation Definitions ===\n");
 
       await initCompDef(program, owner, "init_vote_token_account");
-      await initCompDef(program, owner, "calculate_vote_token_balance");
+      await initCompDef(program, owner, "buy_vote_tokens");
+      await initCompDef(program, owner, "claim_vote_tokens");
       await initCompDef(program, owner, "buy_conviction_market_shares");
       await initCompDef(program, owner, "init_market_shares");
       await initCompDef(program, owner, "reveal_shares");
@@ -269,12 +270,21 @@ describe("ConvictionMarket", () => {
         program.programId
       );
 
+      // Generate X25519 keypair for encryption
+      const privateKey = x25519.utils.randomPrivateKey();
+      const publicKey = x25519.getPublicKey(privateKey);
+
+      // Derive shared secret with MXE
+      const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
+      const cipher = new RescueCipher(sharedSecret);
+
       const buyerVtaNonce = randomBytes(16);
       const buyerVtaComputationOffset = new anchor.BN(randomBytes(8), "hex");
 
       const initBuyerVtaSig = await program.methods
         .initVoteTokenAccount(
           buyerVtaComputationOffset,
+          Array.from(publicKey),
           new anchor.BN(deserializeLE(buyerVtaNonce).toString())
         )
         .accountsPartial({
@@ -311,11 +321,12 @@ describe("ConvictionMarket", () => {
       // ========== STEP 5: Buyer mints vote tokens ==========
       console.log("\nStep 5: Buyer minting vote tokens...");
 
+
       const mintAmount = 100;
       const mintComputationOffset = new anchor.BN(randomBytes(8), "hex");
 
       const mintSig = await program.methods
-        .mintVoteTokens(mintComputationOffset, new anchor.BN(mintAmount), true)
+        .mintVoteTokens(mintComputationOffset, Array.from(publicKey), new anchor.BN(mintAmount))
         .accounts({
           signer: buyer.publicKey,
           computationAccount: getComputationAccAddress(
@@ -328,7 +339,7 @@ describe("ConvictionMarket", () => {
           executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
           compDefAccount: getCompDefAccAddress(
             program.programId,
-            Buffer.from(getCompDefAccOffset("calculate_vote_token_balance")).readUInt32LE()
+            Buffer.from(getCompDefAccOffset("buy_vote_tokens")).readUInt32LE()
           ),
         })
         .signers([buyer])
@@ -382,13 +393,6 @@ describe("ConvictionMarket", () => {
         await new Promise((resolve) => setTimeout(resolve, sleepMs));
       }
 
-      // Generate X25519 keypair for encryption
-      const privateKey = x25519.utils.randomPrivateKey();
-      const publicKey = x25519.getPublicKey(privateKey);
-
-      // Derive shared secret with MXE
-      const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
-      const cipher = new RescueCipher(sharedSecret);
 
       // Encrypt amount (50 vote tokens) and selected_option (option index 1)
       const buySharesAmount = BigInt(50);
@@ -607,10 +611,19 @@ describe("ConvictionMarket", () => {
       const nonce = randomBytes(16);
       const computationOffset = new anchor.BN(randomBytes(8), "hex");
 
+      // Generate X25519 keypair for encryption
+      const privateKey = x25519.utils.randomPrivateKey();
+      const publicKey = x25519.getPublicKey(privateKey);
+
+      // Derive shared secret with MXE
+      const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
+      const cipher = new RescueCipher(sharedSecret);
+
       console.log("\nStep 2: Initializing vote token account...");
       const initSig = await program.methods
         .initVoteTokenAccount(
           computationOffset,
+          Array.from(publicKey),
           new anchor.BN(deserializeLE(nonce).toString())
         )
         .accountsPartial({
@@ -662,8 +675,8 @@ describe("ConvictionMarket", () => {
       const buySig = await program.methods
         .mintVoteTokens(
           computationOffsetBuy,
-          new anchor.BN(buyAmount),
-          true // buy = true
+          Array.from(publicKey),
+          new anchor.BN(buyAmount)
         )
         .accounts({
           signer: buyer.publicKey,
@@ -679,7 +692,7 @@ describe("ConvictionMarket", () => {
           ),
           compDefAccount: getCompDefAccAddress(
             program.programId,
-            Buffer.from(getCompDefAccOffset("calculate_vote_token_balance")).readUInt32LE()
+            Buffer.from(getCompDefAccOffset("buy_vote_tokens")).readUInt32LE()
           ),
         })
         .signers([buyer])
@@ -706,6 +719,20 @@ describe("ConvictionMarket", () => {
       expect(vtaBalanceAfterBuy).to.be.greaterThan(vtaBalanceBefore);
       console.log("   Buy successful! SOL transferred to VTA.");
 
+      // Fetch the vote token account and verify encrypted balance
+      const voteTokenAccountAfterBuy = await program.account.voteTokenAccount.fetch(voteTokenAccountPDA);
+
+      // Decrypt the balance
+      const decryptedBalanceAfterBuy = cipher.decrypt(
+        voteTokenAccountAfterBuy.encryptedState,
+        Uint8Array.from(
+          voteTokenAccountAfterBuy.stateNonce.toArray("le", 16)
+        )
+      );
+
+      expect(decryptedBalanceAfterBuy[0]).to.equal(BigInt(buyAmount));
+      console.log("   Verified encrypted balance:", Number(decryptedBalanceAfterBuy[0]), "tokens");
+
       // ========== STEP 4: Sell vote tokens ==========
       const sellAmount = 50; // Sell 50 vote tokens (should succeed)
       const sellLamports = sellAmount * PRICE_PER_VOTE_TOKEN_LAMPORTS;
@@ -714,10 +741,10 @@ describe("ConvictionMarket", () => {
 
       const computationOffsetSell = new anchor.BN(randomBytes(8), "hex");
       const sellSig = await program.methods
-        .mintVoteTokens(
+        .claimVoteTokens(
           computationOffsetSell,
-          new anchor.BN(sellAmount),
-          false // buy = false (sell)
+          Array.from(publicKey),
+          new anchor.BN(sellAmount)
         )
         .accounts({
           signer: buyer.publicKey,
@@ -733,7 +760,7 @@ describe("ConvictionMarket", () => {
           ),
           compDefAccount: getCompDefAccAddress(
             program.programId,
-            Buffer.from(getCompDefAccOffset("calculate_vote_token_balance")).readUInt32LE()
+            Buffer.from(getCompDefAccOffset("claim_vote_tokens")).readUInt32LE()
           ),
         })
         .signers([buyer])
@@ -760,6 +787,21 @@ describe("ConvictionMarket", () => {
       expect(buyerBalanceAfterSell).to.be.greaterThan(buyerBalanceAfterBuy);
       expect(vtaBalanceAfterSell).to.be.lessThan(vtaBalanceAfterBuy);
       console.log("   Sell successful! SOL transferred back to buyer.");
+
+      // Fetch the vote token account and verify encrypted balance after sell
+      const voteTokenAccountAfterSell = await program.account.voteTokenAccount.fetch(voteTokenAccountPDA);
+
+      // Decrypt the balance
+      const decryptedBalanceAfterSell = cipher.decrypt(
+        voteTokenAccountAfterSell.encryptedState,
+        Uint8Array.from(
+          voteTokenAccountAfterSell.stateNonce.toArray("le", 16)
+        )
+      );
+
+      const expectedBalanceAfterSell = buyAmount - sellAmount;
+      expect(decryptedBalanceAfterSell[0]).to.equal(BigInt(expectedBalanceAfterSell));
+      console.log("   Verified encrypted balance after sell:", Number(decryptedBalanceAfterSell[0]), "tokens");
 
       // ========== STEP 5: Try to sell more than balance (should fail gracefully) ==========
       const oversellAmount = 1000; // Try to sell 1000 tokens (only have 50 left)
@@ -823,7 +865,7 @@ describe("ConvictionMarket", () => {
     });
   });
 
-  type CompDefs =  "init_vote_token_account" | "calculate_vote_token_balance" | "buy_conviction_market_shares" | "init_market_shares" | "reveal_shares"
+  type CompDefs =  "init_vote_token_account" | "buy_vote_tokens" | "claim_vote_tokens" | "buy_conviction_market_shares" | "init_market_shares" | "reveal_shares"
 
   async function initCompDef(
     program: Program<ConvictionMarket>,
@@ -860,9 +902,20 @@ describe("ConvictionMarket", () => {
           .signers([owner])
           .rpc({ preflightCommitment: "confirmed" });
         break;
-      case "calculate_vote_token_balance":
+      case "buy_vote_tokens":
         sig = await program.methods
-          .calculateVoteTokenBalanceCompDef()
+          .buyVoteTokensCompDef()
+          .accounts({
+            compDefAccount: compDefPDA,
+            payer: owner.publicKey,
+            mxeAccount: getMXEAccAddress(program.programId),
+          })
+          .signers([owner])
+          .rpc({ preflightCommitment: "confirmed" });
+        break;
+      case "claim_vote_tokens":
+        sig = await program.methods
+          .claimVoteTokensCompDef()
           .accounts({
             compDefAccount: compDefPDA,
             payer: owner.publicKey,

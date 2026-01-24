@@ -47,41 +47,47 @@ mod circuits {
     // Initialize empty vote token balance for user
     #[instruction]
     pub fn init_vote_token_account(
-        mxe: Mxe
-    ) -> Enc<Mxe, VoteTokenBalance> {
+        mxe: Shared
+    ) -> Enc<Shared, VoteTokenBalance> {
         let state = VoteTokenBalance { amount: 0 };
         mxe.from_arcis(state)
     }
 
-    // Calculate vote token balance for buy/sell operations
-    // Returns (error, new_balance) where error=true means insufficient balance for sell
+    // Buy vote tokens: add to balance
+    // TODO: lets use `Shared` here instead
     #[instruction]
-    pub fn calculate_vote_token_balance(
-        balance_ctx: Enc<Mxe, VoteTokenBalance>,
+    pub fn buy_vote_tokens(
+        balance_ctx: Enc<Shared, VoteTokenBalance>,
         amount: u64,
-        sell: bool
-    ) -> (bool, u64, Enc<Mxe, VoteTokenBalance>) {
+    ) -> Enc<Shared, VoteTokenBalance> {
         let mut balance = balance_ctx.to_arcis();
-        let sold: u64 = if sell { amount } else {0};
+        balance.amount = balance.amount + amount;
+        balance_ctx.owner.from_arcis(balance)
+    }
 
-        // Check for insufficient balance when selling
-        let insufficient_balance = sell && (amount > balance.amount);
+    // Claim vote tokens (sell): subtract from balance
+    // Returns (error, amount_sold, new_balance) where error=true means insufficient balance
+    #[instruction]
+    pub fn claim_vote_tokens(
+        balance_ctx: Enc<Shared, VoteTokenBalance>,
+        amount: u64,
+    ) -> (bool, u64, Enc<Shared, VoteTokenBalance>) {
+        let mut balance = balance_ctx.to_arcis();
 
-        // Calculate new balance based on operation type and validity
-        let new_amount = if sell {
-            if insufficient_balance {
-                balance.amount  // Keep unchanged on error
-            } else {
-                balance.amount - amount
-            }
+        // Check for insufficient balance
+        let insufficient_balance = amount > balance.amount;
+
+        // Calculate new balance and amount sold
+        let (new_amount, sold) = if insufficient_balance {
+            (balance.amount, 0)  // Keep unchanged on error, sold = 0
         } else {
-            balance.amount + amount
+            (balance.amount - amount, amount)
         };
 
         balance.amount = new_amount;
 
-        // Return error flag (true = error) and updated balance
-        (insufficient_balance.reveal(), sold, balance_ctx.owner.from_arcis(balance))
+        // Return error flag (true = error), amount sold (revealed), and updated balance
+        (insufficient_balance.reveal(), sold.reveal(), balance_ctx.owner.from_arcis(balance))
     }
 
     // Buy shares: deduct from user's vote token balance and market's available shares

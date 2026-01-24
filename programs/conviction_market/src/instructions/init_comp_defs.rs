@@ -22,9 +22,9 @@ pub fn init_vote_token_account_comp_def(ctx: Context<InitVoteTokenAccountCompDef
     Ok(())
 }
 
-#[init_computation_definition_accounts("calculate_vote_token_balance", payer)]
+#[init_computation_definition_accounts("buy_vote_tokens", payer)]
 #[derive(Accounts)]
-pub struct CalculateVoteTokenBalanceCompDef<'info> {
+pub struct BuyVoteTokensCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(mut, address = derive_mxe_pda!())]
@@ -36,7 +36,26 @@ pub struct CalculateVoteTokenBalanceCompDef<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn calculate_vote_token_balance_comp_def(ctx: Context<CalculateVoteTokenBalanceCompDef>) -> Result<()> {
+pub fn buy_vote_tokens_comp_def(ctx: Context<BuyVoteTokensCompDef>) -> Result<()> {
+    init_comp_def(ctx.accounts, None, None)?;
+    Ok(())
+}
+
+#[init_computation_definition_accounts("claim_vote_tokens", payer)]
+#[derive(Accounts)]
+pub struct ClaimVoteTokensCompDef<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut, address = derive_mxe_pda!())]
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
+    #[account(mut)]
+    /// CHECK: comp_def_account, checked by arcium program.
+    pub comp_def_account: UncheckedAccount<'info>,
+    pub arcium_program: Program<'info, Arcium>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn claim_vote_tokens_comp_def(ctx: Context<ClaimVoteTokensCompDef>) -> Result<()> {
     init_comp_def(ctx.accounts, None, None)?;
     Ok(())
 }

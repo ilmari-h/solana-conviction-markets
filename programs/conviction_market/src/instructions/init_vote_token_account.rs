@@ -1,5 +1,3 @@
-// TODO: dont think we need this arcium pattern here - could just do regular old account init
-
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
@@ -66,6 +64,7 @@ pub struct InitVoteTokenAccount<'info> {
 pub fn init_vote_token_account(
     ctx: Context<InitVoteTokenAccount>,
     computation_offset: u64,
+    user_pubkey: [u8; 32],
     nonce: u128
 ) -> Result<()> {
     // Initialize vote token fields
@@ -75,7 +74,10 @@ pub fn init_vote_token_account(
     vote_token.state_nonce = 0;
 
     // Build args for encrypted computation
-    let args = ArgBuilder::new().plaintext_u128(nonce).build();
+    let args = ArgBuilder::new()
+        .x25519_pubkey(user_pubkey)
+        .plaintext_u128(nonce)
+        .build();
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 

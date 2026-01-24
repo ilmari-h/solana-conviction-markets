@@ -14,12 +14,13 @@ pub use instructions::*;
 pub use state::*;
 
 pub const COMP_DEF_OFFSET_INIT_VOTE_TOKEN_ACCOUNT: u32 = comp_def_offset("init_vote_token_account");
-pub const COMP_DEF_OFFSET_CALCULATE_VOTE_TOKEN_BALANCE: u32 = comp_def_offset("calculate_vote_token_balance");
+pub const COMP_DEF_OFFSET_BUY_VOTE_TOKENS: u32 = comp_def_offset("buy_vote_tokens");
+pub const COMP_DEF_OFFSET_CLAIM_VOTE_TOKENS: u32 = comp_def_offset("claim_vote_tokens");
 pub const COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES: u32 = comp_def_offset("buy_conviction_market_shares");
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 
-declare_id!("Art6D716XwHHTNUcseMU1aG3gQt9utuaVU6T4zxhBCnt");
+declare_id!("8QnM1kLWDFVzCqJNQ8BkyqV32wuGp4DfcqFmDWNXERFT");
 
 #[arcium_program]
 pub mod conviction_market {
@@ -29,8 +30,12 @@ pub mod conviction_market {
         instructions::init_vote_token_account_comp_def(ctx)
     }
 
-    pub fn calculate_vote_token_balance_comp_def(ctx: Context<CalculateVoteTokenBalanceCompDef>) -> Result<()> {
-        instructions::calculate_vote_token_balance_comp_def(ctx)
+    pub fn buy_vote_tokens_comp_def(ctx: Context<BuyVoteTokensCompDef>) -> Result<()> {
+        instructions::buy_vote_tokens_comp_def(ctx)
+    }
+
+    pub fn claim_vote_tokens_comp_def(ctx: Context<ClaimVoteTokensCompDef>) -> Result<()> {
+        instructions::claim_vote_tokens_comp_def(ctx)
     }
 
     pub fn init_market_shares_comp_def(ctx: Context<InitMarketSharesCompDef>) -> Result<()> {
@@ -89,9 +94,10 @@ pub mod conviction_market {
     pub fn init_vote_token_account(
         ctx: Context<InitVoteTokenAccount>,
         computation_offset: u64,
+        user_pubkey: [u8; 32],
         nonce: u128,
     ) -> Result<()> {
-        instructions::init_vote_token_account(ctx, computation_offset, nonce)
+        instructions::init_vote_token_account(ctx, computation_offset, user_pubkey, nonce)
     }
 
     #[arcium_callback(encrypted_ix = "init_vote_token_account")]
@@ -105,18 +111,35 @@ pub mod conviction_market {
     pub fn mint_vote_tokens(
         ctx: Context<MintVoteTokens>,
         computation_offset: u64,
-        trade_amount: u64,
-        buy: bool,
+        user_pubkey: [u8; 32],
+        amount: u64,
     ) -> Result<()> {
-        instructions::mint_vote_tokens(ctx, computation_offset, trade_amount, buy)
+        instructions::mint_vote_tokens(ctx, user_pubkey, computation_offset, amount)
     }
 
-    #[arcium_callback(encrypted_ix = "calculate_vote_token_balance")]
-    pub fn calculate_vote_token_balance_callback(
-        ctx: Context<CalculateVoteTokenBalanceCallback>,
-        output: SignedComputationOutputs<CalculateVoteTokenBalanceOutput>,
+    #[arcium_callback(encrypted_ix = "buy_vote_tokens")]
+    pub fn buy_vote_tokens_callback(
+        ctx: Context<BuyVoteTokensCallback>,
+        output: SignedComputationOutputs<BuyVoteTokensOutput>,
     ) -> Result<()> {
-        instructions::calculate_vote_token_balance_callback(ctx, output)
+        instructions::buy_vote_tokens_callback(ctx, output)
+    }
+
+    pub fn claim_vote_tokens(
+        ctx: Context<ClaimVoteTokens>,
+        computation_offset: u64,
+        user_pubkey: [u8; 32],
+        amount: u64,
+    ) -> Result<()> {
+        instructions::claim_vote_tokens(ctx, computation_offset, user_pubkey, amount)
+    }
+
+    #[arcium_callback(encrypted_ix = "claim_vote_tokens")]
+    pub fn claim_vote_tokens_callback(
+        ctx: Context<ClaimVoteTokensCallback>,
+        output: SignedComputationOutputs<ClaimVoteTokensOutput>,
+    ) -> Result<()> {
+        instructions::claim_vote_tokens_callback(ctx, output)
     }
 
     pub fn buy_conviction_market_shares_comp_def(ctx: Context<BuyConvictionMarketSharesCompDef>) -> Result<()> {
