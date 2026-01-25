@@ -539,7 +539,6 @@ describe("ConvictionMarket", () => {
 
       console.log("   Revealed amount:", revealedShareAccount.revealedAmount!.toNumber());
       console.log("   Revealed option:", revealedShareAccount.revealedOption);
-      console.log("   Revealed in time:", revealedShareAccount.revealedInTime);
 
       // ========== STEP 11: Increment option tally ==========
       console.log("\nStep 11: Incrementing option tally...");
@@ -588,13 +587,15 @@ describe("ConvictionMarket", () => {
 
       // Get buyer balance before closing
       const buyerBalanceBeforeClose = await provider.connection.getBalance(buyer.publicKey);
+      const marketBalanceBeforeClose = await provider.connection.getBalance(marketPDA);
 
       const closeShareAccountSig = await program.methods
-        .closeShareAccount()
+        .closeShareAccount(selectedOptionIndex)
         .accountsPartial({
           owner: buyer.publicKey,
           market: marketPDA,
           shareAccount: buyerShareAccountPDA,
+          option: optionPDA,
         })
         .signers([buyer])
         .rpc({ commitment: "confirmed" });
@@ -606,13 +607,35 @@ describe("ConvictionMarket", () => {
       expect(shareAccountAfterClose).to.be.null;
       console.log("   Share account closed successfully!");
 
-      // Verify buyer received rent refund
+      // Verify buyer received rent refund + reward
       const buyerBalanceAfterClose = await provider.connection.getBalance(buyer.publicKey);
-      expect(buyerBalanceAfterClose).to.be.greaterThan(buyerBalanceBeforeClose);
-      console.log("   Rent refunded to buyer. Balance increased by:",
-        (buyerBalanceAfterClose - buyerBalanceBeforeClose) / LAMPORTS_PER_SOL, "SOL");
+      const marketBalanceAfterClose = await provider.connection.getBalance(marketPDA);
 
-      console.log("\n   Test PASSED! Revealed shares match purchased shares and share account closed successfully.");
+      const buyerBalanceIncrease = buyerBalanceAfterClose - buyerBalanceBeforeClose;
+      const marketBalanceDecrease = marketBalanceBeforeClose - marketBalanceAfterClose;
+
+      expect(buyerBalanceAfterClose).to.be.greaterThan(buyerBalanceBeforeClose);
+      console.log("   Buyer balance increased by:",
+        buyerBalanceIncrease / LAMPORTS_PER_SOL, "SOL");
+      console.log("   Market balance decreased by:",
+        marketBalanceDecrease / LAMPORTS_PER_SOL, "SOL");
+
+      // Since the buyer was the only one who bought shares for the winning option,
+      // they should receive approximately 100% of the reward (minus rent for share account closure)
+      // The reward was fundingLamports = 1,000,000 lamports = 0.001 SOL
+      const expectedReward = fundingLamports.toNumber();
+      const actualReward = marketBalanceDecrease;
+
+      console.log("   Expected reward:", expectedReward / LAMPORTS_PER_SOL, "SOL");
+      console.log("   Actual reward:", actualReward / LAMPORTS_PER_SOL, "SOL");
+
+      // Allow for small rounding errors (within 0.1% of expected)
+      const rewardDifference = Math.abs(actualReward - expectedReward);
+      const allowedDifference = expectedReward * 0.001; // 0.1% tolerance
+      expect(rewardDifference).to.be.lessThan(allowedDifference);
+      console.log("   ✓ Buyer received ~100% of reward lamports (within 0.1% tolerance)");
+
+      console.log("\n   Test PASSED! Revealed shares match purchased shares, share account closed successfully, and buyer received full reward!");
     });
   });
 

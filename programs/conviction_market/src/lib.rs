@@ -96,8 +96,8 @@ pub mod conviction_market {
         instructions::increment_option_tally(ctx, option_index)
     }
 
-    pub fn close_share_account(ctx: Context<CloseShareAccount>) -> Result<()> {
-        instructions::close_share_account(ctx)
+    pub fn close_share_account(ctx: Context<CloseShareAccount>, option_index: u16) -> Result<()> {
+        instructions::close_share_account(ctx, option_index)
     }
 
     pub fn init_share_account(

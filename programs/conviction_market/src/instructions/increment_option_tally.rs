@@ -81,6 +81,8 @@ pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, _option_index:
         current_total_score.checked_add(user_score).ok_or(ErrorCode::Overflow)?
     );
 
+    // Store the user's score on their share account for yield calculation
+    ctx.accounts.share_account.revealed_score = Some(user_score);
     ctx.accounts.share_account.total_incremented = true;
     Ok(())
 }
