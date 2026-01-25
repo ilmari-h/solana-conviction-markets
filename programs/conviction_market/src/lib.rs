@@ -47,13 +47,25 @@ pub mod conviction_market {
         market_index: u64,
         computation_offset: u64,
         max_options: u16,
-        total_shares: u64,
+        max_shares: u64,
+        reward_lamports: u64,
         time_to_stake: u64,
         time_to_reveal: u64,
         nonce: u128,
         select_authority: Option<Pubkey>,
     ) -> Result<()> {
-        instructions::create_market(ctx, market_index, computation_offset, max_options, total_shares, time_to_stake, time_to_reveal, nonce, select_authority)
+        instructions::create_market(
+            ctx,
+            market_index,
+            computation_offset,
+            max_options,
+            max_shares,
+            reward_lamports,
+            time_to_stake,
+            time_to_reveal,
+            nonce,
+            select_authority
+        )
     }
 
     #[arcium_callback(encrypted_ix = "init_market_shares")]
@@ -82,6 +94,10 @@ pub mod conviction_market {
 
     pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, option_index: u16) -> Result<()> {
         instructions::increment_option_tally(ctx, option_index)
+    }
+
+    pub fn close_share_account(ctx: Context<CloseShareAccount>) -> Result<()> {
+        instructions::close_share_account(ctx)
     }
 
     pub fn init_share_account(

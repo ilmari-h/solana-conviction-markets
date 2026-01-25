@@ -153,17 +153,14 @@ mod circuits {
     }
 
     // Reveal shares: decrypt share account
-    // Returns: (option_mismatch, revealed_amount, revealed_option, updated_vta_balance)
     #[instruction]
     pub fn reveal_shares(
         share_account_ctx: Enc<Shared, SharePurchase>,
         user_vta_ctx: Enc<Mxe, VoteTokenBalance>,
-        plaintext_revealed_in_time: bool
     ) -> (
         u64,                            // revealed_amount
         u16,                            // revealed_option
         Enc<Mxe, VoteTokenBalance>,     // updated VTA balance
-        bool                            // pass through
     ) {
         let share_data = share_account_ctx.to_arcis();
         let mut user_balance = user_vta_ctx.to_arcis();
@@ -176,7 +173,6 @@ mod circuits {
             share_data.amount.reveal(),
             share_data.selected_option.reveal(),
             user_vta_ctx.owner.from_arcis(user_balance),
-            plaintext_revealed_in_time
         )
     }
 }

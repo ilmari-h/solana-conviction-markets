@@ -62,7 +62,8 @@ pub fn create_market(
     market_index: u64,
     computation_offset: u64,
     max_options: u16,
-    total_shares: u64,
+    max_shares: u64,
+    reward_lamports: u64,
     time_to_stake: u64,
     time_to_reveal: u64,
     nonce: u128,
@@ -74,11 +75,12 @@ pub fn create_market(
     market.index = market_index;
     market.total_options = 0;
     market.max_options = max_options;
-    market.total_shares = total_shares;
+    market.max_shares = max_shares;
     market.time_to_stake = time_to_stake;
     market.time_to_reveal = time_to_reveal;
     market.selected_option = None;
     market.state_nonce = 0;
+    market.reward_lamports = reward_lamports;
     market.select_authority = select_authority;
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
@@ -86,7 +88,7 @@ pub fn create_market(
     // Build args: plaintext nonce and plaintext total_shares
     let args = ArgBuilder::new()
         .plaintext_u128(nonce)
-        .plaintext_u64(total_shares)
+        .plaintext_u64(max_shares)
         .build();
 
     // Queue computation with callback
@@ -110,7 +112,7 @@ pub fn create_market(
     emit!(MarketCreatedEvent {
         market: ctx.accounts.market.key(),
         creator: ctx.accounts.creator.key(),
-        total_shares: total_shares,
+        max_shares: max_shares,
         index: market_index,
     });
 

@@ -1,6 +1,4 @@
 use anchor_lang::prelude::*;
-
-use crate::constants::PRICE_PER_SHARE_LAMPORTS;
 use crate::error::ErrorCode;
 use crate::state::ConvictionMarket;
 
@@ -17,18 +15,13 @@ pub struct OpenMarket<'info> {
 
 pub fn open_market(ctx: Context<OpenMarket>, open_timestamp: u64) -> Result<()> {
     let market = &mut ctx.accounts.market;
-
-    // Check that market account has at least total_shares * PRICE_PER_SHARE_LAMPORTS
     let market_lamports = market.to_account_info().lamports();
     let rent = Rent::get()?;
     let min_rent = rent.minimum_balance(market.to_account_info().data_len());
     let available_lamports = market_lamports.saturating_sub(min_rent);
     
-    // TODO: figure out how we actually do this. How much funding is actually needed.
-    let required_lamports = market.total_shares * PRICE_PER_SHARE_LAMPORTS;
-
     require!(
-        available_lamports >= required_lamports,
+        available_lamports >= market.reward_lamports,
         ErrorCode::InsufficientRewardFunding
     );
 

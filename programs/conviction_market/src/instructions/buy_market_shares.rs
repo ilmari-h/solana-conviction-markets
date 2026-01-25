@@ -32,6 +32,7 @@ pub struct BuyMarketShares<'info> {
 
     // Boxed due to heap overflow
     #[account(
+        mut,
         seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref()],
         bump,
     )]
@@ -96,8 +97,8 @@ pub fn buy_market_shares(
         ErrorCode::StakingNotActive
     );
 
-
-    //let share_account_key = ctx.accounts.share_account.key();
+    // Capture timestamp when the buy is queued, not when callback runs
+    ctx.accounts.share_account.bought_at_timestamp = current_timestamp;
 
     let user_vta_key = ctx.accounts.user_vta.key();
     let user_vta_nonce = ctx.accounts.user_vta.state_nonce;

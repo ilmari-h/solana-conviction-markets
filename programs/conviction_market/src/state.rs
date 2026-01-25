@@ -25,7 +25,11 @@ pub struct ConvictionMarket {
 
     pub state_nonce: u128,
 
-    pub total_shares: u64,
+    // Max available shares. 1 shares = 1 vote token
+    pub max_shares: u64,
+
+    // Reward to be shared with stakers
+    pub reward_lamports: u64,
 
     // Optional authority that can select the winning option (same rights as creator)
     pub select_authority: Option<Pubkey>,
@@ -51,10 +55,14 @@ pub struct ShareAccount {
 
     pub encrypted_state_disclosure: [[u8; 32];2],
     pub state_nonce_disclosure: u128,
+    pub bought_at_timestamp: u64,
 
-    pub revealed_in_time: bool,
     pub revealed_amount: Option<u64>,
     pub revealed_option: Option<u16>,
+
+    // Amount that scales by time-in-market.
+    pub revealed_score: Option<u64>,
+
     pub total_incremented: bool
 }
 
@@ -69,7 +77,10 @@ pub struct ConvictionMarketOption {
     pub name: String,
 
     /// Total shares bought for this option (tally)
-    pub total_shares: Option<u64>
+    pub total_shares: Option<u64>,
+
+    // Scales by time-in-market
+    pub total_score: Option<u64>
 }
 
 #[account]

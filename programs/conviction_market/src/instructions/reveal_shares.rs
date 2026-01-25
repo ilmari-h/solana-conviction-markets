@@ -103,12 +103,14 @@ pub fn reveal_shares(
     let market = &ctx.accounts.market;
     let clock = Clock::get()?;
     let current_timestamp = clock.unix_timestamp as u64;
-    let reveal_deadline = market
+
+    // Check that staking period is over.
+    let reveal_start = market
         .open_timestamp
         .unwrap_or(0)
-        .saturating_add(market.time_to_stake)
-        .saturating_add(market.time_to_reveal);
-    let revealed_in_time = current_timestamp <= reveal_deadline;
+        .saturating_add(market.time_to_stake);
+
+    require!(current_timestamp >= reveal_start, ErrorCode::MarketNotResolved);
 
     let share_account_key = ctx.accounts.share_account.key();
     let share_account_nonce = ctx.accounts.share_account.state_nonce;
@@ -127,9 +129,6 @@ pub fn reveal_shares(
         // User VTA encrypted state (Enc<Mxe, VoteTokenBalance>)
         .plaintext_u128(user_vta_nonce)
         .account(user_vta_key, 8, 32 * 1)
-
-        // Pass through boolean if revealed in time or not.
-        .plaintext_bool(revealed_in_time)
         .build();
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
@@ -199,12 +198,10 @@ pub fn reveal_shares_callback(
     let revealed_amount = res.field_0;
     let revealed_option = res.field_1;
     let new_user_balance = res.field_2;
-    let revealed_in_time = res.field_3;
 
     // Update share account with revealed values
     ctx.accounts.share_account.revealed_amount = Some(revealed_amount);
     ctx.accounts.share_account.revealed_option = Some(revealed_option);
-    ctx.accounts.share_account.revealed_in_time = revealed_in_time;
 
     // Update user VTA with credited balance
     ctx.accounts.user_vta.state_nonce = new_user_balance.nonce;

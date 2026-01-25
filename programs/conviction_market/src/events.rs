@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 pub struct MarketCreatedEvent {
     pub market: Pubkey,
     pub creator: Pubkey,
-    pub total_shares: u64,
+    pub max_shares: u64,
     pub index: u64,
 }
 

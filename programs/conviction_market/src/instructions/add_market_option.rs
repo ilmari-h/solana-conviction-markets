@@ -52,6 +52,7 @@ pub fn add_market_option(
     option.bump = ctx.bumps.option;
     option.name = name;
     option.total_shares = None;
+    option.total_score = None;
     option.creator = ctx.accounts.creator.key();
 
     Ok(())

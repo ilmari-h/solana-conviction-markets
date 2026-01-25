@@ -86,15 +86,14 @@ describe("ConvictionMarket", () => {
     it("allows user to buy shares and claim yield", async () => {
       console.log("\n=== Market Creation and Setup Test ===\n");
 
-      const PRICE_PER_SHARE_LAMPORTS = 1_000_000; // Must match Rust constant
       const marketIndex = new anchor.BN(1);
       const maxOptions = 5; // u16
-      const totalShares = new anchor.BN(1000); // 1000 shares
-      const fundingLamports = totalShares.toNumber() * PRICE_PER_SHARE_LAMPORTS; // = 1 SOL
+      const maxShares = new anchor.BN(1000); // 1000 shares
+      const fundingLamports = new anchor.BN(1_000_000); // = 1 SOL
       const timeToStake = new anchor.BN(120);
 
       // Small time slots that are long enough for reliable testing
-      const timeToReveal = new anchor.BN(20); 
+      const timeToReveal = new anchor.BN(10); 
 
       // Derive market PDA
       const [marketPDA] = PublicKey.findProgramAddressSync(
@@ -118,7 +117,8 @@ describe("ConvictionMarket", () => {
           marketIndex,
           marketComputationOffset,
           maxOptions,
-          totalShares,
+          maxShares,
+          fundingLamports,
           timeToStake,
           timeToReveal,
           new anchor.BN(deserializeLE(marketNonce).toString()),
@@ -205,15 +205,15 @@ describe("ConvictionMarket", () => {
       // ========== STEP 3: Fund and Open Market ==========
       console.log("\nStep 3: Funding and opening market...");
       console.log("   Market PDA:", marketPDA.toBase58());
-      console.log("   Total shares:", totalShares.toNumber());
+      console.log("   Max shares:", maxShares.toNumber());
       console.log("   Funding lamports:", fundingLamports);
 
-      // Transfer total_shares * PRICE_PER_SHARE_LAMPORTS to market PDA
+      // Transfer funding amount
       const fundTx = new anchor.web3.Transaction().add(
         SystemProgram.transfer({
           fromPubkey: owner.publicKey,
           toPubkey: marketPDA,
-          lamports: fundingLamports,
+          lamports: fundingLamports.toNumber(),
         })
       );
       fundTx.feePayer = owner.publicKey;
@@ -226,7 +226,6 @@ describe("ConvictionMarket", () => {
       });
       console.log("   Fund tx sent:", fundSig);
       await provider.connection.confirmTransaction(fundSig, "confirmed");
-      console.log("   Funded market with", fundingLamports / LAMPORTS_PER_SOL, "SOL");
 
       // Open market with timestamp 10 seconds in the future
       const currentSlot = await provider.connection.getSlot();
@@ -391,7 +390,6 @@ describe("ConvictionMarket", () => {
         console.log(`   Waiting ${sleepMs}ms for staking period to start...`);
         await new Promise((resolve) => setTimeout(resolve, sleepMs));
       }
-
 
       // Encrypt amount (50 vote tokens) and selected_option (option index 1)
       const buySharesAmount = BigInt(50);
@@ -574,10 +572,47 @@ describe("ConvictionMarket", () => {
       // Verify option tally was incremented
       const optionAccount = await program.account.convictionMarketOption.fetch(optionPDA);
       expect(optionAccount.totalShares).to.not.be.null;
-      expect(optionAccount.totalShares!.toString()).to.equal(buySharesAmount.toString());
-      console.log("   Option tally total shares:", optionAccount.totalShares!.toNumber());
+      expect(optionAccount.totalShares.toString()).to.equal(buySharesAmount.toString());
+      console.log("   Option tally total shares:", optionAccount.totalShares.toNumber());
+      console.log("   Option tally total score:", optionAccount.totalScore?.toNumber() || 0);
 
-      console.log("\n   Test PASSED! Revealed shares match purchased shares.");
+      // ========== STEP 12: Wait for reveal period to end and close share account ==========
+      console.log("\nStep 12: Waiting for reveal period to end, then closing share account...");
+
+      // Wait for reveal period end
+      const sleepMs = timeToReveal.muln(1000).toNumber()
+      console.log(`   Waiting ${sleepMs}ms for reveal period to end...`);
+      await new Promise((resolve) => setTimeout(resolve, sleepMs));
+
+      console.log("   Reveal period ended. Closing share account...");
+
+      // Get buyer balance before closing
+      const buyerBalanceBeforeClose = await provider.connection.getBalance(buyer.publicKey);
+
+      const closeShareAccountSig = await program.methods
+        .closeShareAccount()
+        .accountsPartial({
+          owner: buyer.publicKey,
+          market: marketPDA,
+          shareAccount: buyerShareAccountPDA,
+        })
+        .signers([buyer])
+        .rpc({ commitment: "confirmed" });
+
+      console.log("   Close share account tx:", closeShareAccountSig.slice(0, 20) + "...");
+
+      // Verify share account was closed and rent refunded
+      const shareAccountAfterClose = await provider.connection.getAccountInfo(buyerShareAccountPDA);
+      expect(shareAccountAfterClose).to.be.null;
+      console.log("   Share account closed successfully!");
+
+      // Verify buyer received rent refund
+      const buyerBalanceAfterClose = await provider.connection.getBalance(buyer.publicKey);
+      expect(buyerBalanceAfterClose).to.be.greaterThan(buyerBalanceBeforeClose);
+      console.log("   Rent refunded to buyer. Balance increased by:",
+        (buyerBalanceAfterClose - buyerBalanceBeforeClose) / LAMPORTS_PER_SOL, "SOL");
+
+      console.log("\n   Test PASSED! Revealed shares match purchased shares and share account closed successfully.");
     });
   });
 
