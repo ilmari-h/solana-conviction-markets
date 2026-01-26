@@ -1,0 +1,1 @@
+export const PRICE_PER_VOTE_TOKEN_LAMPORTS = BigInt(1_000_000)

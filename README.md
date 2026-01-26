@@ -4,6 +4,8 @@ Conviction Markets allow users to influence decision making by staking their cap
 
 Which option the user voted for and with how much stake is stored encrypted on chain and only revealed when the market creator has revealed their choice. Those who put their stake in the chosen option can claim yield. All participants can claim their initial stake back.
 
+Devnet address: `8QnM1kLWDFVzCqJNQ8BkyqV32wuGp4DfcqFmDWNXERFT`
+
 ## Build & Test
 
 Arcium v0.6.3 required.
