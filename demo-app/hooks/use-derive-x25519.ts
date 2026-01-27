@@ -1,7 +1,7 @@
 "use client";
 
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { deriveX25519KeypairFromSignature } from "@bench.games/conviction-markets";
 import type { X25519Keypair } from "@bench.games/conviction-markets";
 
@@ -19,11 +19,18 @@ export function useDeriveX25519() {
   const [keypair, setKeypair] = useState<X25519Keypair | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDerivingRef = useRef(false);
 
   useEffect(() => {
     if (!publicKey) {
       setKeypair(null);
       setError(null);
+      isDerivingRef.current = false;
+      return;
+    }
+
+    // Prevent concurrent derivation attempts
+    if (isDerivingRef.current) {
       return;
     }
 
@@ -53,6 +60,7 @@ export function useDeriveX25519() {
         return;
       }
 
+      isDerivingRef.current = true;
       setLoading(true);
       setError(null);
 
@@ -78,11 +86,13 @@ export function useDeriveX25519() {
         console.error("Error deriving X25519 keypair:", err);
       } finally {
         setLoading(false);
+        isDerivingRef.current = false;
       }
     };
 
     deriveKeypair();
-  }, [publicKey, signMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicKey]);
 
   return {
     keypair,

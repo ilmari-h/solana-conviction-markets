@@ -4,10 +4,13 @@ import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowDownUp } from "lucide-react";
+import { ArrowDownUp, Loader2 } from "lucide-react";
 import { useSolBalance } from "@/hooks/use-sol-balance";
+import { useBuyVoteTokens } from "@/hooks/use-buy-vote-tokens";
+import { useToast } from "@/hooks/use-toast";
 import { PRICE_PER_VOTE_TOKEN_LAMPORTS } from "@/lib/constants";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface TokenSwapProps {
   voteTokenBalance?: number;
@@ -17,6 +20,9 @@ export function TokenSwap({ voteTokenBalance = 1234 }: TokenSwapProps) {
   const [swapDirection, setSwapDirection] = useState<"buy" | "sell">("buy");
   const [inputAmount, setInputAmount] = useState("");
   const { balanceInSol } = useSolBalance();
+  const { connected } = useWallet();
+  const { buyVoteTokens, isPending, isSuccess } = useBuyVoteTokens();
+  const { toast } = useToast();
 
   const toggleSwapDirection = () => {
     setSwapDirection((prev) => (prev === "buy" ? "sell" : "buy"));
@@ -28,6 +34,56 @@ export function TokenSwap({ voteTokenBalance = 1234 }: TokenSwapProps) {
       setInputAmount(balanceInSol.toFixed(9));
     } else {
       setInputAmount(voteTokenBalance.toString());
+    }
+  };
+
+  const handleSwap = () => {
+    if (!connected) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet to continue",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (swapDirection === "buy") {
+      // Buy vote tokens with SOL
+      const voteTokenAmount = parseFloat(outputAmount);
+      if (voteTokenAmount <= 0) {
+        toast({
+          title: "Invalid amount",
+          description: "Please enter a valid amount",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      buyVoteTokens(
+        { amount: Math.floor(voteTokenAmount) },
+        {
+          onSuccess: (data) => {
+            toast({
+              title: "Success!",
+              description: `Successfully bought ${data.amount} vote tokens`,
+            });
+            setInputAmount("");
+          },
+          onError: (error) => {
+            toast({
+              title: "Transaction failed",
+              description: error instanceof Error ? error.message : "Unknown error occurred",
+              variant: "destructive",
+            });
+          },
+        }
+      );
+    } else {
+      // Sell vote tokens for SOL (not implemented yet)
+      toast({
+        title: "Coming soon",
+        description: "Selling vote tokens will be available soon",
+      });
     }
   };
 
@@ -145,9 +201,19 @@ export function TokenSwap({ voteTokenBalance = 1234 }: TokenSwapProps) {
       <div className="pt-2">
         <Button
           className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-          disabled={!inputAmount || parseFloat(inputAmount) <= 0}
+          disabled={!inputAmount || parseFloat(inputAmount) <= 0 || isPending || !connected}
+          onClick={handleSwap}
         >
-          Swap {fromToken} → {toToken}
+          {isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : !connected ? (
+            "Connect Wallet"
+          ) : (
+            `Swap ${fromToken} → ${toToken}`
+          )}
         </Button>
       </div>
     </Card>
