@@ -7,22 +7,23 @@ import { Input } from "@/components/ui/input";
 import { ArrowDownUp, Loader2 } from "lucide-react";
 import { useSolBalance } from "@/hooks/use-sol-balance";
 import { useBuyVoteTokens } from "@/hooks/use-buy-vote-tokens";
+import { useVoteTokensBalance } from "@/hooks/use-vote-tokens-balance";
 import { useToast } from "@/hooks/use-toast";
 import { PRICE_PER_VOTE_TOKEN_LAMPORTS } from "@/lib/constants";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 
-interface TokenSwapProps {
-  voteTokenBalance?: number;
-}
-
-export function TokenSwap({ voteTokenBalance = 1234 }: TokenSwapProps) {
+export function TokenSwap() {
   const [swapDirection, setSwapDirection] = useState<"buy" | "sell">("buy");
   const [inputAmount, setInputAmount] = useState("");
   const { balanceInSol } = useSolBalance();
   const { connected } = useWallet();
-  const { buyVoteTokens, isPending, isSuccess } = useBuyVoteTokens();
+  const { buyVoteTokens, isPending } = useBuyVoteTokens();
+  const { balance: voteTokenBalance } = useVoteTokensBalance();
   const { toast } = useToast();
+
+  // Convert bigint balance to number for display
+  const voteTokenBalanceNumber = voteTokenBalance ? Number(voteTokenBalance) : 0;
 
   const toggleSwapDirection = () => {
     setSwapDirection((prev) => (prev === "buy" ? "sell" : "buy"));
@@ -33,7 +34,7 @@ export function TokenSwap({ voteTokenBalance = 1234 }: TokenSwapProps) {
     if (swapDirection === "buy") {
       setInputAmount(balanceInSol.toFixed(9));
     } else {
-      setInputAmount(voteTokenBalance.toString());
+      setInputAmount(voteTokenBalanceNumber.toString());
     }
   };
 
@@ -111,8 +112,8 @@ export function TokenSwap({ voteTokenBalance = 1234 }: TokenSwapProps) {
   const fromToken = swapDirection === "buy" ? "SOL" : "VOTE";
   const toToken = swapDirection === "buy" ? "VOTE" : "SOL";
   const fromBalance =
-    swapDirection === "buy" ? balanceInSol : voteTokenBalance;
-  const toBalance = swapDirection === "buy" ? voteTokenBalance : balanceInSol;
+    swapDirection === "buy" ? balanceInSol : voteTokenBalanceNumber;
+  const toBalance = swapDirection === "buy" ? voteTokenBalanceNumber : balanceInSol;
 
   return (
     <Card className="p-4 bg-card border-border space-y-3 gap-2">

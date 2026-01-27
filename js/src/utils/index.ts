@@ -4,3 +4,4 @@ export * from "./computations";
 export * from "./encryption";
 export * from "./awaitComputationFinalization";
 export * from "./arcium";
+export * from "./accounts";
