@@ -14,3 +14,5 @@ artifacts/
 deploy.sh
 compute-defs.sh
 test-market.sh
+
+.env

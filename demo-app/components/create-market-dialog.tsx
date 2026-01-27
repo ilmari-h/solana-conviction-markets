@@ -121,10 +121,13 @@ export function CreateMarketDialog() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="What kind of decision does this market solve?"
+              placeholder="What should I cook for dinner tonight?"
               required
               maxLength={200}
             />
+            <p className="text-xs text-muted-foreground">
+              What kind of decision will the voters be influencing?
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -134,7 +137,6 @@ export function CreateMarketDialog() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
-              placeholder="More context..."
               maxLength={1000}
               rows={4}
             />
