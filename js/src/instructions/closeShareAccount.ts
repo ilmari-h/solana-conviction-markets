@@ -1,5 +1,5 @@
 import { Program, type AnchorProvider } from "@coral-xyz/anchor";
-import type { Keypair, PublicKey } from "@solana/web3.js";
+import type { PublicKey, Transaction } from "@solana/web3.js";
 import { PROGRAM_ID } from "../constants";
 import { deriveShareAccountPda, deriveOptionPda } from "../utils";
 import IDL from "../idl/conviction_market.json";
@@ -10,7 +10,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface CloseShareAccountParams {
   /** Share account owner */
-  owner: Keypair;
+  owner: PublicKey;
   /** Market PDA */
   market: PublicKey;
   /** Revealed option index */
@@ -20,24 +20,24 @@ export interface CloseShareAccountParams {
 }
 
 /**
- * Result from closing a share account
+ * Result from building close share account transaction
  */
 export interface CloseShareAccountResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
 }
 
 /**
- * Closes a share account after the reveal period ends
+ * Builds a transaction to close a share account after the reveal period ends
  *
  * Only callable if shares were revealed and match the option_index.
  * If the user voted for the winning option and incremented the tally,
  * transfers proportional yield: (user_score / total_score) * reward_lamports.
  * Closes the account and returns rent lamports to owner.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Close share account parameters
- * @returns Transaction signature
+ * @returns Transaction to sign and send
  */
 export async function closeShareAccount(
   provider: AnchorProvider,
@@ -49,13 +49,12 @@ export async function closeShareAccount(
     provider
   ) as Program<ConvictionMarket>;
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .closeShareAccount(params.optionIndex)
     .accountsPartial({
       market: params.market,
     })
-    .signers([params.owner])
-    .rpc();
+    .transaction();
 
-  return { signature };
+  return { transaction };
 }

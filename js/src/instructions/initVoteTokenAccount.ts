@@ -1,5 +1,5 @@
 import { Program, BN, type AnchorProvider } from "@coral-xyz/anchor";
-import { SystemProgram, type Keypair, type PublicKey } from "@solana/web3.js";
+import { SystemProgram, type PublicKey, Transaction } from "@solana/web3.js";
 import {
   getCompDefAccOffset,
   getMXEAccAddress,
@@ -26,7 +26,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface InitVoteTokenAccountParams {
   /** User creating the vote token account */
-  signer: Keypair;
+  signer: PublicKey;
   /** User's X25519 keypair for encryption */
   userX25519Keypair: X25519Keypair;
   /** Optional program ID (defaults to PROGRAM_ID) */
@@ -34,11 +34,11 @@ export interface InitVoteTokenAccountParams {
 }
 
 /**
- * Result from initializing a vote token account
+ * Result from building init vote token account transaction
  */
 export interface InitVoteTokenAccountResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the created vote token account */
   voteTokenAccountPda: PublicKey;
   /** Computation offset (pass to awaitComputationFinalization) */
@@ -46,14 +46,14 @@ export interface InitVoteTokenAccountResult {
 }
 
 /**
- * Initializes a vote token account via encrypted computation
+ * Builds a transaction to initialize a vote token account via encrypted computation
  *
  * Sets up the encrypted balance state for a user. Must be called before
  * minting vote tokens.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Init vote token account parameters
- * @returns Transaction signature, vote token account PDA, and await helper
+ * @returns Transaction to sign and send, vote token account PDA, and computation offset
  */
 export async function initVoteTokenAccount(
   provider: AnchorProvider,
@@ -69,7 +69,7 @@ export async function initVoteTokenAccount(
 
   // Derive vote token account PDA
   const [voteTokenAccountPda] = deriveVoteTokenAccountPda(
-    params.signer.publicKey,
+    params.signer,
     programId
   );
 
@@ -78,14 +78,14 @@ export async function initVoteTokenAccount(
   const nonce = generateNonce();
   const nonceBN = nonceToU128(nonce);
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .initVoteTokenAccount(
       computationOffset,
       Array.from(params.userX25519Keypair.publicKey),
       nonceBN
     )
     .accountsPartial({
-      signer: params.signer.publicKey,
+      signer: params.signer,
       voteTokenAccount: voteTokenAccountPda,
       computationAccount: getComputationAccAddress(
         ARCIUM_CLUSTER_OFFSET,
@@ -103,11 +103,10 @@ export async function initVoteTokenAccount(
       ),
       systemProgram: SystemProgram.programId,
     })
-    .signers([params.signer])
-    .rpc({ skipPreflight: false });
+    .transaction();
 
   return {
-    signature,
+    transaction,
     voteTokenAccountPda,
     computationOffset,
   };

@@ -1,5 +1,5 @@
 import { Program, BN, type AnchorProvider } from "@coral-xyz/anchor";
-import type { Keypair, PublicKey } from "@solana/web3.js";
+import type { PublicKey, Transaction } from "@solana/web3.js";
 import {
   getCompDefAccOffset,
   getMXEAccAddress,
@@ -25,7 +25,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface RevealSharesParams {
   /** User calling the reveal (can be anyone) */
-  signer: Keypair;
+  signer: PublicKey;
   /** Owner of the share account to reveal */
   owner: PublicKey;
   /** Market PDA */
@@ -37,11 +37,11 @@ export interface RevealSharesParams {
 }
 
 /**
- * Result from revealing shares
+ * Result from building reveal shares transaction
  */
 export interface RevealSharesResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the share account */
   shareAccountPda: PublicKey;
   /** Computation offset (pass to awaitComputationFinalization) */
@@ -49,16 +49,16 @@ export interface RevealSharesResult {
 }
 
 /**
- * Reveals a user's encrypted shares after staking ends
+ * Builds a transaction to reveal a user's encrypted shares after staking ends
  *
  * Permissionless - anyone can reveal anyone's shares after the staking
  * period ends and the winning option is selected.
  * Updates share account with revealed amount/option and credits vote
  * token balance back to the user.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Reveal shares parameters
- * @returns Transaction signature, share account PDA, and await helper
+ * @returns Transaction to sign and send, share account PDA, and computation offset
  */
 export async function revealShares(
   provider: AnchorProvider,
@@ -86,7 +86,7 @@ export async function revealShares(
   // Auto-generate computation offset
   const computationOffset = generateComputationOffset();
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .revealShares(
       computationOffset,
       Array.from(params.ownerX25519Keypair.publicKey)
@@ -109,11 +109,10 @@ export async function revealShares(
         ).readUInt32LE()
       ),
     })
-    .signers([params.signer])
-    .rpc({ skipPreflight: true });
+    .transaction();
 
   return {
-    signature,
+    transaction,
     shareAccountPda,
     computationOffset,
   };

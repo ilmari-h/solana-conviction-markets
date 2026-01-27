@@ -1,5 +1,5 @@
 import { Program, type AnchorProvider } from "@coral-xyz/anchor";
-import type { PublicKey } from "@solana/web3.js";
+import type { PublicKey, Transaction } from "@solana/web3.js";
 import { PROGRAM_ID } from "../constants";
 import { deriveShareAccountPda, deriveOptionPda } from "../utils";
 import IDL from "../idl/conviction_market.json";
@@ -20,23 +20,23 @@ export interface IncrementOptionTallyParams {
 }
 
 /**
- * Result from incrementing option tally
+ * Result from building increment option tally transaction
  */
 export interface IncrementOptionTallyResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
 }
 
 /**
- * Increments the tally for an option after shares are revealed
+ * Builds a transaction to increment the tally for an option after shares are revealed
  *
  * This is permissionless - anyone can call it for any revealed share account.
  * Calculates conviction score (amount * time-in-market) and adds it to the
  * option's total. Each share account can only increment once.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Increment option tally parameters
- * @returns Transaction signature
+ * @returns Transaction to sign and send
  */
 export async function incrementOptionTally(
   provider: AnchorProvider,
@@ -48,13 +48,13 @@ export async function incrementOptionTally(
     provider
   ) as Program<ConvictionMarket>;
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .incrementOptionTally(params.optionIndex)
     .accountsPartial({
       market: params.market,
       owner: params.owner,
     })
-    .rpc();
+    .transaction();
 
-  return { signature };
+  return { transaction };
 }

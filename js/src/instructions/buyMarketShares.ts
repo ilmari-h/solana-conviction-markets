@@ -1,5 +1,5 @@
 import { Program, BN, type AnchorProvider } from "@coral-xyz/anchor";
-import type { Keypair, PublicKey } from "@solana/web3.js";
+import type { PublicKey, Transaction } from "@solana/web3.js";
 import {
   getCompDefAccOffset,
   getMXEAccAddress,
@@ -11,7 +11,6 @@ import {
 } from "@arcium-hq/client";
 import { PROGRAM_ID, COMP_DEF_OFFSETS } from "../constants";
 import {
-  deriveVoteTokenAccountPda,
   deriveShareAccountPda,
   generateComputationOffset,
   generateNonce,
@@ -30,7 +29,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface BuyMarketSharesParams {
   /** User buying shares */
-  signer: Keypair;
+  signer: PublicKey;
   /** User's X25519 keypair for encryption */
   userX25519Keypair: X25519Keypair;
   /** Market PDA to buy shares in */
@@ -46,11 +45,11 @@ export interface BuyMarketSharesParams {
 }
 
 /**
- * Result from buying market shares
+ * Result from building buy market shares transaction
  */
 export interface BuyMarketSharesResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the share account */
   shareAccountPda: PublicKey;
   /** Computation offset (pass to awaitComputationFinalization) */
@@ -58,16 +57,16 @@ export interface BuyMarketSharesResult {
 }
 
 /**
- * Buys market shares with encrypted input
+ * Builds a transaction to buy market shares with encrypted input
  *
  * User purchases shares for a market option using encrypted computation.
  * The amount and selected option are encrypted automatically.
  * Deducts from vote token balance and stores encrypted share state.
  * Only works during the staking period.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Buy market shares parameters
- * @returns Transaction signature, share account PDA, and await helper
+ * @returns Transaction to sign and send, share account PDA, and computation offset
  */
 export async function buyMarketShares(
   provider: AnchorProvider,
@@ -87,13 +86,9 @@ export async function buyMarketShares(
     throw new Error("Failed to fetch MXE public key");
   }
 
-  // Derive accounts
-  const [voteTokenAccountPda] = deriveVoteTokenAccountPda(
-    params.signer.publicKey,
-    programId
-  );
+  // Derive share account
   const [shareAccountPda] = deriveShareAccountPda(
-    params.signer.publicKey,
+    params.signer,
     params.market,
     programId
   );
@@ -127,7 +122,7 @@ export async function buyMarketShares(
   const authorizedReaderPubkey =
     params.authorizedReaderX25519Pubkey ?? params.userX25519Keypair.publicKey;
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .buyMarketShares(
       computationOffset,
       Array.from(amountCiphertext),
@@ -154,11 +149,10 @@ export async function buyMarketShares(
         ).readUInt32LE()
       ),
     })
-    .signers([params.signer])
-    .rpc({ skipPreflight: true });
+    .transaction();
 
   return {
-    signature,
+    transaction,
     shareAccountPda,
     computationOffset,
   };

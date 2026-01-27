@@ -1,5 +1,5 @@
 import { Program, BN, type AnchorProvider } from "@coral-xyz/anchor";
-import { SystemProgram, type Keypair, type PublicKey } from "@solana/web3.js";
+import { SystemProgram, type PublicKey, Transaction } from "@solana/web3.js";
 import {
   getCompDefAccOffset,
   getMXEAccAddress,
@@ -24,7 +24,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface ClaimVoteTokensParams {
   /** User claiming tokens (receives SOL) */
-  signer: Keypair;
+  signer: PublicKey;
   /** User's X25519 keypair for encryption */
   userX25519Keypair: X25519Keypair;
   /** Number of vote tokens to sell */
@@ -34,11 +34,11 @@ export interface ClaimVoteTokensParams {
 }
 
 /**
- * Result from claiming vote tokens
+ * Result from building claim vote tokens transaction
  */
 export interface ClaimVoteTokensResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the vote token account */
   voteTokenAccountPda: PublicKey;
   /** Computation offset (pass to awaitComputationFinalization) */
@@ -46,15 +46,15 @@ export interface ClaimVoteTokensResult {
 }
 
 /**
- * Claims (sells) vote tokens for SOL
+ * Builds a transaction to claim (sell) vote tokens for SOL
  *
  * Users can sell their unused vote tokens back for SOL.
  * Uses MPC to verify balance and deduct tokens.
  * Transfers SOL from the vote token account back to the user.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Claim vote tokens parameters
- * @returns Transaction signature, vote token account PDA, and await helper
+ * @returns Transaction to sign and send, vote token account PDA, and computation offset
  */
 export async function claimVoteTokens(
   provider: AnchorProvider,
@@ -70,7 +70,7 @@ export async function claimVoteTokens(
 
   // Derive vote token account PDA
   const [voteTokenAccountPda] = deriveVoteTokenAccountPda(
-    params.signer.publicKey,
+    params.signer,
     programId
   );
 
@@ -81,14 +81,14 @@ export async function claimVoteTokens(
   const amountBN =
     typeof params.amount === "number" ? new BN(params.amount) : params.amount;
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .claimVoteTokens(
       computationOffset,
       Array.from(params.userX25519Keypair.publicKey),
       amountBN
     )
     .accountsPartial({
-      signer: params.signer.publicKey,
+      signer: params.signer,
       voteTokenAccount: voteTokenAccountPda,
       computationAccount: getComputationAccAddress(
         ARCIUM_CLUSTER_OFFSET,
@@ -106,11 +106,10 @@ export async function claimVoteTokens(
       ),
       systemProgram: SystemProgram.programId,
     })
-    .signers([params.signer])
-    .rpc({ skipPreflight: true });
+    .transaction();
 
   return {
-    signature,
+    transaction,
     voteTokenAccountPda,
     computationOffset,
   };

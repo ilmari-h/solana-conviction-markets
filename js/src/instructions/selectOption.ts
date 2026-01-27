@@ -1,5 +1,5 @@
 import { Program, type AnchorProvider } from "@coral-xyz/anchor";
-import type { Keypair, PublicKey } from "@solana/web3.js";
+import type { PublicKey, Transaction } from "@solana/web3.js";
 import { PROGRAM_ID } from "../constants";
 import { deriveOptionPda } from "../utils";
 import IDL from "../idl/conviction_market.json";
@@ -10,7 +10,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface SelectOptionParams {
   /** Authority (creator or select_authority) */
-  authority: Keypair;
+  authority: PublicKey;
   /** Market PDA */
   market: PublicKey;
   /** Winning option index */
@@ -20,24 +20,24 @@ export interface SelectOptionParams {
 }
 
 /**
- * Result from selecting an option
+ * Result from building select option transaction
  */
 export interface SelectOptionResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the selected option */
   optionPda: PublicKey;
 }
 
 /**
- * Selects the winning option for a market
+ * Builds a transaction to select the winning option for a market
  *
  * Can be called by the market creator or designated select_authority.
  * Automatically closes the staking period if still open.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Select option parameters
- * @returns Transaction signature and option PDA
+ * @returns Transaction to sign and send, and option PDA
  */
 export async function selectOption(
   provider: AnchorProvider,
@@ -49,13 +49,12 @@ export async function selectOption(
     provider
   ) as Program<ConvictionMarket>;
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .selectOption(params.optionIndex)
     .accountsPartial({
       market: params.market,
     })
-    .signers([params.authority])
-    .rpc();
+    .transaction();
 
   const [optionPda] = deriveOptionPda(
     params.market,
@@ -63,5 +62,5 @@ export async function selectOption(
     programId
   );
 
-  return { signature, optionPda };
+  return { transaction, optionPda };
 }

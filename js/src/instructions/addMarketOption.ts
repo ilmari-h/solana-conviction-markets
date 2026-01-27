@@ -1,5 +1,5 @@
 import { Program, type AnchorProvider } from "@coral-xyz/anchor";
-import { SystemProgram, type Keypair, type PublicKey } from "@solana/web3.js";
+import { SystemProgram, type PublicKey, Transaction } from "@solana/web3.js";
 import { PROGRAM_ID } from "../constants";
 import { deriveOptionPda } from "../utils";
 import IDL from "../idl/conviction_market.json";
@@ -10,7 +10,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface AddMarketOptionParams {
   /** Market creator (must be the original creator) */
-  creator: Keypair;
+  creator: PublicKey;
   /** Market PDA to add option to */
   market: PublicKey;
   /** Option index (1-based, must be sequential) */
@@ -22,24 +22,24 @@ export interface AddMarketOptionParams {
 }
 
 /**
- * Result from adding a market option
+ * Result from building add market option transaction
  */
 export interface AddMarketOptionResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the created option account */
   optionPda: PublicKey;
 }
 
 /**
- * Adds a named option to a market
+ * Builds a transaction to add a named option to a market
  *
  * Options must be added before opening the market. Option indices
  * must be sequential starting from 1.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Add market option parameters
- * @returns Transaction signature and option PDA
+ * @returns Transaction to sign and send, and option PDA
  */
 export async function addMarketOption(
   provider: AnchorProvider,
@@ -57,14 +57,13 @@ export async function addMarketOption(
     programId
   );
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .addMarketOption(params.optionIndex, params.name)
     .accountsPartial({
       market: params.market,
       systemProgram: SystemProgram.programId,
     })
-    .signers([params.creator])
-    .rpc();
+    .transaction();
 
-  return { signature, optionPda };
+  return { transaction, optionPda };
 }

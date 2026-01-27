@@ -1,5 +1,5 @@
 import { Program, BN, type AnchorProvider } from "@coral-xyz/anchor";
-import { SystemProgram, type Keypair, type PublicKey } from "@solana/web3.js";
+import { SystemProgram, type PublicKey, Transaction } from "@solana/web3.js";
 import {
   getCompDefAccOffset,
   getMXEAccAddress,
@@ -24,7 +24,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface MintVoteTokensParams {
   /** User minting tokens (pays SOL) */
-  signer: Keypair;
+  signer: PublicKey;
   /** User's X25519 keypair for encryption */
   userX25519Keypair: X25519Keypair;
   /** Number of vote tokens to mint */
@@ -34,11 +34,11 @@ export interface MintVoteTokensParams {
 }
 
 /**
- * Result from minting vote tokens
+ * Result from building mint vote tokens transaction
  */
 export interface MintVoteTokensResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the vote token account */
   voteTokenAccountPda: PublicKey;
   /** Computation offset (pass to awaitComputationFinalization) */
@@ -46,15 +46,15 @@ export interface MintVoteTokensResult {
 }
 
 /**
- * Mints vote tokens by paying SOL
+ * Builds a transaction to mint vote tokens by paying SOL
  *
  * Users buy vote tokens which can be used to purchase market shares.
  * Each token costs PRICE_PER_VOTE_TOKEN_LAMPORTS (0.001 SOL).
  * Uses MPC to update the encrypted balance.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Mint vote tokens parameters
- * @returns Transaction signature, vote token account PDA, and await helper
+ * @returns Transaction to sign and send, vote token account PDA, and computation offset
  */
 export async function mintVoteTokens(
   provider: AnchorProvider,
@@ -70,7 +70,7 @@ export async function mintVoteTokens(
 
   // Derive vote token account PDA
   const [voteTokenAccountPda] = deriveVoteTokenAccountPda(
-    params.signer.publicKey,
+    params.signer,
     programId
   );
 
@@ -81,14 +81,14 @@ export async function mintVoteTokens(
   const amountBN =
     typeof params.amount === "number" ? new BN(params.amount) : params.amount;
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .mintVoteTokens(
       computationOffset,
       Array.from(params.userX25519Keypair.publicKey),
       amountBN
     )
     .accountsPartial({
-      signer: params.signer.publicKey,
+      signer: params.signer,
       voteTokenAccount: voteTokenAccountPda,
       computationAccount: getComputationAccAddress(
         ARCIUM_CLUSTER_OFFSET,
@@ -106,11 +106,10 @@ export async function mintVoteTokens(
       ),
       systemProgram: SystemProgram.programId,
     })
-    .signers([params.signer])
-    .rpc({ skipPreflight: true });
+    .transaction();
 
   return {
-    signature,
+    transaction,
     voteTokenAccountPda,
     computationOffset,
   };

@@ -1,5 +1,5 @@
 import { Program, BN, type AnchorProvider } from "@coral-xyz/anchor";
-import type { Keypair, PublicKey } from "@solana/web3.js";
+import type { PublicKey, Transaction } from "@solana/web3.js";
 import { PROGRAM_ID } from "../constants";
 import IDL from "../idl/conviction_market.json";
 import type { ConvictionMarket } from "../idl/conviction_market";
@@ -9,7 +9,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface OpenMarketParams {
   /** Market creator (must be the original creator) */
-  creator: Keypair;
+  creator: PublicKey;
   /** Market PDA to open */
   market: PublicKey;
   /** Unix timestamp when market opens for trading */
@@ -19,22 +19,22 @@ export interface OpenMarketParams {
 }
 
 /**
- * Result from opening a market
+ * Result from building open market transaction
  */
 export interface OpenMarketResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
 }
 
 /**
- * Opens a market for trading
+ * Builds a transaction to open a market for trading
  *
  * After creating a market and adding options, the creator must open it
  * with a specific timestamp. The market must be funded before opening.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Open market parameters
- * @returns Transaction signature
+ * @returns Transaction to sign and send
  */
 export async function openMarket(
   provider: AnchorProvider,
@@ -51,13 +51,12 @@ export async function openMarket(
       ? new BN(params.openTimestamp)
       : params.openTimestamp;
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .openMarket(openTimestampBN)
     .accountsPartial({
       market: params.market,
     })
-    .signers([params.creator])
-    .rpc();
+    .transaction();
 
-  return { signature };
+  return { transaction };
 }

@@ -1,5 +1,5 @@
 import { Program, BN, type AnchorProvider } from "@coral-xyz/anchor";
-import { SystemProgram, type Keypair, type PublicKey } from "@solana/web3.js";
+import { SystemProgram, type PublicKey, Transaction } from "@solana/web3.js";
 import {
   getCompDefAccOffset,
   getMXEAccAddress,
@@ -25,7 +25,7 @@ import type { ConvictionMarket } from "../idl/conviction_market";
  */
 export interface CreateMarketParams {
   /** Market creator (pays for account creation) */
-  creator: Keypair;
+  creator: PublicKey;
   /** Unique market index */
   marketIndex: number | BN;
   /** Maximum number of options allowed */
@@ -45,11 +45,11 @@ export interface CreateMarketParams {
 }
 
 /**
- * Result from creating a market
+ * Result from building create market transaction
  */
 export interface CreateMarketResult {
-  /** Transaction signature */
-  signature: string;
+  /** Transaction to sign and send */
+  transaction: Transaction;
   /** PDA of the created market */
   marketPda: PublicKey;
   /** Computation offset (pass to awaitComputationFinalization) */
@@ -57,14 +57,14 @@ export interface CreateMarketResult {
 }
 
 /**
- * Creates a new conviction market with encrypted state
+ * Builds a transaction to create a new conviction market with encrypted state
  *
  * Initializes a market with encrypted available shares via MPC computation.
  * After creation, options must be added and the market must be funded and opened.
  *
- * @param provider - Anchor provider for connection and wallet
+ * @param provider - Anchor provider for connection
  * @param params - Create market parameters
- * @returns Transaction signature, market PDA, and await helper
+ * @returns Transaction to sign and send, market PDA, and computation offset
  */
 export async function createMarket(
   provider: AnchorProvider,
@@ -102,7 +102,7 @@ export async function createMarket(
 
   // Derive market PDA
   const [marketPda] = deriveMarketPda(
-    params.creator.publicKey,
+    params.creator,
     marketIndexBN,
     programId
   );
@@ -112,7 +112,7 @@ export async function createMarket(
   const nonce = generateNonce();
   const nonceBN = nonceToU128(nonce);
 
-  const signature = await program.methods
+  const transaction = await program.methods
     .createMarket(
       marketIndexBN,
       computationOffset,
@@ -125,7 +125,7 @@ export async function createMarket(
       params.selectAuthority ?? null
     )
     .accountsPartial({
-      creator: params.creator.publicKey,
+      creator: params.creator,
       market: marketPda,
       computationAccount: getComputationAccAddress(
         ARCIUM_CLUSTER_OFFSET,
@@ -143,11 +143,10 @@ export async function createMarket(
       ),
       systemProgram: SystemProgram.programId,
     })
-    .signers([params.creator])
-    .rpc({ skipPreflight: true });
+    .transaction();
 
   return {
-    signature,
+    transaction,
     marketPda,
     computationOffset,
   };
