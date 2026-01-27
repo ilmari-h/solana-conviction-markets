@@ -22,6 +22,7 @@ export default function LoginPage() {
         <h1 className="text-2xl md:text-3xl font-light tracking-tight text-foreground">
           <span className="font-medium">Conviction</span>
           <span className="text-muted-foreground">Markets</span>
+          <span className="text-xl"> (devnet demo)</span>
         </h1>
       </header>
 
@@ -89,7 +90,7 @@ export default function LoginPage() {
       {/* Subtle footer */}
       <footer className="py-6 text-center">
         <p className="text-xs text-muted-foreground">
-          Built on Solana
+          <a href={"https://bench.games"}>bench.games</a>
         </p>
       </footer>
     </main>
