@@ -1,0 +1,42 @@
+{
+  "name": "@bench/conviction-markets",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Solana Conviction Markets with encrypted votes using Arcium MPC",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "bun run build",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "solana",
+    "conviction-voting",
+    "prediction-market",
+    "mpc",
+    "arcium",
+    "encrypted-voting"
+  ],
+  "author": "Bench",
+  "license": "MIT",
+  "peerDependencies": {
+    "@arcium-hq/client": "^0.6.0",
+    "@coral-xyz/anchor": "^0.30.0",
+    "@solana/web3.js": "^1.87.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.3.0"
+  }
+}
