@@ -3,6 +3,8 @@ import { MarketsDashboard } from "@/components/markets-dashboard";
 import { fetchAllMarkets } from "@bench.games/conviction-markets";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { computeMarketStatus } from "@/lib/utils";
+import type { MergedMarket } from "@/lib/types";
 
 export default async function AppPage() {
   // Fetch DB markets for name/description
@@ -32,9 +34,21 @@ export default async function AppPage() {
   const onChainMarkets = await fetchAllMarkets(provider);
 
   // Merge on-chain data with DB metadata
-  const mergedMarkets = onChainMarkets.map((onChain) => {
+  const mergedMarkets: MergedMarket[] = onChainMarkets.map((onChain) => {
     const address = onChain.publicKey.toBase58();
     const dbData = dbMarketMap.get(address);
+
+    const openTimestamp = onChain.account.openTimestamp?.toString() ?? null;
+    const timeToStake = onChain.account.timeToStake.toString();
+    const timeToReveal = onChain.account.timeToReveal.toString();
+    const selectedOption = onChain.account.selectedOption ?? null;
+
+    const status = computeMarketStatus({
+      openTimestamp,
+      timeToStake,
+      timeToReveal,
+      selectedOption,
+    });
 
     return {
       address,
@@ -46,11 +60,16 @@ export default async function AppPage() {
       totalOptions: onChain.account.totalOptions,
       maxOptions: onChain.account.maxOptions,
       maxShares: onChain.account.maxShares.toString(),
-      openTimestamp: onChain.account.openTimestamp?.toString() ?? null,
-      timeToStake: onChain.account.timeToStake.toString(),
-      timeToReveal: onChain.account.timeToReveal.toString(),
-      selectedOption: onChain.account.selectedOption ?? null,
-      options: dbData?.options ?? [],
+      openTimestamp,
+      timeToStake,
+      timeToReveal,
+      selectedOption,
+      status,
+      options: (dbData?.options ?? []).map((opt) => ({
+        address: opt.address,
+        name: opt.name,
+        description: opt.description,
+      })),
     };
   });
 

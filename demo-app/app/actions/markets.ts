@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db/client";
-import { markets, type NewMarket } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { markets, options, shares, type NewMarket, type NewOption, type NewShare } from "@/db/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { PublicKey } from "@solana/web3.js";
 import { revalidatePath } from "next/cache";
 
@@ -129,6 +129,130 @@ export async function getAllMarkets(): Promise<{
     return {
       markets: [],
       error: error instanceof Error ? error.message : "Failed to fetch markets",
+    };
+  }
+}
+
+/**
+ * Insert a new option into the database
+ * Called AFTER successful blockchain transaction
+ */
+export async function insertOption(data: {
+  address: string;
+  marketAddress: string;
+  name: string;
+  description: string;
+  creatorPubkey: string;
+  signature: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Validate inputs
+    new PublicKey(data.address);
+    new PublicKey(data.marketAddress);
+    new PublicKey(data.creatorPubkey);
+
+    if (!data.name.trim()) {
+      throw new Error("Option name is required");
+    }
+
+    const newOption: NewOption = {
+      address: data.address,
+      marketAddress: data.marketAddress,
+      name: data.name.trim(),
+      description: data.description.trim(),
+      creatorPubkey: data.creatorPubkey,
+      signature: data.signature,
+    };
+
+    await db.insert(options).values(newOption);
+
+    // Revalidate the market detail page to show the new option
+    revalidatePath(`/app/${data.marketAddress}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error inserting option:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to insert option",
+    };
+  }
+}
+
+/**
+ * Insert a new share into the database
+ * Called AFTER successful blockchain transaction
+ */
+export async function insertShare(data: {
+  userPubkey: string;
+  marketAddress: string;
+  optionAddress: string;
+  amount: string;
+  signature: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Validate inputs
+    new PublicKey(data.userPubkey);
+    new PublicKey(data.marketAddress);
+    new PublicKey(data.optionAddress);
+
+    if (!data.amount || Number(data.amount) <= 0) {
+      throw new Error("Amount must be greater than 0");
+    }
+
+    const newShare: NewShare = {
+      id: `${data.userPubkey}-${data.marketAddress}`,
+      userPubkey: data.userPubkey,
+      marketAddress: data.marketAddress,
+      optionAddress: data.optionAddress,
+      amount: data.amount,
+      signature: data.signature,
+    };
+
+    await db.insert(shares).values(newShare);
+
+    // Revalidate the market detail page to show the share
+    revalidatePath(`/app/${data.marketAddress}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error inserting share:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to insert share",
+    };
+  }
+}
+
+/**
+ * Get user's share for a specific market
+ * Returns null if user hasn't voted in this market
+ */
+export async function getUserShareForMarket(
+  userPubkey: string,
+  marketAddress: string
+): Promise<{ share: typeof shares.$inferSelect | null; error?: string }> {
+  try {
+    new PublicKey(userPubkey);
+    new PublicKey(marketAddress);
+
+    const result = await db
+      .select()
+      .from(shares)
+      .where(
+        and(
+          eq(shares.userPubkey, userPubkey),
+          eq(shares.marketAddress, marketAddress)
+        )
+      )
+      .limit(1);
+
+    return { share: result[0] ?? null };
+  } catch (error) {
+    console.error("Error fetching user share:", error);
+    return {
+      share: null,
+      error: error instanceof Error ? error.message : "Failed to fetch share",
     };
   }
 }

@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as os from "os";
 
 // Configuration
-const DEVNET_PROGRAM_ID = new PublicKey("bnchXx34qGANGyEL6MxTYdG8iXmUmSPyQFAGhxj1VKn");
+const PROGRAM_ID = new PublicKey(process.env.PROGRAM_ID);
 const CLUSTER_OFFSET = 456;
 const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com";
 
@@ -64,7 +64,10 @@ async function initCompDef(
   if (accountInfo !== null) {
     console.log(`  ✓ ${circuitName} already initialized, skipping...`);
     return;
-  }
+   }
+   const mxeAccount = getMXEAccAddress(program.programId)
+   console.log("MXE", mxeAccount.toBase58())
+   console.log("pid", program.programId.toBase58())
 
   let sig: string;
   try {
@@ -158,7 +161,7 @@ async function main() {
   console.log("=".repeat(60));
   console.log("Conviction Markets - Compute Definition Initialization");
   console.log("=".repeat(60));
-  console.log(`\nProgram ID: ${DEVNET_PROGRAM_ID.toBase58()}`);
+  console.log(`\nProgram ID: ${PROGRAM_ID.toBase58()}`);
   console.log(`Cluster Offset: ${CLUSTER_OFFSET}`);
   console.log(`RPC URL: ${RPC_URL}`);
 

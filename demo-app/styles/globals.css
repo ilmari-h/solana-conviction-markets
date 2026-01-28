@@ -76,7 +76,6 @@
 
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: var(--font-jetbrains-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

@@ -39,14 +39,44 @@ export const options = pgTable(
   }])
 );
 
+export const shares = pgTable(
+  "shares",
+  {
+    id: text("id").primaryKey(), // composite: `${userPubkey}-${marketAddress}`
+    userPubkey: text("user_pubkey").notNull(),
+    marketAddress: text("market_address").notNull().references(() => markets.address),
+    optionAddress: text("option_address").notNull().references(() => options.address),
+    amount: numeric("amount").notNull(),
+    signature: text("signature").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ([
+    index("shares_user_idx").on(table.userPubkey),
+    index("shares_market_idx").on(table.marketAddress),
+  ])
+);
+
 export const marketsRelations = relations(markets, ({ many }) => ({
   options: many(options),
+  shares: many(shares),
 }));
 
-export const optionsRelations = relations(options, ({ one }) => ({
+export const optionsRelations = relations(options, ({ one, many }) => ({
   market: one(markets, {
     fields: [options.marketAddress],
     references: [markets.address],
+  }),
+  shares: many(shares),
+}));
+
+export const sharesRelations = relations(shares, ({ one }) => ({
+  market: one(markets, {
+    fields: [shares.marketAddress],
+    references: [markets.address],
+  }),
+  option: one(options, {
+    fields: [shares.optionAddress],
+    references: [options.address],
   }),
 }));
 
@@ -55,3 +85,6 @@ export type NewMarket = typeof markets.$inferInsert;
 
 export type Option = typeof options.$inferSelect;
 export type NewOption = typeof options.$inferInsert;
+
+export type Share = typeof shares.$inferSelect;
+export type NewShare = typeof shares.$inferInsert;

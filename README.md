@@ -4,20 +4,48 @@ Conviction Markets allow users to influence decision making by staking their cap
 
 Which option the user voted for and with how much stake is stored encrypted on chain and only revealed when the market creator has revealed their choice. Those who put their stake in the chosen option can claim yield. All participants can claim their initial stake back.
 
-Devnet address: `bnchXx34qGANGyEL6MxTYdG8iXmUmSPyQFAGhxj1VKn`
+Devnet address: `berV8jT2dwpZe4HP4PKej7z8kTXo4ziU3rt6zKSvJ8z`
 
 ## Build & Test
 
 Arcium v0.6.3 required.
 
 Before testing, make sure you build without the feature `hosted-compdefs`.
-In *programs/conviction_market/Cargo.toml* set `default = []`.
+In `programs/conviction_market/Cargo.toml` make sure it's not in the defaults array.
 
 
 ```bash
 yarn install
 arcium build
 arcium test
+```
+
+## Deployment
+
+1. Enable the `hosted-compdefs` feature by adding to the  defaults in `programs/conviction_market/Cargo.toml`
+2. Update the program `declare_id!` macro to use your program keypair's pubkey
+3. Run `arcium build with --skip-keys-sync` (last argument ensures step 2. isn't overwritten)
+4. Make sure in your Anchor.toml file, the `conviction_market` address matches address of step 2 (in the `[programs.localnet]` section if you have no devnet config there!)
+
+Run `arcium deploy` with the correct parameters.
+
+```bash
+arcium deploy --cluster-offset 456 \
+  --recovery-set-size 4 \
+  --keypair-path <PAYER KEYPAIR> \
+  --rpc-url <YOUR RPC URL> \
+  --program-keypair  <PROGRAM KEYPAIR > \
+  --program-name "conviction_market"
+```
+
+Run the compute defs script to initialize compute definitions.
+
+```bash
+PROGRAM_ID=<YOUR PROGRAM ID> \
+ARCIUM_CLUSTER_OFFSET=456 \
+KEYPAIR_PATH=<PAYER KEYPAIR> \
+RPC_URL=<YOUR RPC URL> \
+npx ts-node scripts/compute-defs.ts
 ```
 
 ## Structure

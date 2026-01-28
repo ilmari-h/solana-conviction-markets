@@ -20,7 +20,7 @@ pub const COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES: u32 = comp_def_offset("b
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 
-declare_id!("8QnM1kLWDFVzCqJNQ8BkyqV32wuGp4DfcqFmDWNXERFT");
+declare_id!("berV8jT2dwpZe4HP4PKej7z8kTXo4ziU3rt6zKSvJ8z");
 
 #[arcium_program]
 pub mod conviction_market {

@@ -165,7 +165,7 @@ export function TokenSwap() {
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>From</span>
-          <span className="font-mono">
+          <span>
             Balance: {fromBalance.toLocaleString(undefined, {
               maximumFractionDigits: fromToken === "SOL" ? 9 : 0
             })}{" "}
@@ -214,7 +214,7 @@ export function TokenSwap() {
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>To</span>
-          <span className="font-mono">
+          <span>
             Balance: {toBalance.toLocaleString(undefined, {
               maximumFractionDigits: toToken === "SOL" ? 9 : 0
             })}{" "}

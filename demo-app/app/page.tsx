@@ -46,7 +46,7 @@ export default function LoginPage() {
                 <span className="font-medium text-foreground">
                   {wallet?.adapter.name}
                 </span>
-                <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                <span className="text-xs bg-muted px-2 py-1 rounded">
                   {truncateAddress(publicKey.toBase58())}
                 </span>
               </div>

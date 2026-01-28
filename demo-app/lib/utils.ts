@@ -1,6 +1,34 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import type { MarketStatus } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+export function computeMarketStatus(market: {
+  openTimestamp: string | null;
+  timeToStake: string;
+  timeToReveal: string;
+  selectedOption: number | null;
+}): MarketStatus {
+  const now = Math.floor(Date.now() / 1000);
+
+  if (!market.openTimestamp) return "not_funded";
+
+  const openTs = parseInt(market.openTimestamp);
+  const stakeEndTs = openTs + parseInt(market.timeToStake);
+  const revealEndTs = stakeEndTs + parseInt(market.timeToReveal);
+
+  // If selected option exists and reveal period is over, it's resolved
+  if (market.selectedOption !== null && now >= revealEndTs) return "resolved";
+
+  // If stake period is over but reveal period is still active
+  if (now >= stakeEndTs && now < revealEndTs) return "revealing";
+
+  // If market is open and stake period is active
+  if (now >= openTs && now < stakeEndTs) return "open";
+
+  // openTimestamp is in the future or some edge case
+  return "not_funded";
 }

@@ -9,24 +9,29 @@ import { Badge } from "@/components/ui/badge";
 import { TokenSwap } from "@/components/token-swap";
 import { CreateMarketDialog } from "@/components/create-market-dialog";
 import { Info } from "lucide-react";
-import type { Option } from "@/db/schema";
+import type { MergedMarket, MarketStatus } from "@/lib/types";
 
-export interface MergedMarket {
-  address: string;
-  name: string;
-  description: string;
-  creatorPubkey: string;
-  rewardSol: number;
-  marketIndex: string;
-  totalOptions: number;
-  maxOptions: number;
-  maxShares: string;
-  openTimestamp: string | null;
-  timeToStake: string;
-  timeToReveal: string;
-  selectedOption: number | null;
-  options: Option[];
-}
+const STATUS_CONFIG: Record<
+  MarketStatus,
+  { label: string; className: string }
+> = {
+  not_funded: {
+    label: "Not Funded",
+    className: "border-muted-foreground/50 text-muted-foreground",
+  },
+  open: {
+    label: "Open",
+    className: "border-accent/50 text-accent",
+  },
+  revealing: {
+    label: "Revealing",
+    className: "border-amber-500/50 text-amber-500",
+  },
+  resolved: {
+    label: "Resolved",
+    className: "border-blue-500/50 text-blue-500",
+  },
+};
 
 interface MarketsDashboardProps {
   markets: MergedMarket[];
@@ -63,7 +68,7 @@ export function MarketsDashboard({ markets }: MarketsDashboardProps) {
           {publicKey && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="w-2 h-2 rounded-full bg-accent" />
-              <span className="font-mono text-xs bg-secondary px-2 py-1 rounded">
+              <span className="text-xs bg-secondary px-2 py-1 rounded">
                 {truncateAddress(publicKey.toBase58())}
               </span>
             </div>
@@ -83,52 +88,56 @@ export function MarketsDashboard({ markets }: MarketsDashboardProps) {
             </div>
 
             <div className="space-y-4">
-              {markets.map((market) => (
-                <Card
-                  key={market.address}
-                  className="p-5 bg-card border-border hover:border-accent/50 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`https://solscan.io/account/${market.creatorPubkey}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-muted-foreground hover:text-accent flex items-center gap-1"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Created by {truncateAddress(market.creatorPubkey)}
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+              {markets.map((market) => {
+                const statusConfig = STATUS_CONFIG[market.status];
+                return (
+                  <Card
+                    key={market.address}
+                    className="p-5 bg-card border-border hover:border-accent/50 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/app/${market.address}`)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`https://solscan.io/account/${market.creatorPubkey}?cluster=devnet`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground hover:text-accent flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Created by {truncateAddress(market.creatorPubkey)}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                        <h3 className="text-foreground font-medium">
+                          {market.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {market.description}
+                        </p>
                       </div>
-                      <h3 className="text-foreground font-medium">
-                        {market.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {market.description}
-                      </p>
+                      <Badge
+                        variant="outline"
+                        className={`shrink-0 ${statusConfig.className}`}
+                      >
+                        {statusConfig.label}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="border-accent/50 text-accent shrink-0"
-                    >
-                      active
-                    </Badge>
-                  </div>
 
-                  <div className="mt-4 pt-4 border-t border-border flex items-center gap-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <ListChecks className="w-4 h-4" />
-                      <span>{market.totalOptions} options</span>
+                    <div className="mt-4 pt-4 border-t border-border flex items-center gap-6 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <ListChecks className="w-4 h-4" />
+                        <span>{market.totalOptions} options</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Coins className="w-4 h-4" />
+                        <span>{market.rewardSol.toFixed(2)} SOL reward</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Coins className="w-4 h-4" />
-                      <span>{market.rewardSol.toFixed(2)} SOL reward</span>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
 
               {markets.length === 0 && (
                 <Card className="p-8 bg-card border-border text-center">
