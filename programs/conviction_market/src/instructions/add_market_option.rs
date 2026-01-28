@@ -11,6 +11,8 @@ pub struct AddMarketOption<'info> {
     #[account(
         mut,
         has_one = creator @ ErrorCode::Unauthorized,
+
+        // TODO: probably get rid of this - new options can be added during staking too.
         constraint = market.open_timestamp.is_none() @ ErrorCode::MarketAlreadyOpen,
     )]
     pub market: Account<'info, ConvictionMarket>,

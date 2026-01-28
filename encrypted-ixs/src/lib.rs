@@ -54,7 +54,6 @@ mod circuits {
     }
 
     // Buy vote tokens: add to balance
-    // TODO: lets use `Shared` here instead
     #[instruction]
     pub fn buy_vote_tokens(
         balance_ctx: Enc<Shared, VoteTokenBalance>,
@@ -97,12 +96,12 @@ mod circuits {
     pub fn buy_conviction_market_shares(
         input_ctx: Enc<Shared, BuySharesInput>,
         shares_recipient_ctx: Shared,
-        user_vta_ctx: Enc<Mxe, VoteTokenBalance>,
+        user_vta_ctx: Enc<Shared, VoteTokenBalance>,
         market_shares_ctx: Enc<Mxe, MarketShareState>,
         share_account_ctx: Shared,
     ) -> (
         bool,
-        Enc<Mxe, VoteTokenBalance>,
+        Enc<Shared, VoteTokenBalance>,
         Enc<Mxe, MarketShareState>,
         Enc<Shared, SharePurchase>,
         Enc<Shared, SharePurchase>

@@ -118,7 +118,8 @@ pub fn buy_market_shares(
         .x25519_pubkey(authorized_reader_pubkey)
         .plaintext_u128(authorized_reader_nonce)
 
-        // User's VTA (Enc<Mxe, VoteTokenBalance>)
+        // User's VTA (Enc<Shared, VoteTokenBalance>)
+        .x25519_pubkey(user_pubkey)
         .plaintext_u128(user_vta_nonce)
         .account(user_vta_key, 8, 32 * 1)
 
