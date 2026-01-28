@@ -2,7 +2,6 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Coins, ExternalLink, ListChecks } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -38,22 +37,12 @@ interface MarketsDashboardProps {
 }
 
 export function MarketsDashboard({ markets }: MarketsDashboardProps) {
-  const { connected, publicKey } = useWallet();
+  const { publicKey } = useWallet();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!connected) {
-      router.push("/");
-    }
-  }, [connected, router]);
 
   const truncateAddress = (address: string) => {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
-
-  if (!connected) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-background">

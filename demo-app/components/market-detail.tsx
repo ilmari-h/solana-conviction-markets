@@ -2,7 +2,7 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -66,7 +66,7 @@ const STATUS_CONFIG: Record<
 const OPTIONS_PER_PAGE = 5;
 
 export function MarketDetail({ market }: MarketDetailProps) {
-  const { connected, publicKey } = useWallet();
+  const { publicKey } = useWallet();
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -105,19 +105,9 @@ export function MarketDetail({ market }: MarketDetailProps) {
     );
   };
 
-  useEffect(() => {
-    if (!connected) {
-      router.push("/");
-    }
-  }, [connected, router]);
-
   const truncateAddress = (address: string) => {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
-
-  if (!connected) {
-    return null;
-  }
 
   const statusConfig = STATUS_CONFIG[market.status];
   const totalPages = Math.ceil(market.options.length / OPTIONS_PER_PAGE);
@@ -275,7 +265,7 @@ export function MarketDetail({ market }: MarketDetailProps) {
                           <span className="font-medium text-foreground">
                             {market.rewardSol.toFixed(2)} SOL
                           </span>{" "}
-                          to fund the reward pool.
+                          to fund the reward pool. Market can be opened after funding.
                         </p>
                       </div>
                       <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/30 border border-border/50">
