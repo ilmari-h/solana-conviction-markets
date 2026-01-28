@@ -1,6 +1,6 @@
 {
   "name": "@bench.games/conviction-markets",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "author": "Bench",
   "main": "./dist/index.js",
   "devDependencies": {
@@ -41,5 +41,8 @@
     "type-check": "tsc --noEmit"
   },
   "type": "module",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@bench.games/conviction-markets": "0.1.8"
+  }
 }

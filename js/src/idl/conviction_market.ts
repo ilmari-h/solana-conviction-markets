@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/conviction_market.json`.
  */
 export type ConvictionMarket = {
-  "address": "bnchXx34qGANGyEL6MxTYdG8iXmUmSPyQFAGhxj1VKn",
+  "address": "berV8jT2dwpZe4HP4PKej7z8kTXo4ziU3rt6zKSvJ8z",
   "metadata": {
     "name": "convictionMarket",
     "version": "0.1.0",
