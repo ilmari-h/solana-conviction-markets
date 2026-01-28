@@ -1,3 +1,4 @@
+
 {
   "address": "bnchXx34qGANGyEL6MxTYdG8iXmUmSPyQFAGhxj1VKn",
   "metadata": {
@@ -2352,7 +2353,7 @@
             "name": "field_1",
             "type": {
               "defined": {
-                "name": "MXEEncryptedStruct",
+                "name": "SharedEncryptedStruct",
                 "generics": [
                   {
                     "kind": "const",

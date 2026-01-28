@@ -2358,7 +2358,7 @@ export type ConvictionMarket = {
             "name": "field1",
             "type": {
               "defined": {
-                "name": "mxeEncryptedStruct",
+                "name": "sharedEncryptedStruct",
                 "generics": [
                   {
                     "kind": "const",
