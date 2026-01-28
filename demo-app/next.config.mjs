@@ -6,7 +6,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  turbopack: {},
+  turbopack: {
+    resolveAlias: {
+      fs: { browser: './lib/empty-module.js' },
+    },
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
