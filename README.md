@@ -13,7 +13,7 @@ Conviction Markets allow users to influence decision making by staking. Decision
 
 **Privacy:** While voting is open, individual votes and stake amounts are hidden from everyone except the decision maker. This prevents herd behavior—participants vote based on their own judgment rather than following the crowd.
 
-Devnet address: `berV8jT2dwpZe4HP4PKej7z8kTXo4ziU3rt6zKSvJ8z`
+Devnet address: `bnchws5HhuD2tHCZmr4Qz57VSGXfWorsoYvhr3jS72b`
 
 ## Documentation
 
