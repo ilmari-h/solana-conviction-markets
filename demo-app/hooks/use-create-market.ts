@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { createMarket, deriveMarketPda } from "@bench.games/conviction-markets";
 import { getUserMarketsCount, insertMarket } from "@/app/actions/markets";
@@ -22,6 +22,8 @@ interface CreateMarketParams {
   timeToStake: number;
   /** Duration of reveal period in seconds */
   timeToReveal: number;
+  /** Fund the market immediately with SOL transfer in the same transaction */
+  fundImmediately?: boolean;
 }
 
 interface CreateMarketResult {
@@ -87,6 +89,18 @@ export function useCreateMarket() {
         timeToReveal: params.timeToReveal,
         selectAuthority: undefined,
       });
+
+      // STEP 3.5: Add SOL transfer to fund the market if requested
+      if (params.fundImmediately) {
+        transaction.add(
+          SystemProgram.transfer({
+            fromPubkey: wallet.publicKey,
+            toPubkey: marketPda,
+            lamports: params.rewardLamports,
+          })
+        );
+        console.log(`Added SOL transfer of ${params.rewardLamports} lamports to market`);
+      }
 
       const signature = await wallet.sendTransaction(transaction, connection);
       console.log("Create market transaction sent:", signature);

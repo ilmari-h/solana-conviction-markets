@@ -403,25 +403,3 @@ sequenceDiagram
     Note over DM: DONE
     Note over P: DONE
 ```
-
----
-
-## Instruction Reference
-
-| # | Instruction | Phase | Who Can Call | MPC |
-|---|-------------|-------|--------------|-----|
-| 1 | [create_market](./ixs/create-market.md) | Setup | Decision Maker | Yes |
-| 2 | [add_market_option](./ixs/add-market-option.md) | Setup | Decision Maker | No |
-| 3 | [open_market](./ixs/open-market.md) | Setup | Decision Maker | No |
-| 4 | [init_vote_token_account](./ixs/init-vote-token-account.md) | Participant Setup | Anyone | Yes |
-| 5 | [mint_vote_tokens](./ixs/mint-vote-tokens.md) | Participant Setup | Token Owner | Yes |
-| 6 | [init_share_account](./ixs/init-share-account.md) | Staking | Anyone | No |
-| 7 | [buy_market_shares](./ixs/buy-market-shares.md) | Staking | Token Owner | Yes |
-| 8 | [select_option](./ixs/select-option.md) | Resolution | Decision Maker | No |
-| 9 | [reveal_shares](./ixs/reveal-shares.md) | Reveal | Anyone (permissionless) | Yes |
-| 10 | [increment_option_tally](./ixs/increment-option-tally.md) | Reveal | Anyone (permissionless) | No |
-| 11 | [close_share_account](./ixs/close-share-account.md) | Claim | Share Owner | No |
-| 12 | [claim_vote_tokens](./ixs/claim-vote-tokens.md) | Claim | Token Owner | Yes |
-
----
-

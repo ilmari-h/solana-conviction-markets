@@ -20,8 +20,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Plus } from "lucide-react";
 import { useCreateMarket } from "@/hooks/use-create-market";
+import { useSolBalance } from "@/hooks/use-sol-balance";
 import { useToast } from "@/hooks/use-toast";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
@@ -44,14 +46,18 @@ export function CreateMarketDialog() {
   const [rewardSol, setRewardSol] = useState("10");
   const [timeToStake, setTimeToStake] = useState<number>(DURATION_OPTIONS[4].value); // 1 week
   const [timeToReveal, setTimeToReveal] = useState<number>(DURATION_OPTIONS[3].value); // 1 day
+  const [fundImmediately, setFundImmediately] = useState(true);
 
   const { createMarket, isPending } = useCreateMarket();
+  const { balanceInSol } = useSolBalance();
   const { toast } = useToast();
+
+  // Check if user has enough SOL (reward + 0.1 buffer for tx fees)
+  const rewardSolNum = parseFloat(rewardSol) || 0;
+  const hasEnoughSol = balanceInSol >= rewardSolNum + 0.1;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const rewardSolNum = parseFloat(rewardSol);
 
     // Validation
     if (!name.trim() || !description.trim()) {
@@ -81,6 +87,7 @@ export function CreateMarketDialog() {
         rewardLamports: Math.floor(rewardSolNum * LAMPORTS_PER_SOL),
         timeToStake,
         timeToReveal,
+        fundImmediately: hasEnoughSol && fundImmediately,
       },
       {
         onSuccess: (data) => {
@@ -210,6 +217,39 @@ export function CreateMarketDialog() {
               Temporary thing: permissionless operation that we can automate later instead of users having to do it themselves.
             </p>
           </div>
+
+          {hasEnoughSol ? (
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="fundImmediately">
+                  Fund market immediately with {Boolean(rewardSol) ? rewardSol : "-"} SOL
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Create market and fund it in the same transaction. Deposits {rewardSol} SOL from your account to the market reward pool.
+                </p>
+              </div>
+              <Switch
+                id="fundImmediately"
+                checked={fundImmediately}
+                onCheckedChange={setFundImmediately}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2 rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-4 opacity-50">
+                <div className="space-y-0.5">
+                  <Label>Fund market immediately with {rewardSol} SOL</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Create market and fund it in the same transaction.
+                  </p>
+                </div>
+                <Switch disabled checked={false} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                You do not have enough SOL in your wallet to fund the market. You can still create the market and send funds later.
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button
