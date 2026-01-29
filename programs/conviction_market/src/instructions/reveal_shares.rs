@@ -79,8 +79,6 @@ pub fn reveal_shares(
     user_pubkey: [u8; 32],
 ) -> Result<()> {
 
-    require!(ctx.accounts.market.selected_option.is_some(), ErrorCode::MarketNotResolved);
-
     let market = &ctx.accounts.market;
     let clock = Clock::get()?;
     let current_timestamp = clock.unix_timestamp as u64;
@@ -88,7 +86,7 @@ pub fn reveal_shares(
     // Check that staking period is over.
     let reveal_start = market
         .open_timestamp
-        .unwrap_or(0)
+        .ok_or(ErrorCode::MarketNotOpen)?
         .saturating_add(market.time_to_stake);
 
     require!(current_timestamp >= reveal_start, ErrorCode::MarketNotResolved);
