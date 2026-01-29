@@ -411,8 +411,8 @@ export function MarketDetail({ market }: MarketDetailProps) {
               </Card>
             )}
 
-            {/* Reveal vote section - shown when market is in revealing phase and user has stake */}
-            {market.status === "revealing" && userShare && (
+            {/* Reveal vote section - shown when market is no longer staking and user has shares*/}
+            {(market.status === "revealing" || market.status === "resolved") && userShare && (
               <Card className="p-5 border-amber-500/50 bg-amber-500/5">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-full bg-amber-500/10 shrink-0">
