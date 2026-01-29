@@ -69,8 +69,8 @@ export function useVoteTokensBalance() {
       );
 
       return {
-        balance,
-        accountExists: true,
+        balance: account.stateNonce.eqn(0) ? BigInt(0) : balance,
+        accountExists: !account.stateNonce.eqn(0),
         account,
       };
     },

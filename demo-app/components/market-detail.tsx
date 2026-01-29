@@ -2,7 +2,7 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,8 @@ import {
   CheckCircle2,
   Rocket,
   Loader2,
+  Clock,
+  Trophy,
 } from "lucide-react";
 import type { MergedMarket, MarketStatus } from "@/lib/types";
 import { useSolBalance } from "@/hooks/use-sol-balance";
@@ -35,6 +37,7 @@ import { useVoteTokensBalance } from "@/hooks/use-vote-tokens-balance";
 import { AddOptionDialog } from "@/components/add-option-dialog";
 import { VoteDialog } from "@/components/vote-dialog";
 import { CloseMarketDialog } from "@/components/close-market-dialog";
+import { useRevealShares } from "@/hooks/use-reveal-shares";
 import { PublicKey } from "@solana/web3.js";
 
 interface MarketDetailProps {
@@ -82,6 +85,60 @@ export function MarketDetail({ market }: MarketDetailProps) {
 
   // Fetch user's vote token balance
   const { balance: voteTokenBalance } = useVoteTokensBalance();
+
+  // Reveal shares hook
+  const { revealShares, isPending: isRevealing } = useRevealShares();
+
+  // Countdown timer for reveal period
+  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (market.status !== "revealing" || !market.openTimestamp) return;
+
+    const revealEndTs =
+      parseInt(market.openTimestamp) +
+      parseInt(market.timeToStake) +
+      parseInt(market.timeToReveal);
+
+    const updateCountdown = () => {
+      const now = Math.floor(Date.now() / 1000);
+      const remaining = Math.max(0, revealEndTs - now);
+
+      setCountdown({
+        hours: Math.floor(remaining / 3600),
+        minutes: Math.floor((remaining % 3600) / 60),
+        seconds: remaining % 60,
+      });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [market.status, market.openTimestamp, market.timeToStake, market.timeToReveal]);
+
+  const handleRevealVote = () => {
+    revealShares(
+      { market: new PublicKey(market.address) },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Vote revealed!",
+            description: "Your stake has been returned to your vote token balance.",
+          });
+          router.refresh();
+          refetchUserShare();
+        },
+        onError: (error) => {
+          toast({
+            title: "Failed to reveal vote",
+            description: error instanceof Error ? error.message : "Unknown error occurred",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
 
   const handleOpenMarket = () => {
     openMarket(
@@ -188,6 +245,19 @@ export function MarketDetail({ market }: MarketDetailProps) {
                   )}
                 </div>
               </div>
+
+              {/* Selected/Winning option display */}
+              {market.selectedOption !== null && market.options[market.selectedOption] && (
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="border-blue-500/50 text-blue-500 bg-blue-500/10 px-3 py-1"
+                  >
+                    <Trophy className="w-3.5 h-3.5 mr-1.5" />
+                    Winner: {market.options[market.selectedOption].name}
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Market details card */}
@@ -332,6 +402,49 @@ export function MarketDetail({ market }: MarketDetailProps) {
                     </div>
                   </div>
                 )}
+              </Card>
+            )}
+
+            {/* Reveal vote section - shown when market is in revealing phase and user has stake */}
+            {market.status === "revealing" && userShare && (
+              <Card className="p-5 border-amber-500/50 bg-amber-500/5">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-full bg-amber-500/10 shrink-0">
+                    <Clock className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <div>
+                      <h3 className="text-sm font-medium text-foreground">
+                        Reveal your vote
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You have{" "}
+                        <span className="font-medium text-foreground">
+                          {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
+                        </span>{" "}
+                        to reveal your vote and claim back your stake.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 italic">
+                        NOTE: This process is permissionless and will be automated in future iterations of the app.<br/>
+                        Users won't have to come to the site to do this manually.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleRevealVote}
+                      disabled={isRevealing}
+                      className="bg-amber-500 text-white hover:bg-amber-600"
+                    >
+                      {isRevealing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Revealing...
+                        </>
+                      ) : (
+                        "Reveal your vote"
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </Card>
             )}
 
