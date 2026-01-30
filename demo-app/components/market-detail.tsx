@@ -38,7 +38,9 @@ import { AddOptionDialog } from "@/components/add-option-dialog";
 import { VoteDialog } from "@/components/vote-dialog";
 import { CloseMarketDialog } from "@/components/close-market-dialog";
 import { useRevealShares } from "@/hooks/use-reveal-shares";
+import { useClaimReward } from "@/hooks/use-claim-reward";
 import { PublicKey } from "@solana/web3.js";
+import { markShareRevealed, markShareYieldClaimed } from "@/app/actions/markets";
 
 interface MarketDetailProps {
   market: MergedMarket;
@@ -89,11 +91,14 @@ export function MarketDetail({ market }: MarketDetailProps) {
   // Reveal shares hook
   const { revealShares, isPending: isRevealing } = useRevealShares();
 
+  // Claim reward hook
+  const { claimReward, isPending: isClaiming } = useClaimReward();
+
   // Countdown timer for reveal period
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    if ((market.status !== "revealing" && market.status !== "open") || !market.openTimestamp) return;
+    if ((market.status !== "revealing" && market.status !== "resolved") || !market.openTimestamp) return;
 
     const revealEndTs =
       parseInt(market.openTimestamp) +
@@ -117,11 +122,29 @@ export function MarketDetail({ market }: MarketDetailProps) {
     return () => clearInterval(interval);
   }, [market.status, market.openTimestamp, market.timeToStake, market.timeToReveal]);
 
-  const handleRevealVote = () => {
+  const handleRevealVote = async () => {
+    // Calculate if revealing in time
+    const revealEndTs = market.openTimestamp
+      ? parseInt(market.openTimestamp) +
+        parseInt(market.timeToStake) +
+        parseInt(market.timeToReveal)
+      : 0;
+    const now = Math.floor(Date.now() / 1000);
+    const revealedInTime = now < revealEndTs;
+
     revealShares(
       { market: new PublicKey(market.address) },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // Mark share as revealed in database
+          if (publicKey) {
+            await markShareRevealed({
+              userPubkey: publicKey.toBase58(),
+              marketAddress: market.address,
+              revealedInTime,
+            });
+          }
+
           toast({
             title: "Vote revealed!",
             description: "Your stake has been returned to your vote token balance.",
@@ -132,6 +155,50 @@ export function MarketDetail({ market }: MarketDetailProps) {
         onError: (error) => {
           toast({
             title: "Failed to reveal vote",
+            description: error instanceof Error ? error.message : "Unknown error occurred",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  const handleClaimReward = () => {
+    if (!publicKey || !userShare) return;
+
+    // Find optionIndex from userShare.optionAddress (1-indexed)
+    const optionIndex = market.options.findIndex(
+      o => o.address === userShare.optionAddress
+    ) + 1;
+
+    if (optionIndex === 0) {
+      toast({
+        title: "Failed to claim reward",
+        description: "Could not find the option you voted for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    claimReward(
+      { market: new PublicKey(market.address), optionIndex },
+      {
+        onSuccess: async () => {
+          await markShareYieldClaimed({
+            userPubkey: publicKey.toBase58(),
+            marketAddress: market.address,
+          });
+
+          toast({
+            title: "Reward claimed!",
+            description: "Your share of the reward pool has been transferred to your wallet.",
+          });
+          router.refresh();
+          refetchUserShare();
+        },
+        onError: (error) => {
+          toast({
+            title: "Failed to claim reward",
             description: error instanceof Error ? error.message : "Unknown error occurred",
             variant: "destructive",
           });
@@ -262,6 +329,15 @@ export function MarketDetail({ market }: MarketDetailProps) {
                     <Trophy className="w-3.5 h-3.5 mr-1.5" />
                     Winner: {market.options[market.selectedOption - 1].name}
                   </Badge>
+                  {/* Show user's vote if they voted for a different option */}
+                  {market.status === "resolved" && userShare && userShare.optionAddress !== market.options[market.selectedOption - 1].address && (
+                    <Badge
+                      variant="outline"
+                      className="border-muted-foreground/50 text-muted-foreground bg-muted/30 px-3 py-1"
+                    >
+                      You voted for {market.options.find(o => o.address === userShare.optionAddress)?.name}
+                    </Badge>
+                  )}
                 </div>
               )}
             </div>
@@ -411,8 +487,8 @@ export function MarketDetail({ market }: MarketDetailProps) {
               </Card>
             )}
 
-            {/* Reveal vote section - shown when market is no longer staking and user has shares*/}
-            {(market.status === "revealing" || market.status === "resolved") && userShare && (
+            {/* Reveal vote section - shown when market is no longer staking and user has unrevealed shares*/}
+            {(market.status === "revealing" || market.status === "resolved") && userShare && userShare.revealedInTime === null && (
               <Card className="p-5 border-amber-500/50 bg-amber-500/5">
                 <div className="flex items-start gap-4">
                   <div className="p-2 rounded-full bg-amber-500/10 shrink-0">
@@ -454,6 +530,119 @@ export function MarketDetail({ market }: MarketDetailProps) {
                 </div>
               </Card>
             )}
+
+            {/* Market resolving section - shown when reveal period hasn't ended and user has revealed */}
+            {market.openTimestamp &&
+             userShare &&
+             market.selectedOption !== null &&
+             userShare.optionAddress === market.options[market.selectedOption - 1]?.address &&
+             userShare.revealedInTime === true && (() => {
+               const revealEndTs = parseInt(market.openTimestamp) +
+                 parseInt(market.timeToStake) +
+                 parseInt(market.timeToReveal);
+               const now = Math.floor(Date.now() / 1000);
+               const remaining = revealEndTs - now;
+
+               // Don't show if reveal period has ended
+               if (remaining <= 0) return null;
+
+               const hours = Math.floor(remaining / 3600);
+               const minutes = Math.floor((remaining % 3600) / 60);
+               const seconds = remaining % 60;
+
+               return (
+                 <Card className="p-5 border-accent/50 bg-accent/5">
+                   <div className="flex items-start gap-4">
+                     <div className="p-2 rounded-full bg-accent/10 shrink-0">
+                       <Clock className="w-5 h-5 text-accent" />
+                     </div>
+                     <div className="space-y-3 flex-1">
+                       <div>
+                         <h3 className="text-sm font-medium text-foreground">
+                           Vote Revealed
+                         </h3>
+                         <p className="text-sm text-muted-foreground mt-1">
+                           Market still resolving, you can claim your reward in{" "}
+                           <span className="font-medium text-foreground">
+                             {hours}h {minutes}m {seconds}s
+                           </span>
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+                 </Card>
+               );
+             })()}
+
+            {/* Claim share section - shown when reveal period ended and user voted for the winning option */}
+            {market.openTimestamp &&
+             market.selectedOption !== null &&
+             userShare &&
+             userShare.revealedInTime &&
+             userShare.optionAddress === market.options[market.selectedOption - 1]?.address &&
+             (() => {
+               const revealEndTs = parseInt(market.openTimestamp) +
+                 parseInt(market.timeToStake) +
+                 parseInt(market.timeToReveal);
+               const now = Math.floor(Date.now() / 1000);
+
+               // Only show if reveal period has ended
+               if (now < revealEndTs) return null;
+
+               return (
+              <Card className="p-5 border-accent/50 bg-accent/5">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-full bg-accent/10 shrink-0">
+                    <Trophy className="w-5 h-5 text-accent" />
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    {userShare.claimedYield ? (
+                      <div>
+                        <h3 className="text-sm font-medium text-foreground">
+                          Reward Claimed
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          You staked on the winning option and have successfully claimed your reward.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <h3 className="text-sm font-medium text-foreground">
+                            Congratulations! You voted for the winning option
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            You staked{" "}
+                            <span className="font-medium text-foreground">
+                              {userShare.amount} VOTE
+                            </span>{" "}
+                            on the winning option. Claim your share of the reward pool!
+                          </p>
+                        </div>
+                        <Button
+                          variant="accent"
+                          onClick={handleClaimReward}
+                          disabled={isClaiming}
+                        >
+                          {isClaiming ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Claiming...
+                            </>
+                          ) : (
+                            <>
+                              <Coins className="w-4 h-4 mr-2" />
+                              Claim Reward
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </Card>
+               );
+             })()}
 
             {/* Voting options */}
             <div className="space-y-4">

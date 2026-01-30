@@ -28,4 +28,6 @@ export interface MergedMarket {
 export interface UserShare {
   optionAddress: string;
   amount: string;
+  revealedInTime: boolean | null;
+  claimedYield: boolean | null;
 }

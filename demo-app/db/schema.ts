@@ -1,4 +1,4 @@
-import { pgTable, text, numeric, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, text, numeric, timestamp, index, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const markets = pgTable(
@@ -47,6 +47,8 @@ export const shares = pgTable(
     marketAddress: text("market_address").notNull().references(() => markets.address),
     optionAddress: text("option_address").notNull().references(() => options.address),
     amount: numeric("amount").notNull(),
+    revealedInTime: boolean("revealed_in_time"),
+    claimedYield: boolean("claimed_yield").default(false),
     signature: text("signature").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

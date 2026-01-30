@@ -32,6 +32,8 @@ export function useUserShare(marketAddress: string) {
       return {
         optionAddress: result.share.optionAddress,
         amount: result.share.amount,
+        revealedInTime: result.share.revealedInTime,
+        claimedYield: result.share.claimedYield,
       };
     },
     enabled: !!publicKey && !!marketAddress,

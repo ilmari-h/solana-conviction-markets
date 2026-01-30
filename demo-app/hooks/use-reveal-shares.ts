@@ -8,6 +8,9 @@ import {
   revealShares,
   awaitComputationFinalization,
   deriveShareAccountPda,
+  incrementOptionTally,
+  createProgram,
+  fetchShareAccount,
 } from "@bench.games/conviction-markets";
 import { useDeriveX25519 } from "./use-derive-x25519";
 
@@ -19,6 +22,8 @@ interface RevealSharesParams {
 interface RevealSharesResult {
   /** Signature of reveal shares transaction */
   revealSignature: string;
+  /** Signature of increment option tally transaction */
+  tallySignature: string;
   /** PDA of the share account */
   shareAccountPda: string;
 }
@@ -90,8 +95,31 @@ export function useRevealShares() {
       await awaitComputationFinalization(provider, computationOffset);
       console.log("Reveal computation finalized");
 
+      // Fetch the share account to get the revealed option
+      const program = createProgram(provider);
+      const shareAccount = await fetchShareAccount(program, shareAccountPda);
+
+      if (shareAccount.revealedOption === null) {
+        throw new Error("Share account does not have a revealed option");
+      }
+
+      // Increment the option tally
+      console.log("Incrementing option tally for option:", shareAccount.revealedOption);
+      const { transaction: tallyTx } = await incrementOptionTally(provider, {
+        market,
+        owner: wallet.publicKey,
+        optionIndex: shareAccount.revealedOption,
+      });
+
+      const tallySignature = await wallet.sendTransaction(tallyTx, connection);
+      console.log("Increment option tally transaction sent:", tallySignature);
+
+      await connection.confirmTransaction(tallySignature, "confirmed");
+      console.log("Increment option tally confirmed:", tallySignature);
+
       return {
         revealSignature,
+        tallySignature,
         shareAccountPda: shareAccountPda.toBase58(),
       };
     },

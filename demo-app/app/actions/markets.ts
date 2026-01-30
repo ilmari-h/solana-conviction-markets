@@ -256,3 +256,67 @@ export async function getUserShareForMarket(
     };
   }
 }
+
+/**
+ * Mark a share as revealed
+ * Called AFTER successful reveal transaction
+ */
+export async function markShareRevealed(data: {
+  userPubkey: string;
+  marketAddress: string;
+  revealedInTime: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    new PublicKey(data.userPubkey);
+    new PublicKey(data.marketAddress);
+
+    const shareId = `${data.userPubkey}-${data.marketAddress}`;
+
+    await db
+      .update(shares)
+      .set({ revealedInTime: data.revealedInTime })
+      .where(eq(shares.id, shareId));
+
+    // Revalidate the market detail page
+    revalidatePath(`/app/${data.marketAddress}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error marking share as revealed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to mark share as revealed",
+    };
+  }
+}
+
+/**
+ * Mark a share's yield as claimed
+ * Called AFTER successful closeShareAccount transaction
+ */
+export async function markShareYieldClaimed(data: {
+  userPubkey: string;
+  marketAddress: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    new PublicKey(data.userPubkey);
+    new PublicKey(data.marketAddress);
+
+    const shareId = `${data.userPubkey}-${data.marketAddress}`;
+
+    await db
+      .update(shares)
+      .set({ claimedYield: true })
+      .where(eq(shares.id, shareId));
+
+    revalidatePath(`/app/${data.marketAddress}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error marking share yield as claimed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to mark yield as claimed",
+    };
+  }
+}
