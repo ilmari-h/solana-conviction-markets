@@ -72,32 +72,37 @@ export function useRevealShares() {
           "Share account not found. You must have voted in this market to reveal your vote."
         );
       }
-
-      console.log("Revealing shares for market:", market.toBase58());
-
-      const { transaction, computationOffset } = await revealShares(provider, {
-        signer: wallet.publicKey,
-        owner: wallet.publicKey,
-        market,
-        ownerX25519Keypair: x25519Keypair,
-      });
-
-      // Send transaction using wallet adapter
-      const revealSignature = await wallet.sendTransaction(transaction, connection);
-      console.log("Reveal shares transaction sent:", revealSignature);
-
-      // Wait for transaction confirmation
-      await connection.confirmTransaction(revealSignature, "confirmed");
-      console.log("Transaction confirmed:", revealSignature);
-
-      // Wait for MPC computation to finalize
-      console.log("Waiting for MPC reveal computation to finalize...");
-      await awaitComputationFinalization(provider, computationOffset);
-      console.log("Reveal computation finalized");
-
-      // Fetch the share account to get the revealed option
       const program = createProgram(provider);
-      const shareAccount = await fetchShareAccount(program, shareAccountPda);
+      let shareAccount = await fetchShareAccount(program, shareAccountPda);
+
+      if(shareAccount.revealedOption !== null ){
+
+        console.log("Revealing shares for market:", market.toBase58());
+
+        const { transaction, computationOffset } = await revealShares(provider, {
+          signer: wallet.publicKey,
+          owner: wallet.publicKey,
+          market,
+          ownerX25519Keypair: x25519Keypair,
+        });
+
+        // Send transaction using wallet adapter
+        const revealSignature = await wallet.sendTransaction(transaction, connection);
+        console.log("Reveal shares transaction sent:", revealSignature);
+
+        // Wait for transaction confirmation
+        await connection.confirmTransaction(revealSignature, "confirmed");
+        console.log("Transaction confirmed:", revealSignature);
+
+        // Wait for MPC computation to finalize
+        console.log("Waiting for MPC reveal computation to finalize...");
+        await awaitComputationFinalization(provider, computationOffset);
+        console.log("Reveal computation finalized");
+
+        // Fetch the share account to get the revealed option
+        shareAccount = await fetchShareAccount(program, shareAccountPda);
+
+      }
 
       if (shareAccount.revealedOption === null) {
         throw new Error("Share account does not have a revealed option");
@@ -118,7 +123,7 @@ export function useRevealShares() {
       console.log("Increment option tally confirmed:", tallySignature);
 
       return {
-        revealSignature,
+        revealSignature: tallySignature,
         tallySignature,
         shareAccountPda: shareAccountPda.toBase58(),
       };
