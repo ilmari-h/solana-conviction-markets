@@ -204,34 +204,35 @@ sequenceDiagram
         participant P as Participant
     end
 
-    Note over DM: SETUP PHASE
-    DM->>DM: 1. create_market
-    DM->>DM: 2. add_market_option (×N)
-    DM->>DM: 3. Fund market (SOL transfer)
-    DM->>DM: 4. open_market
+    Note over DM,P: SETUP PHASE
+    DM->>DM: create_market
+    DM->>DM: add_market_option
+    P->>P: add_market_option
+    DM->>DM: Fund market (SOL transfer)
+    DM->>DM: open_market
 
     Note over P: PARTICIPANT SETUP
-    P->>P: 5. init_vote_token_account
-    P->>P: 6. mint_vote_tokens
+    P->>P: init_vote_token_account
+    P->>P: mint_vote_tokens
 
     rect rgb(1, 30, 20)
         Note over DM,P: STAKING PERIOD
-        P->>P: 7. init_share_account
-        P->>P: 8. buy_market_shares
+        P->>P: init_share_account
+        P->>P: buy_market_shares
         DM-->>P: (reads disclosed votes)
     end
 
-    DM->>DM: 9. select_option
+    DM->>DM: select_option
 
     rect rgb(24, 5, 50)
         Note over DM,P: REVEAL PERIOD
-        P->>P: 10. reveal_shares
-        P->>P: 11. increment_option_tally
+        P->>P: reveal_shares
+        P->>P: increment_option_tally
     end
 
     Note over DM,P: CLAIM PHASE
-    P->>P: 12. close_share_account (claim reward)
-    P->>P: 13. claim_vote_tokens (withdraw SOL)
+    P->>P: close_share_account (claim reward)
+    P->>P: claim_vote_tokens (withdraw SOL)
 
     Note over DM: DONE
     Note over P: DONE
