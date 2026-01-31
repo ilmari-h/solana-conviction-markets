@@ -7,36 +7,13 @@ This document describes the complete lifecycle of a Conviction Market from creat
 Conviction Markets allow users to influence decision making by staking. Decision makers benefit from conviction markets by getting access to high-quality signals, helping them make the best choice.
 
 1. A **decision maker** creates a market with a reward pool
-2. **Participants** stake on their preferred options with encrypted votes
-3. The **decision maker** sees individual votes (disclosed to them) but others cannot
-4. After selecting a winner, participants who backed it share the reward proportionally
+3. **Participants** stake on their preferred options with encrypted votes and can create new options
+4. The **decision maker** sees individual votes (disclosed to them) but others cannot
+5. After selecting a winner, participants who backed it share the reward proportionally
 
-The market progresses through distinct phases with time-based transitions:
+The protocol sets itself apart from other voting protocols with **confidential stake-to-vote mechanism** and **an arbitrary number of options**.
 
-```mermaid
-flowchart TD
-    subgraph SETUP["**SETUP**"]
-        S1[Create market & fund]
-    end
-
-    subgraph STAKING["**STAKING PERIOD**"]
-        ST1[Users stake by buying shares<br/>*encrypted*]
-        ST2[Decision maker<br/>can observe votes in real time]
-    end
-
-    subgraph REVEAL["**REVEAL PERIOD**"]
-        R1[Votes revealed and users claim back their stake<br/>*permissionless*]
-        R2[Winner selected<br/>*if not already*]
-    end
-
-    subgraph REWARDS["**REWARDS**"]
-        C1[Rewards distributed]
-    end
-
-    SETUP -->|open_timestamp| STAKING
-    STAKING -->|stake_end| REVEAL
-    REVEAL -->|reveal_end| REWARDS
-```
+A conviction market progresses through distinct phases with time limits. A description of these phases follows.
 
 ---
 
@@ -46,32 +23,13 @@ The decision maker creates and configures the market.
 
 ### Step 1.1: Create Market
 
-**Instruction:** [`create_market`](./ixs/create-market.md)
+**Instruction:** [`create_market`](../programs/conviction_market/src/instructions/create_market.rs)
 
 The decision maker initializes a new market with:
-- Maximum number of voting options
-- Total shares available for purchase
 - Reward pool size (in lamports)
 - Duration of staking period
 - Duration of reveal period
-- Optional alternative select authority
-
-```typescript
-await program.methods
-  .createMarket(
-    marketIndex,           // u64: unique identifier
-    computationOffset,     // u64: MPC computation ID
-    maxOptions,            // u16: max voting options (e.g., 5)
-    maxShares,             // u64: total purchasable shares (e.g., 1000)
-    rewardLamports,        // u64: reward pool (e.g., 1 SOL)
-    timeToStake,           // u64: staking duration in seconds
-    timeToReveal,          // u64: reveal duration in seconds
-    nonce,                 // u128: encryption nonce
-    selectAuthority,       // Option<Pubkey>: alternative authority
-  )
-  .accounts({...})
-  .rpc();
-```
+- Optional authority account that enables another signer to select the winning result
 
 **What happens:**
 - Market PDA is created with configuration
@@ -80,72 +38,39 @@ await program.methods
 
 ### Step 1.2: Add Options
 
-**Instruction:** [`add_market_option`](./ixs/add-market-option.md)
+**Instruction:** [`add_market_option`](../programs/conviction_market/src/instructions/add_market_option.rs)
 
-Add voting options one by one:
+The market creator or the wider public can now add new options to vote for.
 
-```typescript
-await program.methods
-  .addMarketOption(1, "Option A")  // index must be sequential: 1, 2, 3...
-  .accounts({ creator, market, option: optionPDA })
-  .rpc();
-```
-
-**Note:** Anyone can add new options. Options can be added also after the market is open, until a winning option is selected.
+**Note:** Options can be added also after the market is open, until a winning option is selected.
 
 ### Step 1.3: Fund & Open Market
 
-**Instruction:** [`open_market`](./ixs/open-market.md)
+**Instruction:** [`open_market`](../programs/conviction_market/src/instructions/open_market.rs)
 
-First, transfer the reward lamports to the market PDA:
+The market must be funded with the reward lamports before this instruction can be called.
+The creator, or anyone for that matter, can send the reward amount to the market's PDA.
+This can also be done in the same transaction as the market opening.
 
-```typescript
-// Transfer reward to market PDA
-const tx = new Transaction().add(
-  SystemProgram.transfer({
-    fromPubkey: creator,
-    toPubkey: marketPDA,
-    lamports: rewardLamports,
-  })
-);
-await sendTransaction(tx);
-```
-
-Then open the market with a future timestamp:
-
-```typescript
-await program.methods
-  .openMarket(new BN(openTimestamp))
-  .accounts({ creator, market })
-  .rpc();
-```
+This instruciton takes an open timestamp as argument.
 
 **What happens:**
 - Validates market has sufficient funding
-- Sets `open_timestamp` - staking begins at this time
+- Sets `open_timestamp` - staking can start from this time onwards
 - Market transitions from draft to active
 
 ---
 
 ## Phase 2: Participant Setup
 
-Participants prepare to stake by setting up their accounts.
+Participants prepare to stake by setting up their accounts. 
 
 ### Step 2.1: Initialize Vote Token Account
 
-**Instruction:** [`init_vote_token_account`](./ixs/init-vote-token-account.md)
+**Instruction:** [`init_vote_token_account`](../programs/conviction_market/src/instructions/init_vote_token_account.rs)
 
-Each participant needs a vote token account to hold their encrypted balance:
-
-```typescript
-await program.methods
-  .initVoteTokenAccount(computationOffset, x25519PublicKey, nonce)
-  .accounts({ signer: user, voteTokenAccount: vtaPDA, ... })
-  .rpc();
-
-// Wait for MPC to complete
-await awaitComputationFinalization(provider, computationOffset, programId);
-```
+Each participant needs a vote token account (VTA) to hold their encrypted balance.
+The VTA is tied to a user's wallet, not any specific market, and is used for staking across different conviction markets.
 
 **What happens:**
 - Creates VoteTokenAccount PDA for the user
@@ -153,19 +78,9 @@ await awaitComputationFinalization(provider, computationOffset, programId);
 
 ### Step 2.2: Purchase Vote Tokens
 
-**Instruction:** [`mint_vote_tokens`](./ixs/mint-vote-tokens.md)
+**Instruction:** [`mint_vote_tokens`](../programs/conviction_market/src/instructions/mint_vote_tokens.rs)
 
-Convert SOL to vote tokens (0.001 SOL per token):
-
-```typescript
-const amount = 100; // Buy 100 vote tokens (costs 0.1 SOL)
-await program.methods
-  .mintVoteTokens(computationOffset, x25519PublicKey, new BN(amount))
-  .accounts({ signer: user, ... })
-  .rpc();
-
-await awaitComputationFinalization(provider, computationOffset, programId);
-```
+Convert SOL to vote tokens at a constant price. Vote tokens are essentially just a privacy-enabling wrapper around SOL.
 
 **What happens:**
 - SOL transfers from user to VTA PDA
@@ -180,55 +95,24 @@ During the staking period (`open_timestamp` to `open_timestamp + time_to_stake`)
 
 ### Step 3.1: Initialize Share Account
 
-**Instruction:** [`init_share_account`](./ixs/init-share-account.md)
+**Instruction:** [`init_share_account`](../programs/conviction_market/src/instructions/init_share_account.rs)
 
-Create a share account for the specific market:
+Creates a share account for the specific market.
 
-```typescript
-await program.methods
-  .initShareAccount(stateNonce)
-  .accounts({ signer: user, market: marketPDA, shareAccount: shareAccountPDA })
-  .rpc();
-```
+This account keeps track of user's purchased shares and which option the user voted for.
+These values are encrypted and only visible to the user and the decision maker.
 
 ### Step 3.2: Buy Market Shares
 
-**Instruction:** [`buy_market_shares`](./ixs/buy-market-shares.md)
+**Instruction:** [`buy_market_shares`](../programs/conviction_market/src/instructions/buy_market_shares.rs)
 
-This is the core voting action. The user encrypts their vote client-side:
-
-```typescript
-// Client-side encryption
-const buyAmount = BigInt(50);      // Buy 50 shares
-const selectedOption = BigInt(1);   // Vote for option 1
-const inputNonce = randomBytes(16);
-
-// Encrypt inputs with shared key
-const ciphertexts = cipher.encrypt([buyAmount, selectedOption], inputNonce);
-
-// Submit encrypted vote
-await program.methods
-  .buyMarketShares(
-    computationOffset,
-    Array.from(ciphertexts[0]),      // encrypted amount
-    Array.from(ciphertexts[1]),      // encrypted option
-    x25519PublicKey,
-    inputNonce,
-    authorizedReaderPubkey,          // Decision maker's key
-    disclosureNonce,
-  )
-  .accounts({ signer: user, market, userVta, shareAccount, ... })
-  .rpc();
-
-await awaitComputationFinalization(provider, computationOffset, programId);
-```
+This is the core voting action. The user encrypts their vote client-side and passes it to the instruction.
 
 **What happens:**
 - MPC decrypts inputs, validates balances
 - Deducts from user's vote token balance
 - Deducts from market's available shares
-- Stores encrypted position in share account
-- Creates disclosure encrypted for authorized reader (decision maker)
+- Stores encrypted position in share account (only decryptable by user and decision maker)
 - Records `bought_at_timestamp` for conviction scoring
 
 ---
@@ -239,15 +123,9 @@ After reviewing disclosed votes, the decision maker selects a winner.
 
 ### Step 4.1: Select Winning Option
 
-**Instruction:** [`select_option`](./ixs/select-option.md)
+**Instruction:** [`select_option`](../programs/conviction_market/src/instructions/select_option.rs)
 
-```typescript
-const winningOptionIndex = 1; // Option 1 wins
-await program.methods
-  .selectOption(winningOptionIndex)
-  .accounts({ authority: creator, market })
-  .rpc();
-```
+This instruction takes as input the 1-based index of the selected option.
 
 **What happens:**
 - Sets `selected_option` on the market
@@ -264,25 +142,9 @@ After a winner is selected, positions are revealed and tallied. This phase runs 
 
 ### Step 5.1: Reveal Shares
 
-**Instruction:** [`reveal_shares`](./ixs/reveal-shares.md)
+**Instruction:** [`reveal_shares`](../programs/conviction_market/src/instructions/reveal_shares.rs)
 
-Anyone can reveal any user's shares (permissionless):
-
-```typescript
-await program.methods
-  .revealShares(computationOffset, ownerX25519PublicKey)
-  .accounts({
-    signer: anyone,
-    owner: shareOwner,
-    market,
-    shareAccount,
-    userVta,
-    ...
-  })
-  .rpc();
-
-await awaitComputationFinalization(provider, computationOffset, programId);
-```
+This instruciton is permissionless; anyone can reveal anyone else's shares.
 
 **What happens:**
 - MPC decrypts share position
@@ -293,22 +155,9 @@ await awaitComputationFinalization(provider, computationOffset, programId);
 
 ### Step 5.2: Increment Option Tally
 
-**Instruction:** [`increment_option_tally`](./ixs/increment-option-tally.md)
+**Instruction:** [`increment_option_tally`](../programs/conviction_market/src/instructions/increment_option_tally.rs)
 
-Add revealed shares to the option's total (also permissionless):
-
-```typescript
-await program.methods
-  .incrementOptionTally(revealedOptionIndex)
-  .accounts({
-    signer: anyone,
-    owner: shareOwner,
-    market,
-    shareAccount,
-    option: optionPDA
-  })
-  .rpc();
-```
+Adds revealed shares to the option's total (also permissionless).
 
 **What happens:**
 - Adds `revealed_amount` to `option.total_shares`
@@ -324,14 +173,7 @@ After the reveal period ends, users can close their accounts and claim rewards.
 
 ### Step 6.1: Close Share Account & Claim Reward
 
-**Instruction:** [`close_share_account`](./ixs/close-share-account.md)
-
-```typescript
-await program.methods
-  .closeShareAccount(revealedOptionIndex)
-  .accounts({ owner: user, market, shareAccount, option: optionPDA })
-  .rpc();
-```
+**Instruction:** [`close_share_account`](../programs/conviction_market/src/instructions/close_share_account.rs)
 
 **What happens:**
 - If user voted for winning option AND incremented tally:
@@ -341,18 +183,9 @@ await program.methods
 
 ### Step 6.2: Claim Vote Tokens (Optional)
 
-**Instruction:** [`claim_vote_tokens`](./ixs/claim-vote-tokens.md)
+**Instruction:** [`claim_vote_tokens`](../programs/conviction_market/src/instructions/claim_vote_tokens.rs)
 
-Users can sell remaining vote tokens back for SOL:
-
-```typescript
-await program.methods
-  .claimVoteTokens(computationOffset, x25519PublicKey, new BN(remainingTokens))
-  .accounts({ signer: user, ... })
-  .rpc();
-
-await awaitComputationFinalization(provider, computationOffset, programId);
-```
+Users can sell remaining vote tokens back for SOL.
 
 **What happens:**
 - MPC validates balance and deducts tokens
@@ -381,16 +214,16 @@ sequenceDiagram
     P->>P: 5. init_vote_token_account
     P->>P: 6. mint_vote_tokens
 
-    rect rgb(4, 41, 14)
+    rect rgb(1, 30, 20)
         Note over DM,P: STAKING PERIOD
-        DM-->>P: (reads disclosed votes)
         P->>P: 7. init_share_account
         P->>P: 8. buy_market_shares
+        DM-->>P: (reads disclosed votes)
     end
 
     DM->>DM: 9. select_option
 
-    rect rgb(24, 4, 41)
+    rect rgb(24, 5, 50)
         Note over DM,P: REVEAL PERIOD
         P->>P: 10. reveal_shares
         P->>P: 11. increment_option_tally
