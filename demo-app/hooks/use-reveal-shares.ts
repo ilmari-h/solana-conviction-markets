@@ -75,7 +75,7 @@ export function useRevealShares() {
       const program = createProgram(provider);
       let shareAccount = await fetchShareAccount(program, shareAccountPda);
 
-      if(shareAccount.revealedOption !== null ){
+      if(shareAccount.revealedOption === null ){
 
         console.log("Revealing shares for market:", market.toBase58());
 
@@ -102,11 +102,11 @@ export function useRevealShares() {
         // Fetch the share account to get the revealed option
         shareAccount = await fetchShareAccount(program, shareAccountPda);
 
+        if (shareAccount.revealedOption === null) {
+          throw new Error("Share account does not have a revealed option");
+        }
       }
 
-      if (shareAccount.revealedOption === null) {
-        throw new Error("Share account does not have a revealed option");
-      }
 
       // Increment the option tally
       console.log("Incrementing option tally for option:", shareAccount.revealedOption);
