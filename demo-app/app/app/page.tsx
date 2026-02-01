@@ -58,9 +58,9 @@ export default async function AppPage() {
     const address = onChain.publicKey.toBase58();
     const dbData = dbMarketMap.get(address)!;
 
-    const openTimestamp = onChain.account.openTimestamp?.toString() ?? null;
-    const timeToStake = onChain.account.timeToStake.toString();
-    const timeToReveal = onChain.account.timeToReveal.toString();
+    const openTimestamp = onChain.account.openTimestamp?.toNumber() ?? null;
+    const timeToStake = onChain.account.timeToStake.toNumber();
+    const timeToReveal = onChain.account.timeToReveal.toNumber();
     const selectedOption = onChain.account.selectedOption ?? null;
 
     const status = computeMarketStatus({

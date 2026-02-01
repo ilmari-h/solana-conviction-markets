@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -72,6 +72,17 @@ export function MarketsDashboard({ markets, pendingMarkets = [] }: MarketsDashbo
       return dateB - dateA;
     });
   }, [markets, pendingMarkets]);
+
+  // Auto-refresh when there are initializing markets
+  useEffect(() => {
+    if (pendingMarkets.length === 0) return;
+
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [pendingMarkets.length, router]);
 
   return (
     <div className="min-h-screen bg-background">

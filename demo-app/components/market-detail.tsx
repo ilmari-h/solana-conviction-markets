@@ -290,9 +290,7 @@ export function MarketDetail({ market }: MarketDetailProps) {
       <header className="border-b border-border bg-card/50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-light tracking-tight text-foreground">
-              <span>Conviction Markets</span>
-            </h1>
+            <img src="/logo-text.png" alt="Bench" className="h-6" />
           </div>
           {publicKey && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
