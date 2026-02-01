@@ -172,10 +172,10 @@ export function MarketsDashboard({ markets, pendingMarkets = [] }: MarketsDashbo
               return (
                 <Card
                   key={market.address}
-                  className="p-5 bg-card border-border hover:border-accent/50 transition-colors cursor-pointer"
+                  className="p-5 bg-card border-border hover:border-accent/50 transition-colors cursor-pointer flex flex-col"
                   onClick={() => router.push(`/app/${market.address}`)}
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start justify-between gap-4 flex-1">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-2">
                         <a
@@ -204,7 +204,7 @@ export function MarketsDashboard({ markets, pendingMarkets = [] }: MarketsDashbo
                     </Badge>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-border flex items-center gap-6 text-sm text-muted-foreground">
+                  <div className="mt-auto pt-4 border-t border-border flex items-center gap-6 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <ListChecks className="w-4 h-4" />
                       <span>{market.totalOptions} options</span>
