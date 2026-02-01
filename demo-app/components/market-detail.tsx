@@ -865,7 +865,7 @@ export function MarketDetail({ market }: MarketDetailProps) {
                     What are vote tokens?
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Vote tokens are used for staking in Conviction Markets.
+                    Vote tokens are used for staking in Opportunity Markets.
                     They enable confidential staking: how much or for which option
                     you staked for is not revealed.
                     Vote tokens can always be swapped back to SOL at a constant price.

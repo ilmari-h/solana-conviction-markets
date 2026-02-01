@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
-pub struct ConvictionMarket {
+pub struct OpportunityMarket {
     pub encrypted_available_shares: [[u8; 32]; 1],
     pub bump: u8,
     pub creator: Pubkey,      // part of PDA seed
@@ -68,7 +68,7 @@ pub struct ShareAccount {
 
 #[account]
 #[derive(InitSpace)]
-pub struct ConvictionMarketOption {
+pub struct OpportunityMarketOption {
     pub bump: u8,
     pub creator: Pubkey,
 
@@ -85,7 +85,7 @@ pub struct ConvictionMarketOption {
 
 #[account]
 #[derive(InitSpace)]
-pub struct ConvictionMarketShare {
+pub struct OpportunityMarketShare {
     // [share_amount, selected_option]
     pub encrypted_state: [[u8; 32]; 2],
     pub bump: u8,

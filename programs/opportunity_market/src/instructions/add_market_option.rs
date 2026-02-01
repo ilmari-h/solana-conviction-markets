@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::error::ErrorCode;
-use crate::state::{ConvictionMarket, ConvictionMarketOption};
+use crate::state::{OpportunityMarket, OpportunityMarketOption};
 
 #[derive(Accounts)]
 #[instruction(option_index: u16)]
@@ -12,15 +12,15 @@ pub struct AddMarketOption<'info> {
         mut,
         constraint = market.selected_option.is_none() @ ErrorCode::WinnerAlreadySelected,
     )]
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
     #[account(
         init,
         payer = creator,
-        space = 8 + ConvictionMarketOption::INIT_SPACE,
+        space = 8 + OpportunityMarketOption::INIT_SPACE,
         seeds = [b"option", market.key().as_ref(), &option_index.to_le_bytes()],
         bump,
     )]
-    pub option: Account<'info, ConvictionMarketOption>,
+    pub option: Account<'info, OpportunityMarketOption>,
     pub system_program: Program<'info, System>,
 }
 

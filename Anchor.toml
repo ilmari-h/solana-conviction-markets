@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-conviction_market = "8QnM1kLWDFVzCqJNQ8BkyqV32wuGp4DfcqFmDWNXERFT"
+opportunity_market = "6Y2SL4PG9YUN3tkF8M4z83Si4sh72X5E41Xp9RDeBXje"
 
 [registry]
 url = "https://api.apr.dev"

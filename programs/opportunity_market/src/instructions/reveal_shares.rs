@@ -6,7 +6,7 @@ use crate::error::ErrorCode;
 use crate::events::SharesRevealedEvent;
 use crate::instructions::buy_market_shares::SHARE_ACCOUNT_SEED;
 use crate::instructions::mint_vote_tokens::VOTE_TOKEN_ACCOUNT_SEED;
-use crate::state::{ConvictionMarket, ShareAccount, VoteTokenAccount};
+use crate::state::{OpportunityMarket, ShareAccount, VoteTokenAccount};
 use crate::COMP_DEF_OFFSET_REVEAL_SHARES;
 use crate::{ArciumSignerAccount, ID, ID_CONST};
 
@@ -20,7 +20,7 @@ pub struct RevealShares<'info> {
     /// CHECK: Any account, this operation is permissionless.
     pub owner: UncheckedAccount<'info>,
 
-    pub market: Box<Account<'info, ConvictionMarket>>,
+    pub market: Box<Account<'info, OpportunityMarket>>,
 
     #[account(
         mut,

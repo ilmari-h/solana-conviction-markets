@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{ConvictionMarket, ShareAccount};
+use crate::state::{OpportunityMarket, ShareAccount};
 use crate::instructions::buy_market_shares::SHARE_ACCOUNT_SEED;
 
 #[derive(Accounts)]
@@ -8,7 +8,7 @@ pub struct InitShareAccount<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 
     #[account(
         init,

@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { ConvictionMarket } from "../target/types/conviction_market";
+import { OpportunityMarket } from "../target/types/opportunity_market";
 import { randomBytes } from "crypto";
 import {
   awaitComputationFinalization,
@@ -108,7 +108,7 @@ function deriveMarketPDA(
 ): PublicKey {
   const [marketPDA] = PublicKey.findProgramAddressSync(
     [
-      Buffer.from("conviction_market"),
+      Buffer.from("opportunity_market"),
       creator.toBuffer(),
       index.toArrayLike(Buffer, "le", 8),
     ],
@@ -136,7 +136,7 @@ function deriveOptionPDA(
 
 async function main() {
   console.log("=".repeat(60));
-  console.log("Conviction Markets - Test Open Market on Devnet");
+  console.log("Opportunity Markets - Test Open Market on Devnet");
   console.log("=".repeat(60));
   console.log(`\nProgram ID: ${DEVNET_PROGRAM_ID.toBase58()}`);
   console.log(`RPC URL: ${RPC_URL}`);
@@ -176,10 +176,10 @@ async function main() {
   console.log("\nLoading program IDL...");
   let idl: anchor.Idl;
   try {
-    const idlPath = `${__dirname}/../target/idl/conviction_market.json`;
+    const idlPath = `${__dirname}/../target/idl/opportunity_market.json`;
     idl = JSON.parse(fs.readFileSync(idlPath, "utf8"));
   } catch (error) {
-    console.error("Failed to load IDL from target/idl/conviction_market.json");
+    console.error("Failed to load IDL from target/idl/opportunity_market.json");
     console.error("Make sure you've built the project with: arcium build");
     process.exit(1);
   }
@@ -187,7 +187,7 @@ async function main() {
   const program = new Program(
     idl,
     provider
-  ) as Program<ConvictionMarket>;
+  ) as Program<OpportunityMarket>;
 
   // Get MXE public key
   console.log("\nFetching MXE public key...");
@@ -200,7 +200,7 @@ async function main() {
   console.log(`Arcium Cluster Offset: ${arciumEnv.arciumClusterOffset}`);
 
   console.log("\n" + "=".repeat(60));
-  console.log("Creating Conviction Market");
+  console.log("Creating Opportunity Market");
   console.log("=".repeat(60));
 
   // Generate random market index to avoid collisions

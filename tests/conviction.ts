@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { ConvictionMarket } from "../target/types/conviction_market";
+import { OpportunityMarket } from "../target/types/opportunity_market";
 import { randomBytes } from "crypto";
 import {
   awaitComputationFinalization,
@@ -31,10 +31,10 @@ function getClusterAccount(): PublicKey {
   return getClusterAccAddress(arciumEnv.arciumClusterOffset);
 }
 
-describe("ConvictionMarket", () => {
+describe("OpportunityMarket", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace
-    .ConvictionMarket as Program<ConvictionMarket>;
+    .OpportunityMarket as Program<OpportunityMarket>;
   const provider = anchor.getProvider();
 
   type Event = anchor.IdlEvents<(typeof program)["idl"]>;
@@ -75,7 +75,7 @@ describe("ConvictionMarket", () => {
       await initCompDef(program, owner, "init_vote_token_account");
       await initCompDef(program, owner, "buy_vote_tokens");
       await initCompDef(program, owner, "claim_vote_tokens");
-      await initCompDef(program, owner, "buy_conviction_market_shares");
+      await initCompDef(program, owner, "buy_opportunity_market_shares");
       await initCompDef(program, owner, "init_market_shares");
       await initCompDef(program, owner, "reveal_shares");
 
@@ -157,7 +157,7 @@ describe("ConvictionMarket", () => {
             executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
             compDefAccount: getCompDefAccAddress(
               program.programId,
-              Buffer.from(getCompDefAccOffset("buy_conviction_market_shares")).readUInt32LE()
+              Buffer.from(getCompDefAccOffset("buy_opportunity_market_shares")).readUInt32LE()
             ),
           })
           .signers([buyer.keypair])
@@ -212,7 +212,7 @@ describe("ConvictionMarket", () => {
       console.log("   Select option tx:", selectOptionSig.slice(0, 20) + "...");
 
       // Verify market has selected option set
-      let marketAccount = await program.account.convictionMarket.fetch(market.pda);
+      let marketAccount = await program.account.opportunityMarket.fetch(market.pda);
       expect(marketAccount.selectedOption).to.not.be.null;
       expect(marketAccount.selectedOption).to.equal(selectedOptionIndex);
       console.log("   Market selected option:", marketAccount.selectedOption);
@@ -291,7 +291,7 @@ describe("ConvictionMarket", () => {
       console.log("   Increment tally tx:", incrementTallySig.slice(0, 20) + "...");
 
       // Verify option tally was incremented
-      const optionAccount = await program.account.convictionMarketOption.fetch(optionPDA);
+      const optionAccount = await program.account.opportunityMarketOption.fetch(optionPDA);
       expect(optionAccount.totalShares).to.not.be.null;
       expect(optionAccount.totalShares.toString()).to.equal(buySharesAmount.toString());
       console.log("   Option tally total shares:", optionAccount.totalShares.toNumber());
@@ -431,7 +431,7 @@ describe("ConvictionMarket", () => {
               executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
               compDefAccount: getCompDefAccAddress(
                 program.programId,
-                Buffer.from(getCompDefAccOffset("buy_conviction_market_shares")).readUInt32LE()
+                Buffer.from(getCompDefAccOffset("buy_opportunity_market_shares")).readUInt32LE()
               ),
             })
             .signers([user.keypair])
@@ -527,7 +527,7 @@ describe("ConvictionMarket", () => {
               executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
               compDefAccount: getCompDefAccAddress(
                 program.programId,
-                Buffer.from(getCompDefAccOffset("buy_conviction_market_shares")).readUInt32LE()
+                Buffer.from(getCompDefAccOffset("buy_opportunity_market_shares")).readUInt32LE()
               ),
             })
             .signers([user.keypair])
@@ -545,14 +545,16 @@ describe("ConvictionMarket", () => {
       }
 
       // Market creator selects option 1 as winner
-      await program.methods
-        .selectOption(1)
-        .accountsPartial({
-          authority: setup.marketCreator.pubkey,
-          market: market.pda,
-        })
-        .signers([setup.marketCreator.keypair])
-        .rpc({ commitment: "confirmed" });
+      await sendWithRetry(() =>
+        program.methods
+          .selectOption(1)
+          .accountsPartial({
+            authority: setup.marketCreator.pubkey,
+            market: market.pda,
+          })
+          .signers([setup.marketCreator.keypair])
+          .rpc({ commitment: "confirmed" })
+      );
 
       console.log("   Market creator selected Option 1 as winner");
 
@@ -561,29 +563,31 @@ describe("ConvictionMarket", () => {
         const user = users[i];
         const revealComputationOffset = new anchor.BN(randomBytes(8), "hex");
 
-        await program.methods
-          .revealShares(revealComputationOffset, Array.from(user.x25519Keypair.publicKey))
-          .accountsPartial({
-            signer: user.pubkey,
-            market: market.pda,
-            owner: user.pubkey,
-            shareAccount: shareAccounts[i],
-            userVta: user.voteTokenAccountPDA,
-            computationAccount: getComputationAccAddress(
-              arciumEnv.arciumClusterOffset,
-              revealComputationOffset
-            ),
-            clusterAccount,
-            mxeAccount: getMXEAccAddress(program.programId),
-            mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
-            executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
-            compDefAccount: getCompDefAccAddress(
-              program.programId,
-              Buffer.from(getCompDefAccOffset("reveal_shares")).readUInt32LE()
-            ),
-          })
-          .signers([user.keypair])
-          .rpc({ commitment: "confirmed" });
+        await sendWithRetry(() =>
+          program.methods
+            .revealShares(revealComputationOffset, Array.from(user.x25519Keypair.publicKey))
+            .accountsPartial({
+              signer: user.pubkey,
+              market: market.pda,
+              owner: user.pubkey,
+              shareAccount: shareAccounts[i],
+              userVta: user.voteTokenAccountPDA,
+              computationAccount: getComputationAccAddress(
+                arciumEnv.arciumClusterOffset,
+                revealComputationOffset
+              ),
+              clusterAccount,
+              mxeAccount: getMXEAccAddress(program.programId),
+              mempoolAccount: getMempoolAccAddress(arciumEnv.arciumClusterOffset),
+              executingPool: getExecutingPoolAccAddress(arciumEnv.arciumClusterOffset),
+              compDefAccount: getCompDefAccAddress(
+                program.programId,
+                Buffer.from(getCompDefAccOffset("reveal_shares")).readUInt32LE()
+              ),
+            })
+            .signers([user.keypair])
+            .rpc({ commitment: "confirmed" })
+        );
 
         await awaitComputationFinalization(
           provider as anchor.AnchorProvider,
@@ -599,17 +603,19 @@ describe("ConvictionMarket", () => {
       const optionPDA = market.options[0].pda;
       for (let i = 0; i < users.length; i++) {
         const user = users[i];
-        await program.methods
-          .incrementOptionTally(1)
-          .accountsPartial({
-            signer: user.pubkey,
-            owner: user.pubkey,
-            market: market.pda,
-            shareAccount: shareAccounts[i],
-            option: optionPDA,
-          })
-          .signers([user.keypair])
-          .rpc({ commitment: "confirmed" });
+        await sendWithRetry(() =>
+          program.methods
+            .incrementOptionTally(1)
+            .accountsPartial({
+              signer: user.pubkey,
+              owner: user.pubkey,
+              market: market.pda,
+              shareAccount: shareAccounts[i],
+              option: optionPDA,
+            })
+            .signers([user.keypair])
+            .rpc({ commitment: "confirmed" })
+        );
       }
 
       console.log("   All users incremented option tally");
@@ -623,16 +629,18 @@ describe("ConvictionMarket", () => {
         const user = users[i];
         const balanceBefore = await provider.connection.getBalance(user.pubkey);
 
-        await program.methods
-          .closeShareAccount(1)
-          .accountsPartial({
-            owner: user.pubkey,
-            market: market.pda,
-            shareAccount: shareAccounts[i],
-            option: optionPDA,
-          })
-          .signers([user.keypair])
-          .rpc({ commitment: "confirmed" });
+        await sendWithRetry(() =>
+          program.methods
+            .closeShareAccount(1)
+            .accountsPartial({
+              owner: user.pubkey,
+              market: market.pda,
+              shareAccount: shareAccounts[i],
+              option: optionPDA,
+            })
+            .signers([user.keypair])
+            .rpc({ commitment: "confirmed" })
+        );
 
         const balanceAfter = await provider.connection.getBalance(user.pubkey);
         const reward = balanceAfter - balanceBefore;
@@ -879,10 +887,10 @@ describe("ConvictionMarket", () => {
     });
   });
 
-  type CompDefs =  "init_vote_token_account" | "buy_vote_tokens" | "claim_vote_tokens" | "buy_conviction_market_shares" | "init_market_shares" | "reveal_shares"
+  type CompDefs =  "init_vote_token_account" | "buy_vote_tokens" | "claim_vote_tokens" | "buy_opportunity_market_shares" | "init_market_shares" | "reveal_shares"
 
   async function initCompDef(
-    program: Program<ConvictionMarket>,
+    program: Program<OpportunityMarket>,
     owner: anchor.web3.Keypair,
     circuitName: CompDefs
   ): Promise<string> {
@@ -938,9 +946,9 @@ describe("ConvictionMarket", () => {
           .signers([owner])
           .rpc({ preflightCommitment: "confirmed" });
         break;
-      case "buy_conviction_market_shares":
+      case "buy_opportunity_market_shares":
         sig = await program.methods
-          .buyConvictionMarketSharesCompDef()
+          .buyOpportunityMarketSharesCompDef()
           .accounts({
             compDefAccount: compDefPDA,
             payer: owner.publicKey,

@@ -1,15 +1,15 @@
 [package]
-name = "conviction_market"
+name = "opportunity_market"
 version = "0.1.0"
-description = "Conviction voting market with encrypted votes using Arcium"
+description = "Opportunity market with encrypted votes using Arcium"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "conviction_market"
+name = "opportunity_market"
 
 [features]
-default = ["hosted-compdefs"]
+default = []
 cesscpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []

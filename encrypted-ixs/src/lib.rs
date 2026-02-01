@@ -93,7 +93,7 @@ mod circuits {
     // TODO: enforce that selected option > 0 <= max_options
     // Returns: (error, new_user_balance, new_market_shares, bought_shares_mxe, bought_shares_shared)
     #[instruction]
-    pub fn buy_conviction_market_shares(
+    pub fn buy_opportunity_market_shares(
         input_ctx: Enc<Shared, BuySharesInput>,
         shares_recipient_ctx: Shared,
         user_vta_ctx: Enc<Shared, VoteTokenBalance>,

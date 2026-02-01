@@ -1,6 +1,6 @@
-# Conviction Markets
+# Opportunity Markets
 
-Conviction Markets allow users to influence decision making by staking. Decision makers benefit from conviction markets by getting access to high-quality signals, helping them make the best choice.
+Opportunity Markets allow users to influence decision making by staking. Decision makers benefit from opportunity markets by getting access to high-quality signals, helping them make the best choice.
 
 **How it works:**
 
@@ -24,7 +24,7 @@ See [this document](./docs/market-life-cycle.md) for detailed documentation of t
 Arcium v0.6.3 required.
 
 Before testing, make sure you build without the feature `hosted-compdefs`.
-In `programs/conviction_market/Cargo.toml` make sure it's not in the defaults array.
+In `programs/opportunity_market/Cargo.toml` make sure it's not in the defaults array.
 
 
 ```bash
@@ -35,10 +35,10 @@ arcium test
 
 ## Deployment
 
-1. Enable the `hosted-compdefs` feature by adding to the  defaults in `programs/conviction_market/Cargo.toml`
+1. Enable the `hosted-compdefs` feature by adding to the  defaults in `programs/opportunity_market/Cargo.toml`
 2. Update the program `declare_id!` macro to use your program keypair's pubkey
 3. Run `arcium build with --skip-keys-sync` (last argument ensures step 2. isn't overwritten)
-4. Make sure in your Anchor.toml file, the `conviction_market` address matches address of step 2 (in the `[programs.localnet]` section if you have no devnet config there!)
+4. Make sure in your Anchor.toml file, the `opportunity_market` address matches address of step 2 (in the `[programs.localnet]` section if you have no devnet config there!)
 
 Run `arcium deploy` with the correct parameters.
 
@@ -48,7 +48,7 @@ arcium deploy --cluster-offset 456 \
   --keypair-path <PAYER KEYPAIR> \
   --rpc-url <YOUR RPC URL> \
   --program-keypair  <PROGRAM KEYPAIR > \
-  --program-name "conviction_market"
+  --program-name "opportunity_market"
 ```
 
 Run the compute defs script to initialize compute definitions.
@@ -63,7 +63,7 @@ npx ts-node scripts/compute-defs.ts
 
 ## Structure
 
-- `programs/conviction_market/` - Anchor program
+- `programs/opportunity_market/` - Anchor program
 - `encrypted-ixs/` - MPC circuits
 - `tests/` - Integration tests
 - `demo-app/` - A NextJS demo application

@@ -17,7 +17,7 @@ const COMP_DEF_OFFSETS = {
   INIT_VOTE_TOKEN_ACCOUNT: "init_vote_token_account",
   BUY_VOTE_TOKENS: "buy_vote_tokens",
   CLAIM_VOTE_TOKENS: "claim_vote_tokens",
-  BUY_CONVICTION_MARKET_SHARES: "buy_conviction_market_shares",
+  BUY_OPPORTUNITY_MARKET_SHARES: "buy_opportunity_market_shares",
   INIT_MARKET_SHARES: "init_market_shares",
   REVEAL_SHARES: "reveal_shares",
 } as const;

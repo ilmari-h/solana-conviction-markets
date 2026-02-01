@@ -5,13 +5,13 @@ use arcium_client::idl::arcium::types::CallbackAccount;
 use crate::error::ErrorCode;
 use crate::events::SharesPurchasedEvent;
 use crate::instructions::mint_vote_tokens::VOTE_TOKEN_ACCOUNT_SEED;
-use crate::state::{ConvictionMarket, ShareAccount, VoteTokenAccount};
-use crate::COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES;
+use crate::state::{OpportunityMarket, ShareAccount, VoteTokenAccount};
+use crate::COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
 
 pub const SHARE_ACCOUNT_SEED: &[u8] = b"share_account";
 
-#[queue_computation_accounts("buy_conviction_market_shares", signer)]
+#[queue_computation_accounts("buy_opportunity_market_shares", signer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
 pub struct BuyMarketShares<'info> {
@@ -22,7 +22,7 @@ pub struct BuyMarketShares<'info> {
         constraint = market.open_timestamp.is_some() @ ErrorCode::MarketNotOpen,
         constraint = market.selected_option.is_none() @ ErrorCode::WinnerAlreadySelected,
     )]
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 
     #[account(
         seeds = [VOTE_TOKEN_ACCOUNT_SEED, signer.key().as_ref()],
@@ -59,7 +59,7 @@ pub struct BuyMarketShares<'info> {
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
     /// CHECK: computation_account
     pub computation_account: UncheckedAccount<'info>,
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
     #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
@@ -140,7 +140,7 @@ pub fn buy_market_shares(
         computation_offset,
         args,
         None,
-        vec![BuyConvictionMarketSharesCallback::callback_ix(
+        vec![BuyOpportunityMarketSharesCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,
             &[
@@ -165,11 +165,11 @@ pub fn buy_market_shares(
     Ok(())
 }
 
-#[callback_accounts("buy_conviction_market_shares")]
+#[callback_accounts("buy_opportunity_market_shares")]
 #[derive(Accounts)]
-pub struct BuyConvictionMarketSharesCallback<'info> {
+pub struct BuyOpportunityMarketSharesCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
@@ -186,22 +186,22 @@ pub struct BuyConvictionMarketSharesCallback<'info> {
     pub user_vote_token_account: Account<'info, VoteTokenAccount>,
 
     #[account(mut)]
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 
     #[account(mut)]
     pub share_account: Account<'info, ShareAccount>,
 }
 
-pub fn buy_conviction_market_shares_callback(
-    ctx: Context<BuyConvictionMarketSharesCallback>,
-    output: SignedComputationOutputs<BuyConvictionMarketSharesOutput>,
+pub fn buy_opportunity_market_shares_callback(
+    ctx: Context<BuyOpportunityMarketSharesCallback>,
+    output: SignedComputationOutputs<BuyOpportunityMarketSharesOutput>,
 ) -> Result<()> {
 
     let res = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
-        Ok(BuyConvictionMarketSharesOutput { field_0 }) => field_0,
+        Ok(BuyOpportunityMarketSharesOutput { field_0 }) => field_0,
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
     let has_error = res.field_0;

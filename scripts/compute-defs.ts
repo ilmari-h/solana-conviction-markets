@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { ConvictionMarket } from "../target/types/conviction_market";
+import { OpportunityMarket } from "../target/types/opportunity_market";
 import {
   getCompDefAccOffset,
   getArciumAccountBaseSeed,
@@ -21,7 +21,7 @@ type CompDefs =
   | "init_vote_token_account"
   | "buy_vote_tokens"
   | "claim_vote_tokens"
-  | "buy_conviction_market_shares"
+  | "buy_opportunity_market_shares"
   | "init_market_shares"
   | "reveal_shares";
 
@@ -29,7 +29,7 @@ const COMP_DEFS: CompDefs[] = [
   "init_vote_token_account",
   "buy_vote_tokens",
   "claim_vote_tokens",
-  "buy_conviction_market_shares",
+  "buy_opportunity_market_shares",
   "init_market_shares",
   "reveal_shares",
 ];
@@ -42,7 +42,7 @@ function readKpJson(path: string): anchor.web3.Keypair {
 }
 
 async function initCompDef(
-  program: Program<ConvictionMarket>,
+  program: Program<OpportunityMarket>,
   provider: anchor.AnchorProvider,
   owner: anchor.web3.Keypair,
   circuitName: CompDefs
@@ -107,9 +107,9 @@ async function initCompDef(
           .signers([owner])
           .rpc({ preflightCommitment: "confirmed" });
         break;
-      case "buy_conviction_market_shares":
+      case "buy_opportunity_market_shares":
         sig = await program.methods
-          .buyConvictionMarketSharesCompDef()
+          .buyOpportunityMarketSharesCompDef()
           .accounts({
             compDefAccount: compDefPDA,
             payer: owner.publicKey,
@@ -159,7 +159,7 @@ async function initCompDef(
 
 async function main() {
   console.log("=".repeat(60));
-  console.log("Conviction Markets - Compute Definition Initialization");
+  console.log("Opportunity Markets - Compute Definition Initialization");
   console.log("=".repeat(60));
   console.log(`\nProgram ID: ${PROGRAM_ID.toBase58()}`);
   console.log(`Cluster Offset: ${CLUSTER_OFFSET}`);
@@ -203,10 +203,10 @@ async function main() {
   console.log("\nLoading program IDL...");
   let idl: anchor.Idl;
   try {
-    const idlPath = `${__dirname}/../target/idl/conviction_market.json`;
+    const idlPath = `${__dirname}/../target/idl/opportunity_market.json`;
     idl = JSON.parse(fs.readFileSync(idlPath, "utf8"));
   } catch (error) {
-    console.error("Failed to load IDL from target/idl/conviction_market.json");
+    console.error("Failed to load IDL from target/idl/opportunity_market.json");
     console.error("Make sure you've built the project with: arcium build");
     process.exit(1);
   }
@@ -214,7 +214,7 @@ async function main() {
   const program = new Program(
     idl,
     provider
-  ) as unknown as Program<ConvictionMarket>;
+  ) as unknown as Program<OpportunityMarket>;
 
   console.log("\n" + "=".repeat(60));
   console.log("Initializing Computation Definitions");

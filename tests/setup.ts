@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { ConvictionMarket } from "../target/types/conviction_market";
+import { OpportunityMarket } from "../target/types/opportunity_market";
 import { randomBytes } from "crypto";
 import {
   awaitComputationFinalization,
@@ -107,7 +107,7 @@ async function sendWithRetry<T>(
 // ============================================================================
 
 export class SetupHelper {
-  private program: Program<ConvictionMarket>;
+  private program: Program<OpportunityMarket>;
   private provider: anchor.AnchorProvider;
   private arciumEnv: ReturnType<typeof getArciumEnv>;
   private clusterAccount: PublicKey;
@@ -115,7 +115,7 @@ export class SetupHelper {
   private config: typeof DEFAULT_CONFIG;
 
   constructor(
-    program: Program<ConvictionMarket>,
+    program: Program<OpportunityMarket>,
     provider: anchor.AnchorProvider,
     mxePublicKey: Uint8Array,
     config?: Partial<typeof DEFAULT_CONFIG>
@@ -262,7 +262,7 @@ export class SetupHelper {
   }
 
   private async createMarket(creator: Account): Promise<MarketState> {
-    console.log("\nCreating conviction market...");
+    console.log("\nCreating opportunity market...");
 
     // Generate random market index to avoid collisions between tests
     const marketIndex = new anchor.BN(Math.floor(Math.random() * 1000000));
@@ -433,7 +433,7 @@ export class SetupHelper {
   private deriveMarketPDA(creator: PublicKey, index: anchor.BN): PublicKey {
     const [marketPDA] = PublicKey.findProgramAddressSync(
       [
-        Buffer.from("conviction_market"),
+        Buffer.from("opportunity_market"),
         creator.toBuffer(),
         index.toArrayLike(Buffer, "le", 8),
       ],

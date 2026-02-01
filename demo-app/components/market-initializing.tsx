@@ -22,7 +22,7 @@ export function MarketInitializing({ marketName }: MarketInitializingProps) {
       <header className="border-b border-border bg-card/50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-xl font-light tracking-tight text-foreground">
-            Conviction Markets
+            Opportunity Markets
           </h1>
         </div>
       </header>

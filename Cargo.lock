@@ -1231,17 +1231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "conviction_market"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "arcium-anchor",
- "arcium-client",
- "arcium-macros",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2562,6 +2551,17 @@ name = "openssl-probe"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f50d9b3dabb09ecd771ad0aa242ca6894994c130308ca3d7684634df8037391"
+
+[[package]]
+name = "opportunity_market"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "arcium-anchor",
+ "arcium-client",
+ "arcium-macros",
+]
 
 [[package]]
 name = "parking_lot"

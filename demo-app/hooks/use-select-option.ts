@@ -21,7 +21,7 @@ interface SelectOptionResult {
 }
 
 /**
- * Hook to select the winning option and close a conviction market
+ * Hook to select the winning option and close an opportunity market
  *
  * This hook handles the transaction to select an option:
  * 1. Builds the select option transaction

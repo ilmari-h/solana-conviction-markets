@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::error::ErrorCode;
 use crate::instructions::buy_market_shares::SHARE_ACCOUNT_SEED;
-use crate::state::{ConvictionMarket, ConvictionMarketOption, ShareAccount};
+use crate::state::{OpportunityMarket, OpportunityMarketOption, ShareAccount};
 
 #[derive(Accounts)]
 #[instruction(option_index: u16)]
@@ -13,7 +13,7 @@ pub struct IncrementOptionTally<'info> {
     /// CHECK: this is a permissionless operation
     pub owner: UncheckedAccount<'info>,
 
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 
     #[account(
         mut,
@@ -29,7 +29,7 @@ pub struct IncrementOptionTally<'info> {
         seeds = [b"option", market.key().as_ref(), &option_index.to_le_bytes()],
         bump = option.bump,
     )]
-    pub option: Account<'info, ConvictionMarketOption>,
+    pub option: Account<'info, OpportunityMarketOption>,
 
     pub system_program: Program<'info, System>,
 }

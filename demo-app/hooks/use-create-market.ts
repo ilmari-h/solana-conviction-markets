@@ -36,7 +36,7 @@ interface CreateMarketResult {
 }
 
 /**
- * Hook to create a new conviction market
+ * Hook to create a new opportunity market
  *
  * This hook handles the transaction to create a market:
  * 1. Fetches existing markets for the user to determine the next index

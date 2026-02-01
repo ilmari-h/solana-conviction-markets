@@ -16,14 +16,14 @@ pub use state::*;
 pub const COMP_DEF_OFFSET_INIT_VOTE_TOKEN_ACCOUNT: u32 = comp_def_offset("init_vote_token_account");
 pub const COMP_DEF_OFFSET_BUY_VOTE_TOKENS: u32 = comp_def_offset("buy_vote_tokens");
 pub const COMP_DEF_OFFSET_CLAIM_VOTE_TOKENS: u32 = comp_def_offset("claim_vote_tokens");
-pub const COMP_DEF_OFFSET_BUY_CONVICTION_MARKET_SHARES: u32 = comp_def_offset("buy_conviction_market_shares");
+pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("buy_opportunity_market_shares");
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 
-declare_id!("bnchws5HhuD2tHCZmr4Qz57VSGXfWorsoYvhr3jS72b");
+declare_id!("6Y2SL4PG9YUN3tkF8M4z83Si4sh72X5E41Xp9RDeBXje");
 
 #[arcium_program]
-pub mod conviction_market {
+pub mod opportunity_market {
     use super::*;
 
     pub fn init_vote_token_account_comp_def(ctx: Context<InitVoteTokenAccountCompDef>) -> Result<()> {
@@ -162,8 +162,8 @@ pub mod conviction_market {
         instructions::claim_vote_tokens_callback(ctx, output)
     }
 
-    pub fn buy_conviction_market_shares_comp_def(ctx: Context<BuyConvictionMarketSharesCompDef>) -> Result<()> {
-        instructions::buy_conviction_market_shares_comp_def(ctx)
+    pub fn buy_opportunity_market_shares_comp_def(ctx: Context<BuyOpportunityMarketSharesCompDef>) -> Result<()> {
+        instructions::buy_opportunity_market_shares_comp_def(ctx)
     }
 
     pub fn buy_market_shares(
@@ -189,12 +189,12 @@ pub mod conviction_market {
         )
     }
 
-    #[arcium_callback(encrypted_ix = "buy_conviction_market_shares")]
-    pub fn buy_conviction_market_shares_callback(
-        ctx: Context<BuyConvictionMarketSharesCallback>,
-        output: SignedComputationOutputs<BuyConvictionMarketSharesOutput>,
+    #[arcium_callback(encrypted_ix = "buy_opportunity_market_shares")]
+    pub fn buy_opportunity_market_shares_callback(
+        ctx: Context<BuyOpportunityMarketSharesCallback>,
+        output: SignedComputationOutputs<BuyOpportunityMarketSharesOutput>,
     ) -> Result<()> {
-        instructions::buy_conviction_market_shares_callback(ctx, output)
+        instructions::buy_opportunity_market_shares_callback(ctx, output)
     }
     pub fn reveal_shares(
         ctx: Context<RevealShares>,

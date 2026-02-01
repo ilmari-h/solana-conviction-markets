@@ -14,9 +14,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Conviction Markets",
+  title: "Opportunity Markets",
   description:
-    "Privacy-focused prediction markets on Solana. Stake capital on your convictions.",
+    "Opportunity Markets allow users to influence decision making by staking.",
   generator: "v0.app",
   icons: {
     icon: [

@@ -1,10 +1,10 @@
-# Conviction Market Lifecycle
+# Opportunity Market Lifecycle
 
-This document describes the complete lifecycle of a Conviction Market from creation to reward distribution.
+This document describes the complete lifecycle of an Opportunity Market from creation to reward distribution.
 
 ## Overview
 
-Conviction Markets allow users to influence decision making by staking. Decision makers benefit from conviction markets by getting access to high-quality signals, helping them make the best choice.
+Opportunity Markets allow users to influence decision making by staking. Decision makers benefit from opportunity markets by getting access to high-quality signals, helping them make the best choice.
 
 1. A **decision maker** creates a market with a reward pool
 3. **Participants** stake on their preferred options with encrypted votes and can create new options
@@ -13,7 +13,7 @@ Conviction Markets allow users to influence decision making by staking. Decision
 
 The protocol sets itself apart from other voting protocols with **confidential stake-to-vote mechanism** and **an arbitrary number of options**.
 
-A conviction market progresses through distinct phases with time limits. A description of these phases follows.
+A opportunity market progresses through distinct phases with time limits. A description of these phases follows.
 
 ---
 
@@ -23,7 +23,7 @@ The decision maker creates and configures the market.
 
 ### Step 1.1: Create Market
 
-**Instruction:** [`create_market`](../programs/conviction_market/src/instructions/create_market.rs)
+**Instruction:** [`create_market`](../programs/opportunity_market/src/instructions/create_market.rs)
 
 The decision maker initializes a new market with:
 - Reward pool size (in lamports)
@@ -38,7 +38,7 @@ The decision maker initializes a new market with:
 
 ### Step 1.2: Add Options
 
-**Instruction:** [`add_market_option`](../programs/conviction_market/src/instructions/add_market_option.rs)
+**Instruction:** [`add_market_option`](../programs/opportunity_market/src/instructions/add_market_option.rs)
 
 The market creator or the wider public can now add new options to vote for.
 
@@ -46,7 +46,7 @@ The market creator or the wider public can now add new options to vote for.
 
 ### Step 1.3: Fund & Open Market
 
-**Instruction:** [`open_market`](../programs/conviction_market/src/instructions/open_market.rs)
+**Instruction:** [`open_market`](../programs/opportunity_market/src/instructions/open_market.rs)
 
 The market must be funded with the reward lamports before this instruction can be called.
 The creator, or anyone for that matter, can send the reward amount to the market's PDA.
@@ -67,10 +67,10 @@ Participants prepare to stake by setting up their accounts.
 
 ### Step 2.1: Initialize Vote Token Account
 
-**Instruction:** [`init_vote_token_account`](../programs/conviction_market/src/instructions/init_vote_token_account.rs)
+**Instruction:** [`init_vote_token_account`](../programs/opportunity_market/src/instructions/init_vote_token_account.rs)
 
 Each participant needs a vote token account (VTA) to hold their encrypted balance.
-The VTA is tied to a participant wallet address, not any specific market, and is used for staking across different conviction markets.
+The VTA is tied to a participant wallet address, not any specific market, and is used for staking across different opportunity markets.
 
 **What happens:**
 - Creates VoteTokenAccount PDA for the participant
@@ -78,7 +78,7 @@ The VTA is tied to a participant wallet address, not any specific market, and is
 
 ### Step 2.2: Purchase Vote Tokens
 
-**Instruction:** [`mint_vote_tokens`](../programs/conviction_market/src/instructions/mint_vote_tokens.rs)
+**Instruction:** [`mint_vote_tokens`](../programs/opportunity_market/src/instructions/mint_vote_tokens.rs)
 
 Convert SOL to vote tokens at a constant price. Vote tokens are essentially just a privacy-enabling wrapper around SOL.
 
@@ -95,7 +95,7 @@ During the staking period (`open_timestamp` to `open_timestamp + time_to_stake`)
 
 ### Step 3.1: Initialize Share Account
 
-**Instruction:** [`init_share_account`](../programs/conviction_market/src/instructions/init_share_account.rs)
+**Instruction:** [`init_share_account`](../programs/opportunity_market/src/instructions/init_share_account.rs)
 
 Creates a share account for the specific market.
 
@@ -104,7 +104,7 @@ These values are encrypted and only visible to the participant and the decision 
 
 ### Step 3.2: Buy Market Shares
 
-**Instruction:** [`buy_market_shares`](../programs/conviction_market/src/instructions/buy_market_shares.rs)
+**Instruction:** [`buy_market_shares`](../programs/opportunity_market/src/instructions/buy_market_shares.rs)
 
 This is the core voting action. The participant encrypts their vote client-side and passes it to the instruction.
 
@@ -123,7 +123,7 @@ After reviewing disclosed votes, the decision maker selects a winner.
 
 ### Step 4.1: Select Winning Option
 
-**Instruction:** [`select_option`](../programs/conviction_market/src/instructions/select_option.rs)
+**Instruction:** [`select_option`](../programs/opportunity_market/src/instructions/select_option.rs)
 
 This instruction takes as input the 1-based index of the selected option.
 
@@ -142,7 +142,7 @@ After a winner is selected, positions are revealed and tallied. This phase runs 
 
 ### Step 5.1: Reveal Shares
 
-**Instruction:** [`reveal_shares`](../programs/conviction_market/src/instructions/reveal_shares.rs)
+**Instruction:** [`reveal_shares`](../programs/opportunity_market/src/instructions/reveal_shares.rs)
 
 This instruciton is permissionless; anyone can reveal anyone else's shares.
 
@@ -156,7 +156,7 @@ Participants don't have to come back to the application to manually reveal their
 
 ### Step 5.2: Increment Option Tally
 
-**Instruction:** [`increment_option_tally`](../programs/conviction_market/src/instructions/increment_option_tally.rs)
+**Instruction:** [`increment_option_tally`](../programs/opportunity_market/src/instructions/increment_option_tally.rs)
 
 Adds revealed shares to the option's total (also permissionless).
 
@@ -174,7 +174,7 @@ After the reveal period ends, participants can close their accounts and claim re
 
 ### Step 6.1: Close Share Account & Claim Reward
 
-**Instruction:** [`close_share_account`](../programs/conviction_market/src/instructions/close_share_account.rs)
+**Instruction:** [`close_share_account`](../programs/opportunity_market/src/instructions/close_share_account.rs)
 
 **What happens:**
 - If participant voted for winning option AND incremented tally:
@@ -184,7 +184,7 @@ After the reveal period ends, participants can close their accounts and claim re
 
 ### Step 6.2: Claim Vote Tokens (Optional)
 
-**Instruction:** [`claim_vote_tokens`](../programs/conviction_market/src/instructions/claim_vote_tokens.rs)
+**Instruction:** [`claim_vote_tokens`](../programs/opportunity_market/src/instructions/claim_vote_tokens.rs)
 
 Participants can sell remaining vote tokens back for SOL.
 

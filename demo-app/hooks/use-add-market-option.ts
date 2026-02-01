@@ -26,7 +26,7 @@ interface AddMarketOptionResult {
 }
 
 /**
- * Hook to add a new option to a conviction market
+ * Hook to add a new option to an opportunity market
  *
  * This hook handles the transaction to add an option:
  * 1. Builds the add option transaction

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::error::ErrorCode;
-use crate::state::ConvictionMarket;
+use crate::state::OpportunityMarket;
 
 #[derive(Accounts)]
 pub struct SelectOption<'info> {
@@ -11,7 +11,7 @@ pub struct SelectOption<'info> {
         constraint = market.creator == authority.key()
             || market.select_authority == Some(authority.key()) @ ErrorCode::Unauthorized,
     )]
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 }
 
 pub fn select_option(ctx: Context<SelectOption>, option_index: u16) -> Result<()> {

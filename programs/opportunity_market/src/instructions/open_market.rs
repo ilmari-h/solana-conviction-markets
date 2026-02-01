@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::error::ErrorCode;
-use crate::state::ConvictionMarket;
+use crate::state::OpportunityMarket;
 
 #[derive(Accounts)]
 pub struct OpenMarket<'info> {
@@ -10,7 +10,7 @@ pub struct OpenMarket<'info> {
         has_one = creator @ ErrorCode::Unauthorized,
         constraint = market.open_timestamp.is_none() @ ErrorCode::MarketAlreadyOpen,
     )]
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 }
 
 pub fn open_market(ctx: Context<OpenMarket>, open_timestamp: u64) -> Result<()> {

@@ -19,7 +19,7 @@ interface OpenMarketResult {
 }
 
 /**
- * Hook to open a conviction market for staking
+ * Hook to open an opportunity market for staking
  *
  * This hook handles the transaction to open a market:
  * 1. Builds the open market transaction with the specified timestamp

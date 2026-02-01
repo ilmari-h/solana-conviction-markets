@@ -118,9 +118,9 @@ export function CreateMarketDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Conviction Market</DialogTitle>
+          <DialogTitle>Create Opportunity Market</DialogTitle>
           <DialogDescription>
-            Set up a new conviction market.
+            Set up a new opportunity market.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::state::ConvictionMarket;
+use crate::state::OpportunityMarket;
 use crate::events::MarketCreatedEvent;
 use crate::COMP_DEF_OFFSET_INIT_MARKET_SHARES;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
@@ -18,11 +18,11 @@ pub struct CreateMarket<'info> {
     #[account(
         init,
         payer = creator,
-        space = 8 + ConvictionMarket::INIT_SPACE,
-        seeds = [b"conviction_market", creator.key().as_ref(), &market_index.to_le_bytes()],
+        space = 8 + OpportunityMarket::INIT_SPACE,
+        seeds = [b"opportunity_market", creator.key().as_ref(), &market_index.to_le_bytes()],
         bump,
     )]
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 
     // Arcium accounts
     #[account(
@@ -135,7 +135,7 @@ pub struct InitMarketSharesCallback<'info> {
     /// CHECK: instructions_sysvar
     pub instructions_sysvar: AccountInfo<'info>,
     #[account(mut)]
-    pub market: Account<'info, ConvictionMarket>,
+    pub market: Account<'info, OpportunityMarket>,
 }
 
 pub fn init_market_shares_callback(
