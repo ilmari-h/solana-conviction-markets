@@ -664,8 +664,6 @@ describe("OpportunityMarket", () => {
   });
 
   describe("Vote Token Buy/Sell", () => {
-    const PRICE_PER_VOTE_TOKEN_LAMPORTS = 1_000_000; // Must match Rust constant
-
     it("allows a user to buy and sell vote tokens", async () => {
       console.log("\n=== Vote Token Buy/Sell Test ===\n");
 
@@ -740,8 +738,7 @@ describe("OpportunityMarket", () => {
       console.log("   Vote token account initialized!");
 
       // ========== STEP 3: Buy vote tokens ==========
-      const buyAmount = 100; // Buy 100 vote tokens
-      const buyLamports = buyAmount * PRICE_PER_VOTE_TOKEN_LAMPORTS;
+      const buyAmount = 100_000_000; // Buy 0.1 SOL worth of vote tokens
 
       // Get balances before buy
       const buyerBalanceBefore = await provider.connection.getBalance(buyer.publicKey);
@@ -814,8 +811,7 @@ describe("OpportunityMarket", () => {
       console.log("   Verified encrypted balance:", Number(decryptedBalanceAfterBuy[0]), "tokens");
 
       // ========== STEP 4: Sell vote tokens ==========
-      const sellAmount = 50; // Sell 50 vote tokens (should succeed)
-      const sellLamports = sellAmount * PRICE_PER_VOTE_TOKEN_LAMPORTS;
+      const sellAmount = 50_000_000; // Sell 0.05 SOL worth of vote tokens
 
       console.log("\nStep 4: Selling", sellAmount, "vote tokens...");
 

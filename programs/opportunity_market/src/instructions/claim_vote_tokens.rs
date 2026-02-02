@@ -1,11 +1,8 @@
-use std::ops::Mul;
-
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::constants::PRICE_PER_VOTE_TOKEN_LAMPORTS;
 use crate::state::VoteTokenAccount;
 use crate::COMP_DEF_OFFSET_CLAIM_VOTE_TOKENS;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
@@ -158,7 +155,7 @@ pub fn claim_vote_tokens_callback(
         return Err(ErrorCode::InsufficientBalance.into());
     }
 
-    // If tokens were sold, transfer SOL to user
+    // If tokens were sold, transfer SOL to user (1 vote token = 1 lamport)
     if amount_sold > 0 {
         // Transfer SOL from vote_token_account PDA to user
         let vta_lamports = vta.to_account_info().lamports();
@@ -167,8 +164,7 @@ pub fn claim_vote_tokens_callback(
 
         // Ensure we don't go below rent-exempt minimum
         let available = vta_lamports.saturating_sub(min_rent);
-        let amount_sold_lamports = amount_sold.mul(PRICE_PER_VOTE_TOKEN_LAMPORTS);
-        let transfer_amount = amount_sold_lamports.min(available);
+        let transfer_amount = amount_sold.min(available);
 
         if transfer_amount > 0 {
             **vta.to_account_info().try_borrow_mut_lamports()? -= transfer_amount;

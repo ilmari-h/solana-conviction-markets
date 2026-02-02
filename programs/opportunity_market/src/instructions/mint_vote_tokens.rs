@@ -4,7 +4,6 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::constants::PRICE_PER_VOTE_TOKEN_LAMPORTS;
 use crate::state::VoteTokenAccount;
 use crate::COMP_DEF_OFFSET_BUY_VOTE_TOKENS;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
@@ -68,11 +67,7 @@ pub fn mint_vote_tokens(
     let vta_pubkey = vta.key();
     let signer = &ctx.accounts.signer;
 
-    let lamports_amount = amount
-        .checked_mul(PRICE_PER_VOTE_TOKEN_LAMPORTS)
-        .ok_or_else(|| ErrorCode::InsufficientBalance)?;
-
-    // Transfer SOL from user to vote_token_account PDA
+    // Transfer SOL from user to vote_token_account PDA (1 lamport = 1 vote token)
     system_program::transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
@@ -81,7 +76,7 @@ pub fn mint_vote_tokens(
                 to: vta.to_account_info(),
             },
         ),
-        lamports_amount,
+        amount,
     )?;
 
     // Build args for encrypted computation
