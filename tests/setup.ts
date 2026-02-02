@@ -42,7 +42,6 @@ export type MarketOption = {
 export type MarketState = {
   pda: PublicKey;
   index: anchor.BN;
-  maxOptions: number;
   maxShares: anchor.BN;
   fundingLamports: anchor.BN;
   timeToStake: anchor.BN;
@@ -65,7 +64,6 @@ const DEFAULT_CONFIG = {
   numUsers: 3,
   airdropAmount: new anchor.BN(2 * LAMPORTS_PER_SOL),
   marketConfig: {
-    maxOptions: 5,
     maxShares: new anchor.BN(1000),
     fundingLamports: new anchor.BN(1_000_000_000 ), // 0.001 SOL
     timeToStake: new anchor.BN(120),
@@ -277,7 +275,6 @@ export class SetupHelper {
         .createMarket(
           marketIndex,
           marketComputationOffset,
-          this.config.marketConfig.maxOptions,
           this.config.marketConfig.maxShares,
           this.config.marketConfig.fundingLamports,
           this.config.marketConfig.timeToStake,
@@ -327,7 +324,6 @@ export class SetupHelper {
     return {
       pda: marketPDA,
       index: marketIndex,
-      maxOptions: this.config.marketConfig.maxOptions,
       maxShares: this.config.marketConfig.maxShares,
       fundingLamports: this.config.marketConfig.fundingLamports,
       timeToStake: this.config.marketConfig.timeToStake,

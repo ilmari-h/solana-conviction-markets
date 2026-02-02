@@ -61,27 +61,25 @@ pub fn create_market(
     ctx: Context<CreateMarket>,
     market_index: u64,
     computation_offset: u64,
-    max_options: u16,
     max_shares: u64,
     reward_lamports: u64,
     time_to_stake: u64,
     time_to_reveal: u64,
     nonce: u128,
-    select_authority: Option<Pubkey>,
+    market_authority: Option<Pubkey>,
 ) -> Result<()> {
     let market = &mut ctx.accounts.market;
     market.bump = ctx.bumps.market;
     market.creator = ctx.accounts.creator.key();
     market.index = market_index;
     market.total_options = 0;
-    market.max_options = max_options;
     market.max_shares = max_shares;
     market.time_to_stake = time_to_stake;
     market.time_to_reveal = time_to_reveal;
     market.selected_option = None;
     market.state_nonce = 0;
     market.reward_lamports = reward_lamports;
-    market.select_authority = select_authority;
+    market.market_authority = market_authority;
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
