@@ -247,12 +247,12 @@ export async function createTestEnvironment(
     encoding: "base64",
   }).send();
 
-  console.log("  Simulation result:");
-  console.log("    Error:", simResult.value.err);
-  console.log("    Logs:");
-  simResult.value.logs?.forEach((log) => console.log("      ", log));
 
   if (simResult.value.err) {
+    console.log("  Simulation failed:");
+    console.log("    Error:", simResult.value.err);
+    console.log("    Logs:");
+    simResult.value.logs?.forEach((log) => console.log("      ", log));
     throw new Error(`Simulation failed: ${JSON.stringify(simResult.value.err)}`);
   }
 

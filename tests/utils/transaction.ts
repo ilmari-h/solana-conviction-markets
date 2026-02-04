@@ -55,7 +55,7 @@ export async function sendTransaction(
   instructions: Instruction[],
   options: SendTransactionOptions = {}
 ): Promise<SendTransactionResult> {
-  const { label, printLogs = true, commitment = "confirmed" } = options;
+  const { label, printLogs = false, commitment = "confirmed" } = options;
   const logPrefix = label ? `   [${label}] ` : "   ";
 
   // Get latest blockhash
@@ -124,7 +124,7 @@ export async function simulateTransaction(
   instructions: Instruction[],
   options: Omit<SendTransactionOptions, "printLogs"> & { printLogs?: boolean } = {}
 ): Promise<{ success: boolean; logs: readonly string[] | undefined; error: unknown }> {
-  const { label, printLogs = true, commitment = "confirmed" } = options;
+  const { label, printLogs = false, commitment = "confirmed" } = options;
   const logPrefix = label ? `   [${label}] ` : "   ";
 
   // Get latest blockhash

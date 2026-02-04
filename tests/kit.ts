@@ -6,20 +6,24 @@ import {
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   generateKeyPairSigner,
+  getAddressEncoder,
+  getProgramDerivedAddress,
   lamports,
   sendAndConfirmTransactionFactory,
 } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
-import {  awaitComputationFinalization, initVoteTokenAccount, openMarket, randomComputationOffset } from "../js/src";
+import { awaitComputationFinalization, initVoteTokenAccount, openMarket, randomComputationOffset, mintVoteTokens, addMarketOption, fetchVoteTokenAccount } from "../js/src";
 import { createTestEnvironment } from "./utils/environment";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sendTransaction } from "./utils/transaction";
-import { getArciumEnv, deserializeLE, x25519 } from "@arcium-hq/client";
+import { nonceToBytes } from "./utils/nonce";
+import { getArciumEnv, deserializeLE } from "@arcium-hq/client";
 import { OpportunityMarket } from "../target/types/opportunity_market";
 import * as fs from "fs";
 import * as os from "os";
 import { randomBytes } from "crypto";
 import { generateX25519Keypair } from "../js/src/x25519/keypair";
+import { expect } from "chai";
 
 const ONCHAIN_TIMESTAMP_BUFFER_SECONDS = 6;
 
@@ -34,6 +38,7 @@ describe("OpportunityMarket", () => {
   const program = anchor.workspace.OpportunityMarket as Program<OpportunityMarket>;
   const provider = anchor.getProvider() as anchor.AnchorProvider;
   const programId = address(program.programId.toBase58());
+  const arciumEnv = getArciumEnv();
 
   // RPC clients for Kit
   const rpc = createSolanaRpc(RPC_URL);
@@ -54,7 +59,6 @@ describe("OpportunityMarket", () => {
 
     it("can work with vote tokens", async () => {
       // Get Arcium environment
-      const arciumEnv = getArciumEnv();
 
       // Generate a new keypair
       const buyer = await generateKeyPairSigner();
@@ -152,5 +156,79 @@ describe("OpportunityMarket", () => {
       [openMarketIx],
       { label: "Open market" }
     );
+
+    const participant = env.participants[0];
+
+    // Initialize vote token account for participant
+    const initVtaOffset = randomComputationOffset();
+    const initVtaNonce = deserializeLE(randomBytes(16));
+
+    const initVtaIx = await initVoteTokenAccount(
+      {
+        signer: participant.keypair,
+        userPubkey: Array.from(participant.x25519Keypair.publicKey),
+        nonce: initVtaNonce,
+      },
+      {
+        clusterOffset: arciumEnv.arciumClusterOffset,
+        computationOffset: initVtaOffset,
+      }
+    );
+
+    await sendTransaction(rpc, sendAndConfirmTransaction, participant.keypair, [initVtaIx], {
+      label: "Init VTA",
+    });
+
+    await awaitComputationFinalization(rpc, initVtaOffset);
+    console.log("   Vote token account initialized for participant 0");
+
+    // In parallel: mint vote tokens + add market option
+    const mintComputationOffset = randomComputationOffset();
+    const mintAmount = 100_000_000n;
+
+    const mintIx = await mintVoteTokens(
+      {
+        signer: participant.keypair,
+        userPubkey: Array.from(participant.x25519Keypair.publicKey),
+        amount: mintAmount,
+      },
+      {
+        clusterOffset: arciumEnv.arciumClusterOffset,
+        computationOffset: mintComputationOffset,
+      }
+    );
+
+    const addOptionIx = await addMarketOption({
+      creator: env.market.creatorAccount.keypair,
+      market: env.market.address,
+      optionIndex: 1,
+      name: "Option A",
+    });
+
+    // Send both in parallel
+    await Promise.all([
+      (async () => {
+        await sendTransaction(rpc, sendAndConfirmTransaction, participant.keypair, [mintIx], {
+          label: "Mint vote tokens",
+        });
+        await awaitComputationFinalization(rpc, mintComputationOffset);
+      })(),
+      sendTransaction(rpc, sendAndConfirmTransaction, env.market.creatorAccount.keypair, [addOptionIx], {
+        label: "Add market option",
+      }),
+    ]);
+
+    // Fetch and verify vote token balance
+    const vtaAddress = await getProgramDerivedAddress({
+      programAddress: programId,
+      seeds: ["vote_token_account", getAddressEncoder().encode(participant.keypair.address)],
+    });
+
+    const vta = await fetchVoteTokenAccount(rpc, vtaAddress[0]);
+    const decryptedBalance = participant.x25519Keypair.cipher.decrypt(
+      vta.data.encryptedState,
+      nonceToBytes(vta.data.stateNonce)
+    );
+    expect(decryptedBalance[0]).to.equal(mintAmount);
   });
 });
