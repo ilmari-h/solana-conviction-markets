@@ -3,7 +3,7 @@ import {
   getInitVoteTokenAccountInstructionAsync,
   type InitVoteTokenAccountInstruction,
 } from "../generated";
-import { ArciumConfig, getComputeAccounts } from "./arciumConfig";
+import { ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
 
 export interface InitVoteTokenAccountParams {
   /** The signer/payer for the transaction */

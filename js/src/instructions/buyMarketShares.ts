@@ -3,7 +3,7 @@ import {
   getBuyMarketSharesInstructionAsync,
   type BuyMarketSharesInstruction,
 } from "../generated";
-import { type ArciumConfig, getComputeAccounts } from "./arciumConfig";
+import { type ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
 
 export interface BuyMarketSharesParams {
   signer: TransactionSigner;

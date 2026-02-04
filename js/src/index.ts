@@ -6,3 +6,6 @@ export * from "./instructions";
 
 // Export utilities
 export * from "./utils";
+
+// Export Arcium utilities
+export * from "./arcium/awaitFinalizeComputation";

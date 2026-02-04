@@ -3,7 +3,7 @@ import {
   getRevealSharesInstructionAsync,
   type RevealSharesInstruction,
 } from "../generated";
-import { type ArciumConfig, getComputeAccounts } from "./arciumConfig";
+import { type ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
 
 export interface RevealSharesParams {
   signer: TransactionSigner;

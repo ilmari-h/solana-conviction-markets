@@ -3,7 +3,7 @@ import {
   getCreateMarketInstructionAsync,
   type CreateMarketInstruction,
 } from "../generated";
-import { ArciumConfig, getComputeAccounts } from "./arciumConfig";
+import { ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
 
 export interface CreateMarketParams {
   creator: TransactionSigner;

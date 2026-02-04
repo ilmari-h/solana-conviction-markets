@@ -31,8 +31,12 @@ export function getComputeAccounts(ixName: string, config: ArciumConfig) {
   const clusterAccount = toAddress(getClusterAccAddress(clusterOffset));
   const mempoolAccount = toAddress(getMempoolAccAddress(clusterOffset));
   const executingPool = toAddress(getExecutingPoolAccAddress(clusterOffset));
+
+  // Convert bigint to BN correctly - BN doesn't support native bigint directly
+  const computationOffsetBN = new BN(computationOffset.toString());
+
   const computationAccount = toAddress(
-    getComputationAccAddress(clusterOffset, new BN(computationOffset))
+    getComputationAccAddress(clusterOffset, computationOffsetBN)
   );
   const compDefAccount = toAddress(
     getCompDefAccAddress(

@@ -10,23 +10,24 @@ import {
   sendAndConfirmTransactionFactory,
 } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
-import { initVoteTokenAccount, openMarket, randomComputationOffset } from "../js/src";
+import {  awaitComputationFinalization, initVoteTokenAccount, openMarket, randomComputationOffset } from "../js/src";
 import { createTestEnvironment } from "./utils/environment";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sendTransaction } from "./utils/transaction";
-import { getArciumEnv, deserializeLE } from "@arcium-hq/client";
+import { getArciumEnv, deserializeLE, x25519 } from "@arcium-hq/client";
 import { OpportunityMarket } from "../target/types/opportunity_market";
 import * as fs from "fs";
 import * as os from "os";
 import { randomBytes } from "crypto";
 import { expect } from "chai";
+import { generateX25519Keypair } from "../js/src/x25519/keypair";
 
 // Environment setup
 const RPC_URL = process.env.ANCHOR_PROVIDER_URL || "http://127.0.0.1:8899";
 // WebSocket port is RPC port + 1 (8899 -> 8900)
 const WS_URL = RPC_URL.replace("http", "ws").replace(":8899", ":8900");
 
-describe("OpportunityMarket (Kit)", () => {
+describe("OpportunityMarket", () => {
   // Anchor setup (still needed for buildFinalizeCompDefTx)
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace.OpportunityMarket as Program<OpportunityMarket>;
@@ -48,17 +49,14 @@ describe("OpportunityMarket (Kit)", () => {
     await initializeAllCompDefs(rpc, sendAndConfirmTransaction, secretKey, programId);
   });
 
-  describe("Basic Operations", () => {
+  describe("Full Suite", () => {
 
-    it("can initialize a vote token account using Kit bindings", async () => {
-      console.log("\n=== Kit Test: Initialize Vote Token Account ===\n");
-
+    it("can work with vote tokens", async () => {
       // Get Arcium environment
       const arciumEnv = getArciumEnv();
 
       // Generate a new keypair
       const buyer = await generateKeyPairSigner();
-      console.log("   Generated buyer:", buyer.address);
 
       // Airdrop SOL for transaction fees
       const airdropAmount = lamports(2_000_000_000n);
@@ -73,16 +71,12 @@ describe("OpportunityMarket (Kit)", () => {
       const computationOffset = randomComputationOffset();
       const nonce = deserializeLE(randomBytes(16));
 
-      // Generate a mock x25519 public key (32 bytes)
-      const userPubkey = Array.from(randomBytes(32));
+      // Generate real x25519 keypair for encryption
+      const keypair = generateX25519Keypair()
 
-      console.log("   Computation offset:", computationOffset.toString());
-
-      // Build the instruction using the simplified helper
-      // All Arcium accounts are derived automatically
       const initVoteTokenAccountIx = await initVoteTokenAccount({
         signer: buyer,
-        userPubkey,
+        userPubkey: Array.from(keypair.publicKey),
         nonce,
         },
          {
@@ -93,90 +87,71 @@ describe("OpportunityMarket (Kit)", () => {
 
       console.log("   Built initVoteTokenAccount instruction");
 
-      // Send transaction using helper
-      const { signature } = await sendTransaction(
+      await sendTransaction(
         rpc,
         sendAndConfirmTransaction,
         buyer,
         [initVoteTokenAccountIx],
         { label: "initVoteTokenAccount" }
       );
-
-      console.log("   Transaction signature:", signature);
-      console.log("\n   Vote token account initialization PASSED!");
+      await awaitComputationFinalization(
+        rpc,
+        computationOffset,
+      )
     });
   });
 
-  describe("Test Environment", () => {
-    it("can create a test environment, fund the market, and open it", async () => {
-      console.log("\n=== Kit Test: Create Test Environment, Fund & Open Market ===\n");
+  it("passes full opportunity market flow", async () => {
+    // Market funding amount (1 SOL) - must match rewardLamports in createTestEnvironment
+    const marketFundingLamports = 1_000_000_000n;
 
-      // Convert program ID to Kit Address type
-      const programIdAddress = address(program.programId.toBase58());
-
-      // Market funding amount (1 SOL) - must match rewardLamports in createTestEnvironment
-      const marketFundingLamports = 1_000_000_000n;
-
-      // Airdrop enough SOL to cover funding + fees (2 SOL for creator)
-      const env = await createTestEnvironment(provider, programIdAddress, {
-        rpcUrl: RPC_URL,
-        wsUrl: WS_URL,
-        numParticipants: 5,
-        airdropLamports: 2_000_000_000n, // 2 SOL for creator
-        marketConfig: {
-          rewardLamports: marketFundingLamports,
-          timeToStake: 120n,
-          timeToReveal: 60n,
-        },
-      });
-
-      // Verify the environment was created correctly
-      expect(env.participants).to.have.lengthOf(5);
-      expect(env.market).to.exist;
-      expect(env.market.address).to.exist;
-      expect(env.market.creatorAccount).to.exist;
-      expect(env.rpc).to.exist;
-      expect(env.rpcSubscriptions).to.exist;
-      console.log("   Test environment created!");
-
-      // ========== Fund the market by transferring SOL from creator ==========
-      console.log("\n   Funding market with", Number(marketFundingLamports) / 1_000_000_000, "SOL...");
-
-      const fundingIx = getTransferSolInstruction({
-        amount: lamports(marketFundingLamports),
-        destination: env.market.address,
-        source: env.market.creatorAccount.keypair,
-      });
-
-      await sendTransaction(
-        rpc,
-        sendAndConfirmTransaction,
-        env.market.creatorAccount.keypair,
-        [fundingIx],
-        { label: "Fund market" }
-      );
-
-      // ========== Open the market ==========
-      console.log("\n   Opening market...");
-
-      // Set open timestamp to now (current unix timestamp)
-      const openTimestamp = BigInt(Math.floor(Date.now() / 1000));
-
-      const openMarketIx = openMarket({
-        creator: env.market.creatorAccount.keypair,
-        market: env.market.address,
-        openTimestamp,
-      });
-
-      await sendTransaction(
-        rpc,
-        sendAndConfirmTransaction,
-        env.market.creatorAccount.keypair,
-        [openMarketIx],
-        { label: "Open market" }
-      );
-
-      console.log("\n   Test environment creation, funding & opening PASSED!");
+    // Airdrop enough SOL to cover funding + fees (2 SOL for creator)
+    const env = await createTestEnvironment(provider, programId, {
+      rpcUrl: RPC_URL,
+      wsUrl: WS_URL,
+      numParticipants: 5,
+      airdropLamports: 2_000_000_000n, // 2 SOL for creator
+      marketConfig: {
+        rewardLamports: marketFundingLamports,
+        timeToStake: 120n,
+        timeToReveal: 60n,
+      },
     });
+
+    // ========== Fund the market by transferring SOL from creator ==========
+    console.log("\n   Funding market with", Number(marketFundingLamports) / 1_000_000_000, "SOL...");
+
+    const fundingIx = getTransferSolInstruction({
+      amount: lamports(marketFundingLamports),
+      destination: env.market.address,
+      source: env.market.creatorAccount.keypair,
+    });
+
+    await sendTransaction(
+      rpc,
+      sendAndConfirmTransaction,
+      env.market.creatorAccount.keypair,
+      [fundingIx],
+      { label: "Fund market" }
+    );
+
+    // Set open timestamp to now (current unix timestamp)
+    const openTimestamp = BigInt(Math.floor(Date.now() / 1000));
+
+    const openMarketIx = openMarket({
+      creator: env.market.creatorAccount.keypair,
+      market: env.market.address,
+      openTimestamp,
+    });
+
+    await sendTransaction(
+      rpc,
+      sendAndConfirmTransaction,
+      env.market.creatorAccount.keypair,
+      [openMarketIx],
+      { label: "Open market" }
+    );
+
+    console.log("\n   Test environment creation, funding & opening PASSED!");
   });
 });

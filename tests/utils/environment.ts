@@ -33,14 +33,11 @@ import {
 import { randomBytes } from "crypto";
 import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { generateX25519Keypair, X25519Keypair } from "../../js/src/x25519/keypair";
 
 export interface Account {
   keypair: KeyPairSigner;
-  x25519Keypair: {
-    privateKey: Uint8Array;
-    publicKey: Uint8Array;
-  };
-  cipher: RescueCipher;
+  x25519Keypair: X25519Keypair;
   initialAirdroppedLamports: bigint;
 }
 
@@ -122,15 +119,9 @@ async function createAccount(mxePublicKey: Uint8Array): Promise<Omit<Account, "i
   const keypair = await generateKeyPairSigner();
 
   // Generate x25519 keypair for encryption
-  const privateKey = x25519.utils.randomPrivateKey();
-  const publicKey = x25519.getPublicKey(privateKey);
-  const x25519Keypair = { privateKey, publicKey };
+  const x25519Keypair = generateX25519Keypair()
 
-  // Derive shared secret with MXE and create cipher
-  const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
-  const cipher = new RescueCipher(sharedSecret);
-
-  return { keypair, x25519Keypair, cipher };
+  return { keypair, x25519Keypair };
 }
 
 /**

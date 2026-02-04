@@ -3,7 +3,7 @@ import {
   getClaimVoteTokensInstructionAsync,
   type ClaimVoteTokensInstruction,
 } from "../generated";
-import { type ArciumConfig, getComputeAccounts } from "./arciumConfig";
+import { type ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
 
 export interface ClaimVoteTokensParams {
   signer: TransactionSigner;
