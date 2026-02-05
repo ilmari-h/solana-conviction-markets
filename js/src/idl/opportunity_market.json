@@ -94,38 +94,7 @@
           "name": "market"
         },
         {
-          "name": "user_vta",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  111,
-                  116,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  97,
-                  99,
-                  99,
-                  111,
-                  117,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "signer"
-              }
-            ]
-          }
+          "name": "user_vta"
         },
         {
           "name": "share_account",
@@ -504,6 +473,9 @@
           "signer": true
         },
         {
+          "name": "token_mint"
+        },
+        {
           "name": "vote_token_account",
           "writable": true,
           "pda": {
@@ -533,10 +505,81 @@
               },
               {
                 "kind": "account",
+                "path": "token_mint"
+              },
+              {
+                "kind": "account",
                 "path": "signer"
               }
             ]
           }
+        },
+        {
+          "name": "vote_token_ata",
+          "docs": [
+            "ATA owned by VTA PDA (source of SPL tokens for withdrawal)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vote_token_account"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "user_token_account",
+          "docs": [
+            "Signer's token account (destination for claimed tokens)"
+          ],
+          "writable": true
         },
         {
           "name": "sign_pda_account",
@@ -607,6 +650,9 @@
           "address": "11111111111111111111111111111111"
         },
         {
+          "name": "token_program"
+        },
+        {
           "name": "arcium_program",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
@@ -669,8 +715,30 @@
           "writable": true
         },
         {
-          "name": "user",
+          "name": "user_token_account",
+          "docs": [
+            "User's token account to receive claimed SPL tokens"
+          ],
           "writable": true
+        },
+        {
+          "name": "vote_token_ata",
+          "docs": [
+            "VTA's ATA holding SPL tokens (source for withdrawal)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "Token mint for transfer_checked"
+          ]
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Token program for CPI"
+          ]
         }
       ],
       "args": [
@@ -814,6 +882,79 @@
           }
         },
         {
+          "name": "token_mint"
+        },
+        {
+          "name": "market_token_ata",
+          "docs": [
+            "Market's ATA holding reward tokens"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "owner_token_account",
+          "docs": [
+            "Owner's token account to receive rewards"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -842,6 +983,9 @@
           "name": "creator",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "token_mint"
         },
         {
           "name": "market",
@@ -880,6 +1024,66 @@
                 "path": "market_index"
               }
             ]
+          }
+        },
+        {
+          "name": "market_token_ata",
+          "docs": [
+            "ATA owned by market PDA, holds reward tokens"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
           }
         },
         {
@@ -951,6 +1155,13 @@
           "address": "11111111111111111111111111111111"
         },
         {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
           "name": "arcium_program",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
@@ -969,7 +1180,7 @@
           "type": "u64"
         },
         {
-          "name": "reward_lamports",
+          "name": "reward_amount",
           "type": "u64"
         },
         {
@@ -1300,6 +1511,9 @@
           "signer": true
         },
         {
+          "name": "token_mint"
+        },
+        {
           "name": "vote_token_account",
           "writable": true,
           "pda": {
@@ -1329,10 +1543,81 @@
               },
               {
                 "kind": "account",
+                "path": "token_mint"
+              },
+              {
+                "kind": "account",
                 "path": "signer"
               }
             ]
           }
+        },
+        {
+          "name": "vote_token_ata",
+          "docs": [
+            "ATA owned by the VTA PDA, holding the actual SPL tokens"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vote_token_account"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "sign_pda_account",
@@ -1542,6 +1827,9 @@
           "signer": true
         },
         {
+          "name": "token_mint"
+        },
+        {
           "name": "vote_token_account",
           "writable": true,
           "pda": {
@@ -1571,9 +1859,80 @@
               },
               {
                 "kind": "account",
+                "path": "token_mint"
+              },
+              {
+                "kind": "account",
                 "path": "signer"
               }
             ]
+          }
+        },
+        {
+          "name": "signer_token_account",
+          "docs": [
+            "The signer's token account (source of SPL tokens)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vote_token_ata",
+          "docs": [
+            "ATA owned by the VTA PDA (destination of SPL tokens)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vote_token_account"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
           }
         },
         {
@@ -1645,6 +2004,9 @@
           "address": "11111111111111111111111111111111"
         },
         {
+          "name": "token_program"
+        },
+        {
           "name": "arcium_program",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
@@ -1692,6 +2054,71 @@
         {
           "name": "market",
           "writable": true
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "market_token_ata",
+          "docs": [
+            "Market's ATA holding reward tokens"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program"
         }
       ],
       "args": [
@@ -1761,38 +2188,7 @@
         },
         {
           "name": "user_vta",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  111,
-                  116,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  97,
-                  99,
-                  99,
-                  111,
-                  117,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "owner"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "sign_pda_account",
@@ -2202,8 +2598,98 @@
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidCallbackTx",
-      "msg": "Invalid callback transaction"
+      "name": "AbortedComputation",
+      "msg": "Computation aborted"
+    },
+    {
+      "code": 6001,
+      "name": "ClusterNotSet",
+      "msg": "Cluster not set"
+    },
+    {
+      "code": 6002,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6003,
+      "name": "InsufficientBalance",
+      "msg": "Insufficient balance"
+    },
+    {
+      "code": 6004,
+      "name": "InsufficientRewardFunding",
+      "msg": "Insufficient reward funding"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTimestamp",
+      "msg": "Timestamp must be in the future"
+    },
+    {
+      "code": 6006,
+      "name": "MarketAlreadyOpen",
+      "msg": "Market is already open"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidOptionIndex",
+      "msg": "Invalid option index"
+    },
+    {
+      "code": 6008,
+      "name": "MarketNotOpen",
+      "msg": "Market is not open"
+    },
+    {
+      "code": 6009,
+      "name": "SharePurchaseFailed",
+      "msg": "Invalid option or not enough balance"
+    },
+    {
+      "code": 6010,
+      "name": "StakingNotActive",
+      "msg": "Staking period is not active"
+    },
+    {
+      "code": 6011,
+      "name": "WinnerAlreadySelected",
+      "msg": "Market winner already selected"
+    },
+    {
+      "code": 6012,
+      "name": "AlreadyRevealed",
+      "msg": "Shares already revealed"
+    },
+    {
+      "code": 6013,
+      "name": "MarketNotResolved",
+      "msg": "Staking period not over"
+    },
+    {
+      "code": 6014,
+      "name": "NotRevealed",
+      "msg": "Shares not yet revealed"
+    },
+    {
+      "code": 6015,
+      "name": "TallyAlreadyIncremented",
+      "msg": "Tally already incremented for this share account"
+    },
+    {
+      "code": 6016,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6017,
+      "name": "RevealPeriodEnded",
+      "msg": "Reveal period has already ended"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidMint",
+      "msg": "Token mint does not match market mint"
     }
   ],
   "types": [
@@ -3104,7 +3590,7 @@
             "type": "u64"
           },
           {
-            "name": "reward_lamports",
+            "name": "reward_amount",
             "type": "u64"
           },
           {
@@ -3112,6 +3598,10 @@
             "type": {
               "option": "pubkey"
             }
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
           }
         ]
       }
@@ -3659,6 +4149,10 @@
           {
             "name": "state_nonce",
             "type": "u128"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
           }
         ]
       }

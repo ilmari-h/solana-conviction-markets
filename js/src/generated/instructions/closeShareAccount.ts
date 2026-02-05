@@ -58,6 +58,10 @@ export type CloseShareAccountInstruction<
   TAccountMarket extends string | AccountMeta<string> = string,
   TAccountShareAccount extends string | AccountMeta<string> = string,
   TAccountOption extends string | AccountMeta<string> = string,
+  TAccountTokenMint extends string | AccountMeta<string> = string,
+  TAccountMarketTokenAta extends string | AccountMeta<string> = string,
+  TAccountOwnerTokenAccount extends string | AccountMeta<string> = string,
+  TAccountTokenProgram extends string | AccountMeta<string> = string,
   TAccountSystemProgram extends string | AccountMeta<string> =
     '11111111111111111111111111111111',
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -78,6 +82,18 @@ export type CloseShareAccountInstruction<
       TAccountOption extends string
         ? ReadonlyAccount<TAccountOption>
         : TAccountOption,
+      TAccountTokenMint extends string
+        ? ReadonlyAccount<TAccountTokenMint>
+        : TAccountTokenMint,
+      TAccountMarketTokenAta extends string
+        ? WritableAccount<TAccountMarketTokenAta>
+        : TAccountMarketTokenAta,
+      TAccountOwnerTokenAccount extends string
+        ? WritableAccount<TAccountOwnerTokenAccount>
+        : TAccountOwnerTokenAccount,
+      TAccountTokenProgram extends string
+        ? ReadonlyAccount<TAccountTokenProgram>
+        : TAccountTokenProgram,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -124,12 +140,22 @@ export type CloseShareAccountAsyncInput<
   TAccountMarket extends string = string,
   TAccountShareAccount extends string = string,
   TAccountOption extends string = string,
+  TAccountTokenMint extends string = string,
+  TAccountMarketTokenAta extends string = string,
+  TAccountOwnerTokenAccount extends string = string,
+  TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   owner: TransactionSigner<TAccountOwner>;
   market: Address<TAccountMarket>;
   shareAccount?: Address<TAccountShareAccount>;
   option?: Address<TAccountOption>;
+  tokenMint: Address<TAccountTokenMint>;
+  /** Market's ATA holding reward tokens */
+  marketTokenAta?: Address<TAccountMarketTokenAta>;
+  /** Owner's token account to receive rewards */
+  ownerTokenAccount: Address<TAccountOwnerTokenAccount>;
+  tokenProgram: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: CloseShareAccountInstructionDataArgs['optionIndex'];
 };
@@ -139,6 +165,10 @@ export async function getCloseShareAccountInstructionAsync<
   TAccountMarket extends string,
   TAccountShareAccount extends string,
   TAccountOption extends string,
+  TAccountTokenMint extends string,
+  TAccountMarketTokenAta extends string,
+  TAccountOwnerTokenAccount extends string,
+  TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
@@ -147,6 +177,10 @@ export async function getCloseShareAccountInstructionAsync<
     TAccountMarket,
     TAccountShareAccount,
     TAccountOption,
+    TAccountTokenMint,
+    TAccountMarketTokenAta,
+    TAccountOwnerTokenAccount,
+    TAccountTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -157,6 +191,10 @@ export async function getCloseShareAccountInstructionAsync<
     TAccountMarket,
     TAccountShareAccount,
     TAccountOption,
+    TAccountTokenMint,
+    TAccountMarketTokenAta,
+    TAccountOwnerTokenAccount,
+    TAccountTokenProgram,
     TAccountSystemProgram
   >
 > {
@@ -170,6 +208,13 @@ export async function getCloseShareAccountInstructionAsync<
     market: { value: input.market ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     option: { value: input.option ?? null, isWritable: false },
+    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
+    marketTokenAta: { value: input.marketTokenAta ?? null, isWritable: true },
+    ownerTokenAccount: {
+      value: input.ownerTokenAccount ?? null,
+      isWritable: true,
+    },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -207,6 +252,17 @@ export async function getCloseShareAccountInstructionAsync<
       ],
     });
   }
+  if (!accounts.marketTokenAta.value) {
+    accounts.marketTokenAta.value = await getProgramDerivedAddress({
+      programAddress:
+        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
+      seeds: [
+        getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
+        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
+      ],
+    });
+  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -219,6 +275,10 @@ export async function getCloseShareAccountInstructionAsync<
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.option),
+      getAccountMeta(accounts.tokenMint),
+      getAccountMeta(accounts.marketTokenAta),
+      getAccountMeta(accounts.ownerTokenAccount),
+      getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getCloseShareAccountInstructionDataEncoder().encode(
@@ -231,6 +291,10 @@ export async function getCloseShareAccountInstructionAsync<
     TAccountMarket,
     TAccountShareAccount,
     TAccountOption,
+    TAccountTokenMint,
+    TAccountMarketTokenAta,
+    TAccountOwnerTokenAccount,
+    TAccountTokenProgram,
     TAccountSystemProgram
   >);
 }
@@ -240,12 +304,22 @@ export type CloseShareAccountInput<
   TAccountMarket extends string = string,
   TAccountShareAccount extends string = string,
   TAccountOption extends string = string,
+  TAccountTokenMint extends string = string,
+  TAccountMarketTokenAta extends string = string,
+  TAccountOwnerTokenAccount extends string = string,
+  TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   owner: TransactionSigner<TAccountOwner>;
   market: Address<TAccountMarket>;
   shareAccount: Address<TAccountShareAccount>;
   option: Address<TAccountOption>;
+  tokenMint: Address<TAccountTokenMint>;
+  /** Market's ATA holding reward tokens */
+  marketTokenAta: Address<TAccountMarketTokenAta>;
+  /** Owner's token account to receive rewards */
+  ownerTokenAccount: Address<TAccountOwnerTokenAccount>;
+  tokenProgram: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: CloseShareAccountInstructionDataArgs['optionIndex'];
 };
@@ -255,6 +329,10 @@ export function getCloseShareAccountInstruction<
   TAccountMarket extends string,
   TAccountShareAccount extends string,
   TAccountOption extends string,
+  TAccountTokenMint extends string,
+  TAccountMarketTokenAta extends string,
+  TAccountOwnerTokenAccount extends string,
+  TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
@@ -263,6 +341,10 @@ export function getCloseShareAccountInstruction<
     TAccountMarket,
     TAccountShareAccount,
     TAccountOption,
+    TAccountTokenMint,
+    TAccountMarketTokenAta,
+    TAccountOwnerTokenAccount,
+    TAccountTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -272,6 +354,10 @@ export function getCloseShareAccountInstruction<
   TAccountMarket,
   TAccountShareAccount,
   TAccountOption,
+  TAccountTokenMint,
+  TAccountMarketTokenAta,
+  TAccountOwnerTokenAccount,
+  TAccountTokenProgram,
   TAccountSystemProgram
 > {
   // Program address.
@@ -284,6 +370,13 @@ export function getCloseShareAccountInstruction<
     market: { value: input.market ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     option: { value: input.option ?? null, isWritable: false },
+    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
+    marketTokenAta: { value: input.marketTokenAta ?? null, isWritable: true },
+    ownerTokenAccount: {
+      value: input.ownerTokenAccount ?? null,
+      isWritable: true,
+    },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -307,6 +400,10 @@ export function getCloseShareAccountInstruction<
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.option),
+      getAccountMeta(accounts.tokenMint),
+      getAccountMeta(accounts.marketTokenAta),
+      getAccountMeta(accounts.ownerTokenAccount),
+      getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getCloseShareAccountInstructionDataEncoder().encode(
@@ -319,6 +416,10 @@ export function getCloseShareAccountInstruction<
     TAccountMarket,
     TAccountShareAccount,
     TAccountOption,
+    TAccountTokenMint,
+    TAccountMarketTokenAta,
+    TAccountOwnerTokenAccount,
+    TAccountTokenProgram,
     TAccountSystemProgram
   >);
 }
@@ -333,7 +434,13 @@ export type ParsedCloseShareAccountInstruction<
     market: TAccountMetas[1];
     shareAccount: TAccountMetas[2];
     option: TAccountMetas[3];
-    systemProgram: TAccountMetas[4];
+    tokenMint: TAccountMetas[4];
+    /** Market's ATA holding reward tokens */
+    marketTokenAta: TAccountMetas[5];
+    /** Owner's token account to receive rewards */
+    ownerTokenAccount: TAccountMetas[6];
+    tokenProgram: TAccountMetas[7];
+    systemProgram: TAccountMetas[8];
   };
   data: CloseShareAccountInstructionData;
 };
@@ -346,7 +453,7 @@ export function parseCloseShareAccountInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedCloseShareAccountInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 5) {
+  if (instruction.accounts.length < 9) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -363,6 +470,10 @@ export function parseCloseShareAccountInstruction<
       market: getNextAccount(),
       shareAccount: getNextAccount(),
       option: getNextAccount(),
+      tokenMint: getNextAccount(),
+      marketTokenAta: getNextAccount(),
+      ownerTokenAccount: getNextAccount(),
+      tokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
     data: getCloseShareAccountInstructionDataDecoder().decode(instruction.data),

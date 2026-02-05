@@ -1,4 +1,4 @@
-import { type TransactionSigner, Address } from "@solana/kit";
+import { type TransactionSigner, type Address } from "@solana/kit";
 import {
   getCreateMarketInstructionAsync,
   type CreateMarketInstruction,
@@ -7,9 +7,11 @@ import { ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
 
 export interface CreateMarketParams {
   creator: TransactionSigner;
+  tokenMint: Address;
+  tokenProgram: Address;
   marketIndex: bigint;
   maxShares: bigint;
-  rewardLamports: bigint;
+  rewardAmount: bigint;
   timeToStake: bigint;
   timeToReveal: bigint;
   marketAuthority: Address | null;
@@ -24,9 +26,11 @@ export async function createMarket(
   const {
     nonce,
     creator,
+    tokenMint,
+    tokenProgram,
     marketIndex,
     maxShares,
-    rewardLamports,
+    rewardAmount,
     timeToReveal,
     timeToStake,
     marketAuthority,
@@ -35,9 +39,11 @@ export async function createMarket(
   return getCreateMarketInstructionAsync({
     ...getComputeAccounts("init_market_shares", config),
     creator,
+    tokenMint,
+    tokenProgram,
     marketIndex,
     maxShares,
-    rewardLamports,
+    rewardAmount,
     timeToStake,
     timeToReveal,
     nonce,

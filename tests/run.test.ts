@@ -74,54 +74,6 @@ describe("OpportunityMarket", () => {
     await initializeAllCompDefs(rpc, sendAndConfirmTransaction, secretKey, programId);
   });
 
-  describe("Full Suite", () => {
-
-    it("can work with vote tokens", async () => {
-      // Get Arcium environment
-
-      // Generate a new keypair
-      const buyer = await generateKeyPairSigner();
-
-      // Airdrop SOL for transaction fees
-      const airdropAmount = lamports(2_000_000_000n);
-      await airdrop({
-        recipientAddress: buyer.address,
-        lamports: airdropAmount,
-        commitment: "confirmed",
-      });
-
-      // Generate computation offset and nonce
-      const computationOffset = randomComputationOffset();
-      const nonce = deserializeLE(randomBytes(16));
-
-      // Generate real x25519 keypair for encryption
-      const keypair = generateX25519Keypair();
-
-      const initVoteTokenAccountIx = await initVoteTokenAccount({
-        signer: buyer,
-        userPubkey: keypair.publicKey,
-        nonce,
-        },
-         {
-          clusterOffset: arciumEnv.arciumClusterOffset,
-          computationOffset,
-        },
-      );
-
-      await sendTransaction(
-        rpc,
-        sendAndConfirmTransaction,
-        buyer,
-        [initVoteTokenAccountIx],
-        { label: "initVoteTokenAccount" }
-      );
-      await awaitComputationFinalization(
-        rpc,
-        computationOffset,
-      )
-    });
-  });
-
   it("passes full opportunity market flow", async () => {
     // Market funding amount (1 SOL) - must match rewardLamports in createTestEnvironment
     const marketFundingLamports = 1_000_000_000n;

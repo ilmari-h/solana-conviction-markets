@@ -58,7 +58,10 @@ export function getClaimVoteTokensDiscriminatorBytes() {
 export type ClaimVoteTokensInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
+  TAccountTokenMint extends string | AccountMeta<string> = string,
   TAccountVoteTokenAccount extends string | AccountMeta<string> = string,
+  TAccountVoteTokenAta extends string | AccountMeta<string> = string,
+  TAccountUserTokenAccount extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
   TAccountMempoolAccount extends string | AccountMeta<string> = string,
@@ -72,6 +75,7 @@ export type ClaimVoteTokensInstruction<
     '7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot',
   TAccountSystemProgram extends string | AccountMeta<string> =
     '11111111111111111111111111111111',
+  TAccountTokenProgram extends string | AccountMeta<string> = string,
   TAccountArciumProgram extends string | AccountMeta<string> =
     'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ',
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -83,9 +87,18 @@ export type ClaimVoteTokensInstruction<
         ? WritableSignerAccount<TAccountSigner> &
             AccountSignerMeta<TAccountSigner>
         : TAccountSigner,
+      TAccountTokenMint extends string
+        ? ReadonlyAccount<TAccountTokenMint>
+        : TAccountTokenMint,
       TAccountVoteTokenAccount extends string
         ? WritableAccount<TAccountVoteTokenAccount>
         : TAccountVoteTokenAccount,
+      TAccountVoteTokenAta extends string
+        ? WritableAccount<TAccountVoteTokenAta>
+        : TAccountVoteTokenAta,
+      TAccountUserTokenAccount extends string
+        ? WritableAccount<TAccountUserTokenAccount>
+        : TAccountUserTokenAccount,
       TAccountSignPdaAccount extends string
         ? WritableAccount<TAccountSignPdaAccount>
         : TAccountSignPdaAccount,
@@ -116,6 +129,9 @@ export type ClaimVoteTokensInstruction<
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
+      TAccountTokenProgram extends string
+        ? ReadonlyAccount<TAccountTokenProgram>
+        : TAccountTokenProgram,
       TAccountArciumProgram extends string
         ? ReadonlyAccount<TAccountArciumProgram>
         : TAccountArciumProgram,
@@ -169,7 +185,10 @@ export function getClaimVoteTokensInstructionDataCodec(): FixedSizeCodec<
 
 export type ClaimVoteTokensAsyncInput<
   TAccountSigner extends string = string,
+  TAccountTokenMint extends string = string,
   TAccountVoteTokenAccount extends string = string,
+  TAccountVoteTokenAta extends string = string,
+  TAccountUserTokenAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountMempoolAccount extends string = string,
@@ -180,10 +199,16 @@ export type ClaimVoteTokensAsyncInput<
   TAccountPoolAccount extends string = string,
   TAccountClockAccount extends string = string,
   TAccountSystemProgram extends string = string,
+  TAccountTokenProgram extends string = string,
   TAccountArciumProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
+  tokenMint: Address<TAccountTokenMint>;
   voteTokenAccount?: Address<TAccountVoteTokenAccount>;
+  /** ATA owned by VTA PDA (source of SPL tokens for withdrawal) */
+  voteTokenAta?: Address<TAccountVoteTokenAta>;
+  /** Signer's token account (destination for claimed tokens) */
+  userTokenAccount: Address<TAccountUserTokenAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -194,6 +219,7 @@ export type ClaimVoteTokensAsyncInput<
   poolAccount?: Address<TAccountPoolAccount>;
   clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
+  tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: ClaimVoteTokensInstructionDataArgs['computationOffset'];
   userPubkey: ClaimVoteTokensInstructionDataArgs['userPubkey'];
@@ -202,7 +228,10 @@ export type ClaimVoteTokensAsyncInput<
 
 export async function getClaimVoteTokensInstructionAsync<
   TAccountSigner extends string,
+  TAccountTokenMint extends string,
   TAccountVoteTokenAccount extends string,
+  TAccountVoteTokenAta extends string,
+  TAccountUserTokenAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
   TAccountMempoolAccount extends string,
@@ -213,12 +242,16 @@ export async function getClaimVoteTokensInstructionAsync<
   TAccountPoolAccount extends string,
   TAccountClockAccount extends string,
   TAccountSystemProgram extends string,
+  TAccountTokenProgram extends string,
   TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: ClaimVoteTokensAsyncInput<
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -229,6 +262,7 @@ export async function getClaimVoteTokensInstructionAsync<
     TAccountPoolAccount,
     TAccountClockAccount,
     TAccountSystemProgram,
+    TAccountTokenProgram,
     TAccountArciumProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -236,7 +270,10 @@ export async function getClaimVoteTokensInstructionAsync<
   ClaimVoteTokensInstruction<
     TProgramAddress,
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -247,6 +284,7 @@ export async function getClaimVoteTokensInstructionAsync<
     TAccountPoolAccount,
     TAccountClockAccount,
     TAccountSystemProgram,
+    TAccountTokenProgram,
     TAccountArciumProgram
   >
 > {
@@ -257,8 +295,14 @@ export async function getClaimVoteTokensInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
+    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
     voteTokenAccount: {
       value: input.voteTokenAccount ?? null,
+      isWritable: true,
+    },
+    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    userTokenAccount: {
+      value: input.userTokenAccount ?? null,
       isWritable: true,
     },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
@@ -274,6 +318,7 @@ export async function getClaimVoteTokensInstructionAsync<
     poolAccount: { value: input.poolAccount ?? null, isWritable: true },
     clockAccount: { value: input.clockAccount ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     arciumProgram: { value: input.arciumProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -295,7 +340,21 @@ export async function getClaimVoteTokensInstructionAsync<
             111, 117, 110, 116,
           ])
         ),
+        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
         getAddressEncoder().encode(expectAddress(accounts.signer.value)),
+      ],
+    });
+  }
+  if (!accounts.voteTokenAta.value) {
+    accounts.voteTokenAta.value = await getProgramDerivedAddress({
+      programAddress:
+        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
+      seeds: [
+        getAddressEncoder().encode(
+          expectAddress(accounts.voteTokenAccount.value)
+        ),
+        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
+        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
       ],
     });
   }
@@ -333,7 +392,10 @@ export async function getClaimVoteTokensInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
+      getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.voteTokenAccount),
+      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.userTokenAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
       getAccountMeta(accounts.mempoolAccount),
@@ -344,6 +406,7 @@ export async function getClaimVoteTokensInstructionAsync<
       getAccountMeta(accounts.poolAccount),
       getAccountMeta(accounts.clockAccount),
       getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.arciumProgram),
     ],
     data: getClaimVoteTokensInstructionDataEncoder().encode(
@@ -353,7 +416,10 @@ export async function getClaimVoteTokensInstructionAsync<
   } as ClaimVoteTokensInstruction<
     TProgramAddress,
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -364,13 +430,17 @@ export async function getClaimVoteTokensInstructionAsync<
     TAccountPoolAccount,
     TAccountClockAccount,
     TAccountSystemProgram,
+    TAccountTokenProgram,
     TAccountArciumProgram
   >);
 }
 
 export type ClaimVoteTokensInput<
   TAccountSigner extends string = string,
+  TAccountTokenMint extends string = string,
   TAccountVoteTokenAccount extends string = string,
+  TAccountVoteTokenAta extends string = string,
+  TAccountUserTokenAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountMempoolAccount extends string = string,
@@ -381,10 +451,16 @@ export type ClaimVoteTokensInput<
   TAccountPoolAccount extends string = string,
   TAccountClockAccount extends string = string,
   TAccountSystemProgram extends string = string,
+  TAccountTokenProgram extends string = string,
   TAccountArciumProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
+  tokenMint: Address<TAccountTokenMint>;
   voteTokenAccount: Address<TAccountVoteTokenAccount>;
+  /** ATA owned by VTA PDA (source of SPL tokens for withdrawal) */
+  voteTokenAta: Address<TAccountVoteTokenAta>;
+  /** Signer's token account (destination for claimed tokens) */
+  userTokenAccount: Address<TAccountUserTokenAccount>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -395,6 +471,7 @@ export type ClaimVoteTokensInput<
   poolAccount?: Address<TAccountPoolAccount>;
   clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
+  tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: ClaimVoteTokensInstructionDataArgs['computationOffset'];
   userPubkey: ClaimVoteTokensInstructionDataArgs['userPubkey'];
@@ -403,7 +480,10 @@ export type ClaimVoteTokensInput<
 
 export function getClaimVoteTokensInstruction<
   TAccountSigner extends string,
+  TAccountTokenMint extends string,
   TAccountVoteTokenAccount extends string,
+  TAccountVoteTokenAta extends string,
+  TAccountUserTokenAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
   TAccountMempoolAccount extends string,
@@ -414,12 +494,16 @@ export function getClaimVoteTokensInstruction<
   TAccountPoolAccount extends string,
   TAccountClockAccount extends string,
   TAccountSystemProgram extends string,
+  TAccountTokenProgram extends string,
   TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: ClaimVoteTokensInput<
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -430,13 +514,17 @@ export function getClaimVoteTokensInstruction<
     TAccountPoolAccount,
     TAccountClockAccount,
     TAccountSystemProgram,
+    TAccountTokenProgram,
     TAccountArciumProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): ClaimVoteTokensInstruction<
   TProgramAddress,
   TAccountSigner,
+  TAccountTokenMint,
   TAccountVoteTokenAccount,
+  TAccountVoteTokenAta,
+  TAccountUserTokenAccount,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
   TAccountMempoolAccount,
@@ -447,6 +535,7 @@ export function getClaimVoteTokensInstruction<
   TAccountPoolAccount,
   TAccountClockAccount,
   TAccountSystemProgram,
+  TAccountTokenProgram,
   TAccountArciumProgram
 > {
   // Program address.
@@ -456,8 +545,14 @@ export function getClaimVoteTokensInstruction<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
+    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
     voteTokenAccount: {
       value: input.voteTokenAccount ?? null,
+      isWritable: true,
+    },
+    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    userTokenAccount: {
+      value: input.userTokenAccount ?? null,
       isWritable: true,
     },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
@@ -473,6 +568,7 @@ export function getClaimVoteTokensInstruction<
     poolAccount: { value: input.poolAccount ?? null, isWritable: true },
     clockAccount: { value: input.clockAccount ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     arciumProgram: { value: input.arciumProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -505,7 +601,10 @@ export function getClaimVoteTokensInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
+      getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.voteTokenAccount),
+      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.userTokenAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
       getAccountMeta(accounts.mempoolAccount),
@@ -516,6 +615,7 @@ export function getClaimVoteTokensInstruction<
       getAccountMeta(accounts.poolAccount),
       getAccountMeta(accounts.clockAccount),
       getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.arciumProgram),
     ],
     data: getClaimVoteTokensInstructionDataEncoder().encode(
@@ -525,7 +625,10 @@ export function getClaimVoteTokensInstruction<
   } as ClaimVoteTokensInstruction<
     TProgramAddress,
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -536,6 +639,7 @@ export function getClaimVoteTokensInstruction<
     TAccountPoolAccount,
     TAccountClockAccount,
     TAccountSystemProgram,
+    TAccountTokenProgram,
     TAccountArciumProgram
   >);
 }
@@ -547,18 +651,24 @@ export type ParsedClaimVoteTokensInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     signer: TAccountMetas[0];
-    voteTokenAccount: TAccountMetas[1];
-    signPdaAccount: TAccountMetas[2];
-    mxeAccount: TAccountMetas[3];
-    mempoolAccount: TAccountMetas[4];
-    executingPool: TAccountMetas[5];
-    computationAccount: TAccountMetas[6];
-    compDefAccount: TAccountMetas[7];
-    clusterAccount: TAccountMetas[8];
-    poolAccount: TAccountMetas[9];
-    clockAccount: TAccountMetas[10];
-    systemProgram: TAccountMetas[11];
-    arciumProgram: TAccountMetas[12];
+    tokenMint: TAccountMetas[1];
+    voteTokenAccount: TAccountMetas[2];
+    /** ATA owned by VTA PDA (source of SPL tokens for withdrawal) */
+    voteTokenAta: TAccountMetas[3];
+    /** Signer's token account (destination for claimed tokens) */
+    userTokenAccount: TAccountMetas[4];
+    signPdaAccount: TAccountMetas[5];
+    mxeAccount: TAccountMetas[6];
+    mempoolAccount: TAccountMetas[7];
+    executingPool: TAccountMetas[8];
+    computationAccount: TAccountMetas[9];
+    compDefAccount: TAccountMetas[10];
+    clusterAccount: TAccountMetas[11];
+    poolAccount: TAccountMetas[12];
+    clockAccount: TAccountMetas[13];
+    systemProgram: TAccountMetas[14];
+    tokenProgram: TAccountMetas[15];
+    arciumProgram: TAccountMetas[16];
   };
   data: ClaimVoteTokensInstructionData;
 };
@@ -571,7 +681,7 @@ export function parseClaimVoteTokensInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedClaimVoteTokensInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 13) {
+  if (instruction.accounts.length < 17) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -585,7 +695,10 @@ export function parseClaimVoteTokensInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       signer: getNextAccount(),
+      tokenMint: getNextAccount(),
       voteTokenAccount: getNextAccount(),
+      voteTokenAta: getNextAccount(),
+      userTokenAccount: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),
       mempoolAccount: getNextAccount(),
@@ -596,6 +709,7 @@ export function parseClaimVoteTokensInstruction<
       poolAccount: getNextAccount(),
       clockAccount: getNextAccount(),
       systemProgram: getNextAccount(),
+      tokenProgram: getNextAccount(),
       arciumProgram: getNextAccount(),
     },
     data: getClaimVoteTokensInstructionDataDecoder().decode(instruction.data),

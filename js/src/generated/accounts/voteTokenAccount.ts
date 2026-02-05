@@ -57,6 +57,7 @@ export type VoteTokenAccount = {
   bump: number;
   owner: Address;
   stateNonce: bigint;
+  tokenMint: Address;
 };
 
 export type VoteTokenAccountArgs = {
@@ -64,6 +65,7 @@ export type VoteTokenAccountArgs = {
   bump: number;
   owner: Address;
   stateNonce: number | bigint;
+  tokenMint: Address;
 };
 
 export function getVoteTokenAccountEncoder(): FixedSizeEncoder<VoteTokenAccountArgs> {
@@ -79,6 +81,7 @@ export function getVoteTokenAccountEncoder(): FixedSizeEncoder<VoteTokenAccountA
       ['bump', getU8Encoder()],
       ['owner', getAddressEncoder()],
       ['stateNonce', getU128Encoder()],
+      ['tokenMint', getAddressEncoder()],
     ]),
     (value) => ({ ...value, discriminator: VOTE_TOKEN_ACCOUNT_DISCRIMINATOR })
   );
@@ -96,6 +99,7 @@ export function getVoteTokenAccountDecoder(): FixedSizeDecoder<VoteTokenAccount>
     ['bump', getU8Decoder()],
     ['owner', getAddressDecoder()],
     ['stateNonce', getU128Decoder()],
+    ['tokenMint', getAddressDecoder()],
   ]);
 }
 

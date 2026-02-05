@@ -89,7 +89,10 @@ pub fn mint_vote_tokens(
     let vta_pubkey = vta.key();
 
     // Transfer SPL tokens from signer's token account to VTA's ATA
-    // TODO: transfer first to ephemeral deposit account and in callback, transfer from there to VTA
+    // TODO:
+    // This can go terribly wrong if callback for some reason fails to execute
+    // Lets first transfer to ephemeral deposit account and in callback, transfer from there to VTA
+    // User can close to ephemeral deposit account manually and reclaim tokens if something goes wrong.
     transfer_checked(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),

@@ -72,8 +72,9 @@ export type OpportunityMarket = {
   selectedOption: Option<number>;
   stateNonce: bigint;
   maxShares: bigint;
-  rewardLamports: bigint;
+  rewardAmount: bigint;
   marketAuthority: Option<Address>;
+  mint: Address;
 };
 
 export type OpportunityMarketArgs = {
@@ -88,8 +89,9 @@ export type OpportunityMarketArgs = {
   selectedOption: OptionOrNullable<number>;
   stateNonce: number | bigint;
   maxShares: number | bigint;
-  rewardLamports: number | bigint;
+  rewardAmount: number | bigint;
   marketAuthority: OptionOrNullable<Address>;
+  mint: Address;
 };
 
 export function getOpportunityMarketEncoder(): Encoder<OpportunityMarketArgs> {
@@ -112,8 +114,9 @@ export function getOpportunityMarketEncoder(): Encoder<OpportunityMarketArgs> {
       ['selectedOption', getOptionEncoder(getU16Encoder())],
       ['stateNonce', getU128Encoder()],
       ['maxShares', getU64Encoder()],
-      ['rewardLamports', getU64Encoder()],
+      ['rewardAmount', getU64Encoder()],
       ['marketAuthority', getOptionEncoder(getAddressEncoder())],
+      ['mint', getAddressEncoder()],
     ]),
     (value) => ({ ...value, discriminator: OPPORTUNITY_MARKET_DISCRIMINATOR })
   );
@@ -138,8 +141,9 @@ export function getOpportunityMarketDecoder(): Decoder<OpportunityMarket> {
     ['selectedOption', getOptionDecoder(getU16Decoder())],
     ['stateNonce', getU128Decoder()],
     ['maxShares', getU64Decoder()],
-    ['rewardLamports', getU64Decoder()],
+    ['rewardAmount', getU64Decoder()],
     ['marketAuthority', getOptionDecoder(getAddressDecoder())],
+    ['mint', getAddressDecoder()],
   ]);
 }
 

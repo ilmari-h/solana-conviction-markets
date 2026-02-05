@@ -100,38 +100,7 @@ export type OpportunityMarket = {
           "name": "market"
         },
         {
-          "name": "userVta",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  111,
-                  116,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  97,
-                  99,
-                  99,
-                  111,
-                  117,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "signer"
-              }
-            ]
-          }
+          "name": "userVta"
         },
         {
           "name": "shareAccount",
@@ -510,6 +479,9 @@ export type OpportunityMarket = {
           "signer": true
         },
         {
+          "name": "tokenMint"
+        },
+        {
           "name": "voteTokenAccount",
           "writable": true,
           "pda": {
@@ -539,10 +511,81 @@ export type OpportunityMarket = {
               },
               {
                 "kind": "account",
+                "path": "tokenMint"
+              },
+              {
+                "kind": "account",
                 "path": "signer"
               }
             ]
           }
+        },
+        {
+          "name": "voteTokenAta",
+          "docs": [
+            "ATA owned by VTA PDA (source of SPL tokens for withdrawal)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "voteTokenAccount"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "userTokenAccount",
+          "docs": [
+            "Signer's token account (destination for claimed tokens)"
+          ],
+          "writable": true
         },
         {
           "name": "signPdaAccount",
@@ -613,6 +656,9 @@ export type OpportunityMarket = {
           "address": "11111111111111111111111111111111"
         },
         {
+          "name": "tokenProgram"
+        },
+        {
           "name": "arciumProgram",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
@@ -675,8 +721,30 @@ export type OpportunityMarket = {
           "writable": true
         },
         {
-          "name": "user",
+          "name": "userTokenAccount",
+          "docs": [
+            "User's token account to receive claimed SPL tokens"
+          ],
           "writable": true
+        },
+        {
+          "name": "voteTokenAta",
+          "docs": [
+            "VTA's ATA holding SPL tokens (source for withdrawal)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenMint",
+          "docs": [
+            "Token mint for transfer_checked"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "docs": [
+            "Token program for CPI"
+          ]
         }
       ],
       "args": [
@@ -820,6 +888,79 @@ export type OpportunityMarket = {
           }
         },
         {
+          "name": "tokenMint"
+        },
+        {
+          "name": "marketTokenAta",
+          "docs": [
+            "Market's ATA holding reward tokens"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "ownerTokenAccount",
+          "docs": [
+            "Owner's token account to receive rewards"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
@@ -848,6 +989,9 @@ export type OpportunityMarket = {
           "name": "creator",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "tokenMint"
         },
         {
           "name": "market",
@@ -886,6 +1030,66 @@ export type OpportunityMarket = {
                 "path": "marketIndex"
               }
             ]
+          }
+        },
+        {
+          "name": "marketTokenAta",
+          "docs": [
+            "ATA owned by market PDA, holds reward tokens"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
           }
         },
         {
@@ -957,6 +1161,13 @@ export type OpportunityMarket = {
           "address": "11111111111111111111111111111111"
         },
         {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
           "name": "arciumProgram",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
@@ -975,7 +1186,7 @@ export type OpportunityMarket = {
           "type": "u64"
         },
         {
-          "name": "rewardLamports",
+          "name": "rewardAmount",
           "type": "u64"
         },
         {
@@ -1306,6 +1517,9 @@ export type OpportunityMarket = {
           "signer": true
         },
         {
+          "name": "tokenMint"
+        },
+        {
           "name": "voteTokenAccount",
           "writable": true,
           "pda": {
@@ -1335,10 +1549,81 @@ export type OpportunityMarket = {
               },
               {
                 "kind": "account",
+                "path": "tokenMint"
+              },
+              {
+                "kind": "account",
                 "path": "signer"
               }
             ]
           }
+        },
+        {
+          "name": "voteTokenAta",
+          "docs": [
+            "ATA owned by the VTA PDA, holding the actual SPL tokens"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "voteTokenAccount"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "signPdaAccount",
@@ -1548,6 +1833,9 @@ export type OpportunityMarket = {
           "signer": true
         },
         {
+          "name": "tokenMint"
+        },
+        {
           "name": "voteTokenAccount",
           "writable": true,
           "pda": {
@@ -1577,9 +1865,80 @@ export type OpportunityMarket = {
               },
               {
                 "kind": "account",
+                "path": "tokenMint"
+              },
+              {
+                "kind": "account",
                 "path": "signer"
               }
             ]
+          }
+        },
+        {
+          "name": "signerTokenAccount",
+          "docs": [
+            "The signer's token account (source of SPL tokens)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "voteTokenAta",
+          "docs": [
+            "ATA owned by the VTA PDA (destination of SPL tokens)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "voteTokenAccount"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
           }
         },
         {
@@ -1651,6 +2010,9 @@ export type OpportunityMarket = {
           "address": "11111111111111111111111111111111"
         },
         {
+          "name": "tokenProgram"
+        },
+        {
           "name": "arciumProgram",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
@@ -1698,6 +2060,71 @@ export type OpportunityMarket = {
         {
           "name": "market",
           "writable": true
+        },
+        {
+          "name": "tokenMint"
+        },
+        {
+          "name": "marketTokenAta",
+          "docs": [
+            "Market's ATA holding reward tokens"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgram"
         }
       ],
       "args": [
@@ -1767,38 +2194,7 @@ export type OpportunityMarket = {
         },
         {
           "name": "userVta",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  111,
-                  116,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  97,
-                  99,
-                  99,
-                  111,
-                  117,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "owner"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "signPdaAccount",
@@ -2208,8 +2604,98 @@ export type OpportunityMarket = {
   "errors": [
     {
       "code": 6000,
-      "name": "invalidCallbackTx",
-      "msg": "Invalid callback transaction"
+      "name": "abortedComputation",
+      "msg": "Computation aborted"
+    },
+    {
+      "code": 6001,
+      "name": "clusterNotSet",
+      "msg": "Cluster not set"
+    },
+    {
+      "code": 6002,
+      "name": "unauthorized",
+      "msg": "unauthorized"
+    },
+    {
+      "code": 6003,
+      "name": "insufficientBalance",
+      "msg": "Insufficient balance"
+    },
+    {
+      "code": 6004,
+      "name": "insufficientRewardFunding",
+      "msg": "Insufficient reward funding"
+    },
+    {
+      "code": 6005,
+      "name": "invalidTimestamp",
+      "msg": "Timestamp must be in the future"
+    },
+    {
+      "code": 6006,
+      "name": "marketAlreadyOpen",
+      "msg": "Market is already open"
+    },
+    {
+      "code": 6007,
+      "name": "invalidOptionIndex",
+      "msg": "Invalid option index"
+    },
+    {
+      "code": 6008,
+      "name": "marketNotOpen",
+      "msg": "Market is not open"
+    },
+    {
+      "code": 6009,
+      "name": "sharePurchaseFailed",
+      "msg": "Invalid option or not enough balance"
+    },
+    {
+      "code": 6010,
+      "name": "stakingNotActive",
+      "msg": "Staking period is not active"
+    },
+    {
+      "code": 6011,
+      "name": "winnerAlreadySelected",
+      "msg": "Market winner already selected"
+    },
+    {
+      "code": 6012,
+      "name": "alreadyRevealed",
+      "msg": "Shares already revealed"
+    },
+    {
+      "code": 6013,
+      "name": "marketNotResolved",
+      "msg": "Staking period not over"
+    },
+    {
+      "code": 6014,
+      "name": "notRevealed",
+      "msg": "Shares not yet revealed"
+    },
+    {
+      "code": 6015,
+      "name": "tallyAlreadyIncremented",
+      "msg": "Tally already incremented for this share account"
+    },
+    {
+      "code": 6016,
+      "name": "overflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6017,
+      "name": "revealPeriodEnded",
+      "msg": "Reveal period has already ended"
+    },
+    {
+      "code": 6018,
+      "name": "invalidMint",
+      "msg": "Token mint does not match market mint"
     }
   ],
   "types": [
@@ -3110,7 +3596,7 @@ export type OpportunityMarket = {
             "type": "u64"
           },
           {
-            "name": "rewardLamports",
+            "name": "rewardAmount",
             "type": "u64"
           },
           {
@@ -3118,6 +3604,10 @@ export type OpportunityMarket = {
             "type": {
               "option": "pubkey"
             }
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
           }
         ]
       }
@@ -3665,6 +4155,10 @@ export type OpportunityMarket = {
           {
             "name": "stateNonce",
             "type": "u128"
+          },
+          {
+            "name": "tokenMint",
+            "type": "pubkey"
           }
         ]
       }

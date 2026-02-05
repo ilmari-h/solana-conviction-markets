@@ -9,6 +9,7 @@ import { type ByteArray, toNumberArray } from "../utils";
 export interface BuyMarketSharesParams {
   signer: TransactionSigner;
   market: Address;
+  userVta: Address;
   amountCiphertext: ByteArray;
   selectedOptionCiphertext: ByteArray;
   userPubkey: ByteArray;
@@ -24,6 +25,7 @@ export async function buyMarketShares(
   const {
     signer,
     market,
+    userVta,
     amountCiphertext,
     selectedOptionCiphertext,
     userPubkey,
@@ -36,6 +38,7 @@ export async function buyMarketShares(
     ...getComputeAccounts("buy_opportunity_market_shares", config),
     signer,
     market,
+    userVta,
     amountCiphertext: toNumberArray(amountCiphertext),
     selectedOptionCiphertext: toNumberArray(selectedOptionCiphertext),
     userPubkey: toNumberArray(userPubkey),

@@ -60,7 +60,12 @@ export function getInitVoteTokenAccountDiscriminatorBytes() {
 export type InitVoteTokenAccountInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
+  TAccountTokenMint extends string | AccountMeta<string> = string,
   TAccountVoteTokenAccount extends string | AccountMeta<string> = string,
+  TAccountVoteTokenAta extends string | AccountMeta<string> = string,
+  TAccountTokenProgram extends string | AccountMeta<string> = string,
+  TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
+    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
   TAccountMempoolAccount extends string | AccountMeta<string> = string,
@@ -85,9 +90,21 @@ export type InitVoteTokenAccountInstruction<
         ? WritableSignerAccount<TAccountSigner> &
             AccountSignerMeta<TAccountSigner>
         : TAccountSigner,
+      TAccountTokenMint extends string
+        ? ReadonlyAccount<TAccountTokenMint>
+        : TAccountTokenMint,
       TAccountVoteTokenAccount extends string
         ? WritableAccount<TAccountVoteTokenAccount>
         : TAccountVoteTokenAccount,
+      TAccountVoteTokenAta extends string
+        ? WritableAccount<TAccountVoteTokenAta>
+        : TAccountVoteTokenAta,
+      TAccountTokenProgram extends string
+        ? ReadonlyAccount<TAccountTokenProgram>
+        : TAccountTokenProgram,
+      TAccountAssociatedTokenProgram extends string
+        ? ReadonlyAccount<TAccountAssociatedTokenProgram>
+        : TAccountAssociatedTokenProgram,
       TAccountSignPdaAccount extends string
         ? WritableAccount<TAccountSignPdaAccount>
         : TAccountSignPdaAccount,
@@ -174,7 +191,11 @@ export function getInitVoteTokenAccountInstructionDataCodec(): FixedSizeCodec<
 
 export type InitVoteTokenAccountAsyncInput<
   TAccountSigner extends string = string,
+  TAccountTokenMint extends string = string,
   TAccountVoteTokenAccount extends string = string,
+  TAccountVoteTokenAta extends string = string,
+  TAccountTokenProgram extends string = string,
+  TAccountAssociatedTokenProgram extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountMempoolAccount extends string = string,
@@ -188,7 +209,12 @@ export type InitVoteTokenAccountAsyncInput<
   TAccountArciumProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
+  tokenMint: Address<TAccountTokenMint>;
   voteTokenAccount?: Address<TAccountVoteTokenAccount>;
+  /** ATA owned by the VTA PDA, holding the actual SPL tokens */
+  voteTokenAta?: Address<TAccountVoteTokenAta>;
+  tokenProgram: Address<TAccountTokenProgram>;
+  associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -207,7 +233,11 @@ export type InitVoteTokenAccountAsyncInput<
 
 export async function getInitVoteTokenAccountInstructionAsync<
   TAccountSigner extends string,
+  TAccountTokenMint extends string,
   TAccountVoteTokenAccount extends string,
+  TAccountVoteTokenAta extends string,
+  TAccountTokenProgram extends string,
+  TAccountAssociatedTokenProgram extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
   TAccountMempoolAccount extends string,
@@ -223,7 +253,11 @@ export async function getInitVoteTokenAccountInstructionAsync<
 >(
   input: InitVoteTokenAccountAsyncInput<
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountTokenProgram,
+    TAccountAssociatedTokenProgram,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -241,7 +275,11 @@ export async function getInitVoteTokenAccountInstructionAsync<
   InitVoteTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountTokenProgram,
+    TAccountAssociatedTokenProgram,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -262,9 +300,16 @@ export async function getInitVoteTokenAccountInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
+    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
     voteTokenAccount: {
       value: input.voteTokenAccount ?? null,
       isWritable: true,
+    },
+    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
+    associatedTokenProgram: {
+      value: input.associatedTokenProgram ?? null,
+      isWritable: false,
     },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -300,9 +345,27 @@ export async function getInitVoteTokenAccountInstructionAsync<
             111, 117, 110, 116,
           ])
         ),
+        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
         getAddressEncoder().encode(expectAddress(accounts.signer.value)),
       ],
     });
+  }
+  if (!accounts.voteTokenAta.value) {
+    accounts.voteTokenAta.value = await getProgramDerivedAddress({
+      programAddress:
+        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
+      seeds: [
+        getAddressEncoder().encode(
+          expectAddress(accounts.voteTokenAccount.value)
+        ),
+        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
+        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
+      ],
+    });
+  }
+  if (!accounts.associatedTokenProgram.value) {
+    accounts.associatedTokenProgram.value =
+      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
   }
   if (!accounts.signPdaAccount.value) {
     accounts.signPdaAccount.value = await getProgramDerivedAddress({
@@ -338,7 +401,11 @@ export async function getInitVoteTokenAccountInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
+      getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.voteTokenAccount),
+      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.tokenProgram),
+      getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
       getAccountMeta(accounts.mempoolAccount),
@@ -358,7 +425,11 @@ export async function getInitVoteTokenAccountInstructionAsync<
   } as InitVoteTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountTokenProgram,
+    TAccountAssociatedTokenProgram,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -375,7 +446,11 @@ export async function getInitVoteTokenAccountInstructionAsync<
 
 export type InitVoteTokenAccountInput<
   TAccountSigner extends string = string,
+  TAccountTokenMint extends string = string,
   TAccountVoteTokenAccount extends string = string,
+  TAccountVoteTokenAta extends string = string,
+  TAccountTokenProgram extends string = string,
+  TAccountAssociatedTokenProgram extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountMempoolAccount extends string = string,
@@ -389,7 +464,12 @@ export type InitVoteTokenAccountInput<
   TAccountArciumProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
+  tokenMint: Address<TAccountTokenMint>;
   voteTokenAccount: Address<TAccountVoteTokenAccount>;
+  /** ATA owned by the VTA PDA, holding the actual SPL tokens */
+  voteTokenAta: Address<TAccountVoteTokenAta>;
+  tokenProgram: Address<TAccountTokenProgram>;
+  associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -408,7 +488,11 @@ export type InitVoteTokenAccountInput<
 
 export function getInitVoteTokenAccountInstruction<
   TAccountSigner extends string,
+  TAccountTokenMint extends string,
   TAccountVoteTokenAccount extends string,
+  TAccountVoteTokenAta extends string,
+  TAccountTokenProgram extends string,
+  TAccountAssociatedTokenProgram extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
   TAccountMempoolAccount extends string,
@@ -424,7 +508,11 @@ export function getInitVoteTokenAccountInstruction<
 >(
   input: InitVoteTokenAccountInput<
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountTokenProgram,
+    TAccountAssociatedTokenProgram,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -441,7 +529,11 @@ export function getInitVoteTokenAccountInstruction<
 ): InitVoteTokenAccountInstruction<
   TProgramAddress,
   TAccountSigner,
+  TAccountTokenMint,
   TAccountVoteTokenAccount,
+  TAccountVoteTokenAta,
+  TAccountTokenProgram,
+  TAccountAssociatedTokenProgram,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
   TAccountMempoolAccount,
@@ -461,9 +553,16 @@ export function getInitVoteTokenAccountInstruction<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
+    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
     voteTokenAccount: {
       value: input.voteTokenAccount ?? null,
       isWritable: true,
+    },
+    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
+    associatedTokenProgram: {
+      value: input.associatedTokenProgram ?? null,
+      isWritable: false,
     },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -489,6 +588,10 @@ export function getInitVoteTokenAccountInstruction<
   const args = { ...input };
 
   // Resolve default values.
+  if (!accounts.associatedTokenProgram.value) {
+    accounts.associatedTokenProgram.value =
+      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
+  }
   if (!accounts.poolAccount.value) {
     accounts.poolAccount.value =
       'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC' as Address<'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC'>;
@@ -510,7 +613,11 @@ export function getInitVoteTokenAccountInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
+      getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.voteTokenAccount),
+      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.tokenProgram),
+      getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
       getAccountMeta(accounts.mempoolAccount),
@@ -530,7 +637,11 @@ export function getInitVoteTokenAccountInstruction<
   } as InitVoteTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
+    TAccountTokenMint,
     TAccountVoteTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountTokenProgram,
+    TAccountAssociatedTokenProgram,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -552,18 +663,23 @@ export type ParsedInitVoteTokenAccountInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     signer: TAccountMetas[0];
-    voteTokenAccount: TAccountMetas[1];
-    signPdaAccount: TAccountMetas[2];
-    mxeAccount: TAccountMetas[3];
-    mempoolAccount: TAccountMetas[4];
-    executingPool: TAccountMetas[5];
-    computationAccount: TAccountMetas[6];
-    compDefAccount: TAccountMetas[7];
-    clusterAccount: TAccountMetas[8];
-    poolAccount: TAccountMetas[9];
-    clockAccount: TAccountMetas[10];
-    systemProgram: TAccountMetas[11];
-    arciumProgram: TAccountMetas[12];
+    tokenMint: TAccountMetas[1];
+    voteTokenAccount: TAccountMetas[2];
+    /** ATA owned by the VTA PDA, holding the actual SPL tokens */
+    voteTokenAta: TAccountMetas[3];
+    tokenProgram: TAccountMetas[4];
+    associatedTokenProgram: TAccountMetas[5];
+    signPdaAccount: TAccountMetas[6];
+    mxeAccount: TAccountMetas[7];
+    mempoolAccount: TAccountMetas[8];
+    executingPool: TAccountMetas[9];
+    computationAccount: TAccountMetas[10];
+    compDefAccount: TAccountMetas[11];
+    clusterAccount: TAccountMetas[12];
+    poolAccount: TAccountMetas[13];
+    clockAccount: TAccountMetas[14];
+    systemProgram: TAccountMetas[15];
+    arciumProgram: TAccountMetas[16];
   };
   data: InitVoteTokenAccountInstructionData;
 };
@@ -576,7 +692,7 @@ export function parseInitVoteTokenAccountInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedInitVoteTokenAccountInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 13) {
+  if (instruction.accounts.length < 17) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -590,7 +706,11 @@ export function parseInitVoteTokenAccountInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       signer: getNextAccount(),
+      tokenMint: getNextAccount(),
       voteTokenAccount: getNextAccount(),
+      voteTokenAta: getNextAccount(),
+      tokenProgram: getNextAccount(),
+      associatedTokenProgram: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),
       mempoolAccount: getNextAccount(),

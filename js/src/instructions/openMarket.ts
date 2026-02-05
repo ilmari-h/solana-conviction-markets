@@ -7,6 +7,9 @@ import {
 export interface OpenMarketParams {
   creator: TransactionSigner;
   market: Address;
+  tokenMint: Address;
+  marketTokenAta: Address;
+  tokenProgram: Address;
   openTimestamp: bigint;
 }
 

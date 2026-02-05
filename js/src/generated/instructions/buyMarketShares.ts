@@ -215,7 +215,7 @@ export type BuyMarketSharesAsyncInput<
 > = {
   signer: TransactionSigner<TAccountSigner>;
   market: Address<TAccountMarket>;
-  userVta?: Address<TAccountUserVta>;
+  userVta: Address<TAccountUserVta>;
   shareAccount?: Address<TAccountShareAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -327,20 +327,6 @@ export async function getBuyMarketSharesInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.userVta.value) {
-    accounts.userVta.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            118, 111, 116, 101, 95, 116, 111, 107, 101, 110, 95, 97, 99, 99,
-            111, 117, 110, 116,
-          ])
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.signer.value)),
-      ],
-    });
-  }
   if (!accounts.shareAccount.value) {
     accounts.shareAccount.value = await getProgramDerivedAddress({
       programAddress,

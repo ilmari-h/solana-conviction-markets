@@ -7,6 +7,9 @@ import {
 export interface CloseShareAccountParams {
   owner: TransactionSigner;
   market: Address;
+  tokenMint: Address;
+  ownerTokenAccount: Address;
+  tokenProgram: Address;
   optionIndex: number;
 }
 

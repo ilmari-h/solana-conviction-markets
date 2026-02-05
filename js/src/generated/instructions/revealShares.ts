@@ -197,7 +197,7 @@ export type RevealSharesAsyncInput<
   owner: Address<TAccountOwner>;
   market: Address<TAccountMarket>;
   shareAccount?: Address<TAccountShareAccount>;
-  userVta?: Address<TAccountUserVta>;
+  userVta: Address<TAccountUserVta>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -318,20 +318,6 @@ export async function getRevealSharesInstructionAsync<
         ),
         getAddressEncoder().encode(expectAddress(accounts.owner.value)),
         getAddressEncoder().encode(expectAddress(accounts.market.value)),
-      ],
-    });
-  }
-  if (!accounts.userVta.value) {
-    accounts.userVta.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            118, 111, 116, 101, 95, 116, 111, 107, 101, 110, 95, 97, 99, 99,
-            111, 117, 110, 116,
-          ])
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.owner.value)),
       ],
     });
   }

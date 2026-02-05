@@ -67,7 +67,10 @@ export type ClaimVoteTokensCallbackInstruction<
   TAccountInstructionsSysvar extends string | AccountMeta<string> =
     'Sysvar1nstructions1111111111111111111111111',
   TAccountVoteTokenAccount extends string | AccountMeta<string> = string,
-  TAccountUser extends string | AccountMeta<string> = string,
+  TAccountUserTokenAccount extends string | AccountMeta<string> = string,
+  TAccountVoteTokenAta extends string | AccountMeta<string> = string,
+  TAccountTokenMint extends string | AccountMeta<string> = string,
+  TAccountTokenProgram extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -94,9 +97,18 @@ export type ClaimVoteTokensCallbackInstruction<
       TAccountVoteTokenAccount extends string
         ? WritableAccount<TAccountVoteTokenAccount>
         : TAccountVoteTokenAccount,
-      TAccountUser extends string
-        ? WritableAccount<TAccountUser>
-        : TAccountUser,
+      TAccountUserTokenAccount extends string
+        ? WritableAccount<TAccountUserTokenAccount>
+        : TAccountUserTokenAccount,
+      TAccountVoteTokenAta extends string
+        ? WritableAccount<TAccountVoteTokenAta>
+        : TAccountVoteTokenAta,
+      TAccountTokenMint extends string
+        ? ReadonlyAccount<TAccountTokenMint>
+        : TAccountTokenMint,
+      TAccountTokenProgram extends string
+        ? ReadonlyAccount<TAccountTokenProgram>
+        : TAccountTokenProgram,
       ...TRemainingAccounts,
     ]
   >;
@@ -212,7 +224,10 @@ export type ClaimVoteTokensCallbackInput<
   TAccountClusterAccount extends string = string,
   TAccountInstructionsSysvar extends string = string,
   TAccountVoteTokenAccount extends string = string,
-  TAccountUser extends string = string,
+  TAccountUserTokenAccount extends string = string,
+  TAccountVoteTokenAta extends string = string,
+  TAccountTokenMint extends string = string,
+  TAccountTokenProgram extends string = string,
 > = {
   arciumProgram?: Address<TAccountArciumProgram>;
   compDefAccount: Address<TAccountCompDefAccount>;
@@ -221,7 +236,14 @@ export type ClaimVoteTokensCallbackInput<
   clusterAccount: Address<TAccountClusterAccount>;
   instructionsSysvar?: Address<TAccountInstructionsSysvar>;
   voteTokenAccount: Address<TAccountVoteTokenAccount>;
-  user: Address<TAccountUser>;
+  /** User's token account to receive claimed SPL tokens */
+  userTokenAccount: Address<TAccountUserTokenAccount>;
+  /** VTA's ATA holding SPL tokens (source for withdrawal) */
+  voteTokenAta: Address<TAccountVoteTokenAta>;
+  /** Token mint for transfer_checked */
+  tokenMint: Address<TAccountTokenMint>;
+  /** Token program for CPI */
+  tokenProgram: Address<TAccountTokenProgram>;
   output: ClaimVoteTokensCallbackInstructionDataArgs['output'];
 };
 
@@ -233,7 +255,10 @@ export function getClaimVoteTokensCallbackInstruction<
   TAccountClusterAccount extends string,
   TAccountInstructionsSysvar extends string,
   TAccountVoteTokenAccount extends string,
-  TAccountUser extends string,
+  TAccountUserTokenAccount extends string,
+  TAccountVoteTokenAta extends string,
+  TAccountTokenMint extends string,
+  TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: ClaimVoteTokensCallbackInput<
@@ -244,7 +269,10 @@ export function getClaimVoteTokensCallbackInstruction<
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
     TAccountVoteTokenAccount,
-    TAccountUser
+    TAccountUserTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountTokenMint,
+    TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): ClaimVoteTokensCallbackInstruction<
@@ -256,7 +284,10 @@ export function getClaimVoteTokensCallbackInstruction<
   TAccountClusterAccount,
   TAccountInstructionsSysvar,
   TAccountVoteTokenAccount,
-  TAccountUser
+  TAccountUserTokenAccount,
+  TAccountVoteTokenAta,
+  TAccountTokenMint,
+  TAccountTokenProgram
 > {
   // Program address.
   const programAddress =
@@ -280,7 +311,13 @@ export function getClaimVoteTokensCallbackInstruction<
       value: input.voteTokenAccount ?? null,
       isWritable: true,
     },
-    user: { value: input.user ?? null, isWritable: true },
+    userTokenAccount: {
+      value: input.userTokenAccount ?? null,
+      isWritable: true,
+    },
+    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -310,7 +347,10 @@ export function getClaimVoteTokensCallbackInstruction<
       getAccountMeta(accounts.clusterAccount),
       getAccountMeta(accounts.instructionsSysvar),
       getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.user),
+      getAccountMeta(accounts.userTokenAccount),
+      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.tokenMint),
+      getAccountMeta(accounts.tokenProgram),
     ],
     data: getClaimVoteTokensCallbackInstructionDataEncoder().encode(
       args as ClaimVoteTokensCallbackInstructionDataArgs
@@ -325,7 +365,10 @@ export function getClaimVoteTokensCallbackInstruction<
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
     TAccountVoteTokenAccount,
-    TAccountUser
+    TAccountUserTokenAccount,
+    TAccountVoteTokenAta,
+    TAccountTokenMint,
+    TAccountTokenProgram
   >);
 }
 
@@ -342,7 +385,14 @@ export type ParsedClaimVoteTokensCallbackInstruction<
     clusterAccount: TAccountMetas[4];
     instructionsSysvar: TAccountMetas[5];
     voteTokenAccount: TAccountMetas[6];
-    user: TAccountMetas[7];
+    /** User's token account to receive claimed SPL tokens */
+    userTokenAccount: TAccountMetas[7];
+    /** VTA's ATA holding SPL tokens (source for withdrawal) */
+    voteTokenAta: TAccountMetas[8];
+    /** Token mint for transfer_checked */
+    tokenMint: TAccountMetas[9];
+    /** Token program for CPI */
+    tokenProgram: TAccountMetas[10];
   };
   data: ClaimVoteTokensCallbackInstructionData;
 };
@@ -355,7 +405,7 @@ export function parseClaimVoteTokensCallbackInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedClaimVoteTokensCallbackInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 8) {
+  if (instruction.accounts.length < 11) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -375,7 +425,10 @@ export function parseClaimVoteTokensCallbackInstruction<
       clusterAccount: getNextAccount(),
       instructionsSysvar: getNextAccount(),
       voteTokenAccount: getNextAccount(),
-      user: getNextAccount(),
+      userTokenAccount: getNextAccount(),
+      voteTokenAta: getNextAccount(),
+      tokenMint: getNextAccount(),
+      tokenProgram: getNextAccount(),
     },
     data: getClaimVoteTokensCallbackInstructionDataDecoder().decode(
       instruction.data
