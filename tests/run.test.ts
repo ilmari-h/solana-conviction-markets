@@ -192,7 +192,7 @@ describe("OpportunityMarket", () => {
       })
     );
 
-    // For some reason my transaction logic is broken when ran in parallel - doing these in sequence
+    // For some reason my transaction sending code is broken when ran in parallel - doing these in sequence
     for(const {participant, ix, idx} of initVtaData) {
       await sendTransaction(rpc, sendAndConfirmTransaction, participant.keypair, [ix], {
         label: `Init VTA ${idx}`
@@ -268,14 +268,11 @@ describe("OpportunityMarket", () => {
       })
     );
 
-    console.log("Initializing share accounts")
     for (const { participant, ix, idx } of initShareData) {
       await sendTransaction(rpc, sendAndConfirmTransaction, participant.keypair, [ix], {
         label: `Init share account [${idx}]`,
       });
     }
-
-    console.log("Share accounts initialized")
 
     // Define voting: half vote for Option A (winning), half for Option B (losing)
     const winningOptionIndex = 1; // Option A
@@ -312,14 +309,12 @@ describe("OpportunityMarket", () => {
       })
     );
 
-    console.log("Buyin shares")
 
     for (const { participant, ix, idx } of buySharesData) {
       await sendTransaction(rpc, sendAndConfirmTransaction, participant.keypair, [ix], {
         label: `Buy shares [${idx}]`,
       });
     }
-    console.log("Shares bought")
 
     // Wait for all buy shares computations
     await awaitBatchComputationFinalization(rpc, buySharesData.map(({computationOffset}) => computationOffset))
@@ -359,8 +354,6 @@ describe("OpportunityMarket", () => {
       })
     );
 
-    console.log("Revealing shares")
-
     // Send all reveal transactions sequentially
     for (const { participant, ix, idx } of revealData) {
       await sendTransaction(rpc, sendAndConfirmTransaction, participant.keypair, [ix], {
@@ -368,11 +361,8 @@ describe("OpportunityMarket", () => {
       });
     }
 
-    console.log("Awaiting reveal computation")
     // Wait for all reveal computations to finalize in parallel
     await awaitBatchComputationFinalization(rpc, revealData.map(({computationOffset}) => computationOffset))
-
-    console.log("Shares revealed")
 
     // Verify revealed shares for winners
     for (let i = 0; i < winners.length; i++) {
@@ -409,6 +399,19 @@ describe("OpportunityMarket", () => {
     const [optionAddress] = await getOpportunityMarketOptionAddress(env.market.address, winningOptionIndex);
     const optionAccount = await fetchOpportunityMarketOption(rpc, optionAddress);
     expect(optionAccount.data.totalShares).to.deep.equal(some(totalWinningShares));
+
+    // Refetch market to get updated state (open_timestamp may have changed due to select_option)
+    const updatedMarket = await fetchOpportunityMarket(rpc, env.market.address);
+    const marketCloseTimestamp = BigInt(updatedMarket.data.openTimestamp.__option === 'Some' ? updatedMarket.data.openTimestamp.value : 0n) + updatedMarket.data.timeToStake;
+
+    // Fetch boughtAtTimestamp for each winner before share accounts are closed
+    const winnerTimestamps = await Promise.all(
+      winners.map(async (participant) => {
+        const [shareAccountAddress] = await getShareAccountAddress(participant.keypair.address, env.market.address);
+        const shareAccount = await fetchShareAccount(rpc, shareAccountAddress);
+        return shareAccount.data.boughtAtTimestamp;
+      })
+    );
 
     // Wait for reveal period to end
     const timeToReveal = Number(env.market.timeToReveal);
@@ -477,22 +480,25 @@ describe("OpportunityMarket", () => {
     const marketLoss = marketBalanceBefore.value - marketBalanceAfter.value;
     expect(marketLoss >= marketFundingLamports - 1n && marketLoss <= marketFundingLamports + 1n).to.be.true;
 
-    // Verify proportional reward distribution (with tolerance for staking time variance and rent)
-    // Reward is based on: (participant_shares / total_shares) * reward_amount
-    // Plus rent refund from closing share account
-    // Allow 5% tolerance due to staking time differences affecting the calculation
-    const REWARD_TOLERANCE_PERCENT = 5n;
+    // Verify proportional reward distribution:
+    // gainA / gainB ~= scoreA / scoreB (where score = shares * timeInMarket)
+    // Cross-multiply to avoid division: gainA * scoreB ~= gainB * scoreA
+    const winnerScores = gains.map(({ gain, shares }, i) => ({
+      gain,
+      score: shares * (marketCloseTimestamp - winnerTimestamps[i]),
+    }));
 
-    for (const { gain, shares } of gains) {
-      // Expected reward = (shares / totalShares) * marketFundingLamports
-      const expectedReward = (shares * marketFundingLamports) / totalWinningShares;
-
-      // Account for rent refund (estimate ~2.5M lamports per share account)
-      const minExpected = expectedReward - (expectedReward * REWARD_TOLERANCE_PERCENT) / 100n;
-      const maxExpected = expectedReward + ESTIMATED_MAX_ACCOUNT_RENT + (expectedReward * REWARD_TOLERANCE_PERCENT) / 100n;
-
-      expect(gain >= minExpected && gain <= maxExpected).to.be.true;
-    }
+    winnerScores.forEach((a, i) =>
+      winnerScores.slice(i + 1).forEach((b, j) => {
+        const lhs = a.gain * b.score;
+        const rhs = b.gain * a.score;
+        const tolerance = (lhs > rhs ? lhs : rhs) / 100n; // 1%
+        expect(
+          Math.abs(Number(lhs - rhs)) <= tolerance,
+          `Reward ratio mismatch between winner ${i} and ${i + j + 1}`
+        ).to.be.true;
+      })
+    );
 
     // Verify total gains approximately equal reward + rent refunds
     const totalGains = gains.reduce((sum, { gain }) => sum + gain, 0n);
