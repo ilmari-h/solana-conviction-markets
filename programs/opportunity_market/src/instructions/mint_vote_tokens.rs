@@ -1,14 +1,15 @@
 use anchor_lang::prelude::*;
-use anchor_lang::system_program;
+use anchor_spl::token_interface::{
+    transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked,
+};
 use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
+use crate::instructions::init_vote_token_account::VOTE_TOKEN_ACCOUNT_SEED;
 use crate::state::VoteTokenAccount;
 use crate::COMP_DEF_OFFSET_BUY_VOTE_TOKENS;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
-
-pub const VOTE_TOKEN_ACCOUNT_SEED: &[u8] = b"vote_token_account";
 
 #[queue_computation_accounts("buy_vote_tokens", signer)]
 #[derive(Accounts)]
@@ -17,12 +18,32 @@ pub struct MintVoteTokens<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
     #[account(
         mut,
-        seeds = [VOTE_TOKEN_ACCOUNT_SEED, signer.key().as_ref()],
+        seeds = [VOTE_TOKEN_ACCOUNT_SEED, token_mint.key().as_ref(), signer.key().as_ref()],
         bump = vote_token_account.bump,
     )]
-    pub vote_token_account: Account<'info, VoteTokenAccount>,
+    pub vote_token_account: Box<Account<'info, VoteTokenAccount>>,
+
+    /// The signer's token account (source of SPL tokens)
+    #[account(
+        mut,
+        token::mint = token_mint,
+        token::authority = signer,
+        token::token_program = token_program,
+    )]
+    pub signer_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    /// ATA owned by the VTA PDA (destination of SPL tokens)
+    #[account(
+        mut,
+        associated_token::mint = token_mint,
+        associated_token::authority = vote_token_account,
+        associated_token::token_program = token_program,
+    )]
+    pub vote_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
 
     // Arcium accounts
     #[account(
@@ -33,9 +54,9 @@ pub struct MintVoteTokens<'info> {
         bump,
         address = derive_sign_pda!(),
     )]
-    pub sign_pda_account: Account<'info, ArciumSignerAccount>,
+    pub sign_pda_account: Box<Account<'info, ArciumSignerAccount>>,
     #[account(address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
     #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     /// CHECK: mempool_account
     pub mempool_account: UncheckedAccount<'info>,
@@ -54,6 +75,7 @@ pub struct MintVoteTokens<'info> {
     #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
     pub clock_account: Account<'info, ClockAccount>,
     pub system_program: Program<'info, System>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub arcium_program: Program<'info, Arcium>,
 }
 
@@ -65,18 +87,21 @@ pub fn mint_vote_tokens(
 ) -> Result<()> {
     let vta = &mut ctx.accounts.vote_token_account;
     let vta_pubkey = vta.key();
-    let signer = &ctx.accounts.signer;
 
-    // Transfer SOL from user to vote_token_account PDA (1 lamport = 1 vote token)
-    system_program::transfer(
+    // Transfer SPL tokens from signer's token account to VTA's ATA
+    // TODO: transfer first to ephemeral deposit account and in callback, transfer from there to VTA
+    transfer_checked(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
-            system_program::Transfer {
-                from: signer.to_account_info(),
-                to: vta.to_account_info(),
+            ctx.accounts.token_program.to_account_info(),
+            TransferChecked {
+                from: ctx.accounts.signer_token_account.to_account_info(),
+                mint: ctx.accounts.token_mint.to_account_info(),
+                to: ctx.accounts.vote_token_ata.to_account_info(),
+                authority: ctx.accounts.signer.to_account_info(),
             },
         ),
         amount,
+        ctx.accounts.token_mint.decimals,
     )?;
 
     // Build args for encrypted computation

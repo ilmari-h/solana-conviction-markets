@@ -38,4 +38,6 @@ pub enum ErrorCode {
     Overflow,
     #[msg("Reveal period has already ended")]
     RevealPeriodEnded,
+    #[msg("Token mint does not match market mint")]
+    InvalidMint,
 }

@@ -27,11 +27,14 @@ pub struct OpportunityMarket {
     // Max available shares. 1 shares = 1 vote token
     pub max_shares: u64,
 
-    // Reward to be shared with stakers
-    pub reward_lamports: u64,
+    // Reward to be shared with stakers (in SPL token base units)
+    pub reward_amount: u64,
 
     // Optional authority that can manage the market (select winning option, extend reveal period)
     pub market_authority: Option<Pubkey>,
+
+    // SPL token mint for this market (vote tokens and rewards)
+    pub mint: Pubkey,
 }
 
 #[account]
@@ -41,6 +44,7 @@ pub struct VoteTokenAccount {
     pub bump: u8,
     pub owner: Pubkey,
     pub state_nonce: u128,
+    pub token_mint: Pubkey,
 }
 
 #[account]
