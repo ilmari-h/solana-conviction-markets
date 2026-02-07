@@ -83,8 +83,7 @@ export type MXEAccount = {
   utilityPubkeys:
     | { __kind: 'Set'; fields: readonly [UtilityPubkeys] }
     | { __kind: 'Unset'; fields: readonly [UtilityPubkeys, Array<boolean>] };
-  fallbackClusters: Array<number>;
-  rejectedClusters: Array<number>;
+  lutOffsetSlot: bigint;
   computationDefinitions: Array<number>;
   status: MxeStatus;
   bump: number;
@@ -102,8 +101,7 @@ export type MXEAccountArgs = {
         __kind: 'Unset';
         fields: readonly [UtilityPubkeysArgs, Array<boolean>];
       };
-  fallbackClusters: Array<number>;
-  rejectedClusters: Array<number>;
+  lutOffsetSlot: number | bigint;
   computationDefinitions: Array<number>;
   status: MxeStatusArgs;
   bump: number;
@@ -141,8 +139,7 @@ export function getMXEAccountEncoder(): Encoder<MXEAccountArgs> {
           ],
         ]),
       ],
-      ['fallbackClusters', getArrayEncoder(getU32Encoder())],
-      ['rejectedClusters', getArrayEncoder(getU32Encoder())],
+      ['lutOffsetSlot', getU64Encoder()],
       ['computationDefinitions', getArrayEncoder(getU32Encoder())],
       ['status', getMxeStatusEncoder()],
       ['bump', getU8Encoder()],
@@ -182,8 +179,7 @@ export function getMXEAccountDecoder(): Decoder<MXEAccount> {
         ],
       ]),
     ],
-    ['fallbackClusters', getArrayDecoder(getU32Decoder())],
-    ['rejectedClusters', getArrayDecoder(getU32Decoder())],
+    ['lutOffsetSlot', getU64Decoder()],
     ['computationDefinitions', getArrayDecoder(getU32Decoder())],
     ['status', getMxeStatusDecoder()],
     ['bump', getU8Decoder()],

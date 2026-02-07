@@ -1,5 +1,5 @@
 {
-  "address": "6Y2SL4PG9YUN3tkF8M4z83Si4sh72X5E41Xp9RDeBXje",
+  "address": "AFJhmrwWC4DGh88yeLTBtJRu9vKN6gnAEra4163zGHS6",
   "metadata": {
     "name": "opportunity_market",
     "version": "0.1.0",
@@ -348,6 +348,14 @@
           "writable": true
         },
         {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
+        },
+        {
           "name": "arcium_program",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         },
@@ -442,6 +450,14 @@
         {
           "name": "comp_def_account",
           "writable": true
+        },
+        {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
         },
         {
           "name": "arcium_program",
@@ -920,6 +936,14 @@
         {
           "name": "comp_def_account",
           "writable": true
+        },
+        {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
         },
         {
           "name": "arcium_program",
@@ -1548,6 +1572,14 @@
           "writable": true
         },
         {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
+        },
+        {
           "name": "arcium_program",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         },
@@ -1929,6 +1961,14 @@
         {
           "name": "comp_def_account",
           "writable": true
+        },
+        {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
         },
         {
           "name": "arcium_program",
@@ -2502,6 +2542,14 @@
           "writable": true
         },
         {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
+        },
+        {
           "name": "arcium_program",
           "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         },
@@ -2731,8 +2779,98 @@
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidCallbackTx",
-      "msg": "Invalid callback transaction"
+      "name": "AbortedComputation",
+      "msg": "Computation aborted"
+    },
+    {
+      "code": 6001,
+      "name": "ClusterNotSet",
+      "msg": "Cluster not set"
+    },
+    {
+      "code": 6002,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6003,
+      "name": "InsufficientBalance",
+      "msg": "Insufficient balance"
+    },
+    {
+      "code": 6004,
+      "name": "InsufficientRewardFunding",
+      "msg": "Insufficient reward funding"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTimestamp",
+      "msg": "Timestamp must be in the future"
+    },
+    {
+      "code": 6006,
+      "name": "MarketAlreadyOpen",
+      "msg": "Market is already open"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidOptionIndex",
+      "msg": "Invalid option index"
+    },
+    {
+      "code": 6008,
+      "name": "MarketNotOpen",
+      "msg": "Market is not open"
+    },
+    {
+      "code": 6009,
+      "name": "SharePurchaseFailed",
+      "msg": "Invalid option or not enough balance"
+    },
+    {
+      "code": 6010,
+      "name": "StakingNotActive",
+      "msg": "Staking period is not active"
+    },
+    {
+      "code": 6011,
+      "name": "WinnerAlreadySelected",
+      "msg": "Market winner already selected"
+    },
+    {
+      "code": 6012,
+      "name": "AlreadyRevealed",
+      "msg": "Shares already revealed"
+    },
+    {
+      "code": 6013,
+      "name": "MarketNotResolved",
+      "msg": "Staking period not over"
+    },
+    {
+      "code": 6014,
+      "name": "NotRevealed",
+      "msg": "Shares not yet revealed"
+    },
+    {
+      "code": 6015,
+      "name": "TallyAlreadyIncremented",
+      "msg": "Tally already incremented for this share account"
+    },
+    {
+      "code": 6016,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6017,
+      "name": "RevealPeriodEnded",
+      "msg": "Reveal period has already ended"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidMint",
+      "msg": "Token mint does not match market mint"
     }
   ],
   "types": [
@@ -3385,16 +3523,8 @@
             }
           },
           {
-            "name": "fallback_clusters",
-            "type": {
-              "vec": "u32"
-            }
-          },
-          {
-            "name": "rejected_clusters",
-            "type": {
-              "vec": "u32"
-            }
+            "name": "lut_offset_slot",
+            "type": "u64"
           },
           {
             "name": "computation_definitions",

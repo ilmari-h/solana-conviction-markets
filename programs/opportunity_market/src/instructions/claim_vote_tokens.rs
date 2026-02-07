@@ -105,7 +105,6 @@ pub fn claim_vote_tokens(
         ctx.accounts,
         computation_offset,
         args,
-        None,
         vec![ClaimVoteTokensCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,

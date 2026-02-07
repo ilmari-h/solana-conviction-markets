@@ -47,6 +47,9 @@ export type BuyOpportunityMarketSharesCompDefInstruction<
   TAccountPayer extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
   TAccountCompDefAccount extends string | AccountMeta<string> = string,
+  TAccountAddressLookupTable extends string | AccountMeta<string> = string,
+  TAccountLutProgram extends string | AccountMeta<string> =
+    'AddressLookupTab1e1111111111111111111111111',
   TAccountArciumProgram extends string | AccountMeta<string> =
     'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ',
   TAccountSystemProgram extends string | AccountMeta<string> =
@@ -66,6 +69,12 @@ export type BuyOpportunityMarketSharesCompDefInstruction<
       TAccountCompDefAccount extends string
         ? WritableAccount<TAccountCompDefAccount>
         : TAccountCompDefAccount,
+      TAccountAddressLookupTable extends string
+        ? WritableAccount<TAccountAddressLookupTable>
+        : TAccountAddressLookupTable,
+      TAccountLutProgram extends string
+        ? ReadonlyAccount<TAccountLutProgram>
+        : TAccountLutProgram,
       TAccountArciumProgram extends string
         ? ReadonlyAccount<TAccountArciumProgram>
         : TAccountArciumProgram,
@@ -112,12 +121,16 @@ export type BuyOpportunityMarketSharesCompDefInput<
   TAccountPayer extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountCompDefAccount extends string = string,
+  TAccountAddressLookupTable extends string = string,
+  TAccountLutProgram extends string = string,
   TAccountArciumProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   payer: TransactionSigner<TAccountPayer>;
   mxeAccount: Address<TAccountMxeAccount>;
   compDefAccount: Address<TAccountCompDefAccount>;
+  addressLookupTable: Address<TAccountAddressLookupTable>;
+  lutProgram?: Address<TAccountLutProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
 };
@@ -126,6 +139,8 @@ export function getBuyOpportunityMarketSharesCompDefInstruction<
   TAccountPayer extends string,
   TAccountMxeAccount extends string,
   TAccountCompDefAccount extends string,
+  TAccountAddressLookupTable extends string,
+  TAccountLutProgram extends string,
   TAccountArciumProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
@@ -134,6 +149,8 @@ export function getBuyOpportunityMarketSharesCompDefInstruction<
     TAccountPayer,
     TAccountMxeAccount,
     TAccountCompDefAccount,
+    TAccountAddressLookupTable,
+    TAccountLutProgram,
     TAccountArciumProgram,
     TAccountSystemProgram
   >,
@@ -143,6 +160,8 @@ export function getBuyOpportunityMarketSharesCompDefInstruction<
   TAccountPayer,
   TAccountMxeAccount,
   TAccountCompDefAccount,
+  TAccountAddressLookupTable,
+  TAccountLutProgram,
   TAccountArciumProgram,
   TAccountSystemProgram
 > {
@@ -155,6 +174,11 @@ export function getBuyOpportunityMarketSharesCompDefInstruction<
     payer: { value: input.payer ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: true },
     compDefAccount: { value: input.compDefAccount ?? null, isWritable: true },
+    addressLookupTable: {
+      value: input.addressLookupTable ?? null,
+      isWritable: true,
+    },
+    lutProgram: { value: input.lutProgram ?? null, isWritable: false },
     arciumProgram: { value: input.arciumProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
@@ -164,6 +188,10 @@ export function getBuyOpportunityMarketSharesCompDefInstruction<
   >;
 
   // Resolve default values.
+  if (!accounts.lutProgram.value) {
+    accounts.lutProgram.value =
+      'AddressLookupTab1e1111111111111111111111111' as Address<'AddressLookupTab1e1111111111111111111111111'>;
+  }
   if (!accounts.arciumProgram.value) {
     accounts.arciumProgram.value =
       'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ' as Address<'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ'>;
@@ -179,6 +207,8 @@ export function getBuyOpportunityMarketSharesCompDefInstruction<
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.mxeAccount),
       getAccountMeta(accounts.compDefAccount),
+      getAccountMeta(accounts.addressLookupTable),
+      getAccountMeta(accounts.lutProgram),
       getAccountMeta(accounts.arciumProgram),
       getAccountMeta(accounts.systemProgram),
     ],
@@ -191,6 +221,8 @@ export function getBuyOpportunityMarketSharesCompDefInstruction<
     TAccountPayer,
     TAccountMxeAccount,
     TAccountCompDefAccount,
+    TAccountAddressLookupTable,
+    TAccountLutProgram,
     TAccountArciumProgram,
     TAccountSystemProgram
   >);
@@ -205,8 +237,10 @@ export type ParsedBuyOpportunityMarketSharesCompDefInstruction<
     payer: TAccountMetas[0];
     mxeAccount: TAccountMetas[1];
     compDefAccount: TAccountMetas[2];
-    arciumProgram: TAccountMetas[3];
-    systemProgram: TAccountMetas[4];
+    addressLookupTable: TAccountMetas[3];
+    lutProgram: TAccountMetas[4];
+    arciumProgram: TAccountMetas[5];
+    systemProgram: TAccountMetas[6];
   };
   data: BuyOpportunityMarketSharesCompDefInstructionData;
 };
@@ -219,7 +253,7 @@ export function parseBuyOpportunityMarketSharesCompDefInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedBuyOpportunityMarketSharesCompDefInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 5) {
+  if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -235,6 +269,8 @@ export function parseBuyOpportunityMarketSharesCompDefInstruction<
       payer: getNextAccount(),
       mxeAccount: getNextAccount(),
       compDefAccount: getNextAccount(),
+      addressLookupTable: getNextAccount(),
+      lutProgram: getNextAccount(),
       arciumProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },

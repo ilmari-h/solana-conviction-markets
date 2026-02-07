@@ -139,7 +139,6 @@ pub fn buy_market_shares(
         ctx.accounts,
         computation_offset,
         args,
-        None,
         vec![BuyOpportunityMarketSharesCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,

@@ -125,7 +125,6 @@ pub fn mint_vote_tokens(
         ctx.accounts,
         computation_offset,
         args,
-        None,
         vec![BuyVoteTokensCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,

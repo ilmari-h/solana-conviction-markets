@@ -37,7 +37,7 @@ import {
 import { createTestEnvironment } from "./utils/environment";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sendTransaction } from "./utils/transaction";
-import { getArciumEnv, deserializeLE } from "@arcium-hq/client";
+import { getArciumEnv, deserializeLE, getArciumProgram } from "@arcium-hq/client";
 import { OpportunityMarket } from "../target/types/opportunity_market";
 import * as fs from "fs";
 import * as os from "os";
@@ -58,6 +58,8 @@ describe("OpportunityMarket", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace.OpportunityMarket as Program<OpportunityMarket>;
   const provider = anchor.getProvider() as anchor.AnchorProvider;
+    const arciumProgram = getArciumProgram(provider as anchor.AnchorProvider);
+
   const programId = address(program.programId.toBase58());
   const arciumEnv = getArciumEnv();
 

@@ -104,7 +104,6 @@ pub fn init_vote_token_account(
         ctx.accounts,
         computation_offset,
         args,
-        None,
         vec![InitVoteTokenAccountCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,

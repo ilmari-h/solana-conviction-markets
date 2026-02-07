@@ -10,6 +10,8 @@ import {
   setTransactionMessageLifetimeUsingBlockhash,
   appendTransactionMessageInstructions,
   signTransactionMessageWithSigners,
+  type Rpc,
+  type SolanaRpcApi
 } from "@solana/kit";
 import {
   getInitCompDefInstruction,
@@ -27,7 +29,7 @@ import { PublicKey } from "@solana/web3.js";
  * since buildFinalizeCompDefTx from @arcium-hq/client returns a web3.js Transaction.
  */
 async function initCompDef(
-  rpc: ReturnType<typeof createSolanaRpc>,
+  rpc: Rpc<SolanaRpcApi>,
   sendAndConfirm: ReturnType<typeof sendAndConfirmTransactionFactory>,
   provider: anchor.AnchorProvider,
   payer: Awaited<ReturnType<typeof createKeyPairSignerFromBytes>>,
@@ -35,7 +37,6 @@ async function initCompDef(
   programId: Address,
   circuitName: CompDefCircuitName
 ): Promise<void> {
-  // Check if already exists using Kit RPC
   const compDefAddress = getCompDefAccount(circuitName, programId);
   const accountInfo = await rpc.getAccountInfo(compDefAddress, { encoding: "base64" }).send();
   if (accountInfo.value !== null) {
@@ -43,8 +44,8 @@ async function initCompDef(
     return;
   }
 
-  // Build the init instruction using our Kit-based helper
-  const initIx = getInitCompDefInstruction(payer, circuitName, { programId });
+  // Build the init instruction
+  const initIx = await getInitCompDefInstruction(rpc, payer, circuitName, { programId });
 
   // Get latest blockhash
   const { value: latestBlockhash } = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send();
@@ -59,8 +60,21 @@ async function initCompDef(
 
   // Sign and send
   const signedTransaction = await signTransactionMessageWithSigners(transactionMessage);
-  await sendAndConfirm(signedTransaction, { commitment: "confirmed" });
-  console.log(`   Comp def ${circuitName} init tx sent`);
+  try {
+    await sendAndConfirm(signedTransaction, { commitment: "confirmed" });
+    console.log(`   Comp def ${circuitName} init tx sent`);
+  } catch (err: any) {
+    console.error(`   Comp def ${circuitName} init tx failed:`);
+    if (err?.context?.logs) {
+      console.error("   Transaction logs:");
+      err.context.logs.forEach((log: string) => console.error(`     ${log}`));
+    } else if (err?.logs) {
+      console.error("   Transaction logs:");
+      err.logs.forEach((log: string) => console.error(`     ${log}`));
+    }
+    console.error("   Error:", err?.message || err);
+    throw err;
+  }
 
   // Finalize using arcium-hq/client (still needs provider for this)
   const programIdLegacy = new PublicKey(programId);
@@ -73,9 +87,18 @@ async function initCompDef(
 
   // Sign with the legacy keypair
   finalizeTx.sign(payerLegacy);
-  await provider.sendAndConfirm(finalizeTx);
-
-  console.log(`   Comp def ${circuitName} finalized!`);
+  try {
+    await provider.sendAndConfirm(finalizeTx);
+    console.log(`   Comp def ${circuitName} finalized!`);
+  } catch (err: any) {
+    console.error(`   Comp def ${circuitName} finalize tx failed:`);
+    if (err?.logs) {
+      console.error("   Transaction logs:");
+      err.logs.forEach((log: string) => console.error(`     ${log}`));
+    }
+    console.error("   Error:", err?.message || err);
+    throw err;
+  }
 }
 
 /**
@@ -87,7 +110,7 @@ async function initCompDef(
  * @param programId - The program ID as a Kit Address
  */
 export async function initializeAllCompDefs(
-  rpc: ReturnType<typeof createSolanaRpc>,
+  rpc: Rpc<SolanaRpcApi>,
   sendAndConfirm: ReturnType<typeof sendAndConfirmTransactionFactory>,
   secretKey: Uint8Array,
   programId: Address

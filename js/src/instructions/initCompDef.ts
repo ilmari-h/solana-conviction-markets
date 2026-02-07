@@ -3,11 +3,14 @@ import {
   type Address,
   address,
   type Instruction,
+  SolanaRpcApi,
+  Rpc,
 } from "@solana/kit";
 import {
   getMXEAccAddress,
   getCompDefAccAddress,
   getCompDefAccOffset,
+  getLookupTableAddress,
 } from "@arcium-hq/client";
 import { PublicKey } from "@solana/web3.js";
 import {
@@ -18,7 +21,9 @@ import {
   getInitMarketSharesCompDefInstruction,
   getRevealSharesCompDefInstruction,
   OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
+  fetchMXEAccount,
 } from "../generated";
+import { BN } from "bn.js";
 
 export type CompDefCircuitName =
   | "init_vote_token_account"
@@ -46,9 +51,10 @@ export interface InitCompDefConfig {
   programId?: Address;
 }
 
-export function getMxeAccount(programId: Address = OPPORTUNITY_MARKET_PROGRAM_ADDRESS): Address {
+export async function getMxeAccount(rpc: Rpc<SolanaRpcApi>, programId: Address = OPPORTUNITY_MARKET_PROGRAM_ADDRESS) {
   const programIdLegacy = new PublicKey(programId);
-  return toAddress(getMXEAccAddress(programIdLegacy));
+  const mxeAddress = toAddress(getMXEAccAddress(programIdLegacy));
+  return fetchMXEAccount(rpc, mxeAddress)
 }
 
 export function getCompDefAccount(
@@ -69,19 +75,26 @@ export function getCompDefOffsetNumber(circuitName: CompDefCircuitName): number 
 }
 
 
-export function getInitCompDefInstruction(
+export async function getInitCompDefInstruction(
+  rpc: Rpc<SolanaRpcApi>,
   payer: TransactionSigner,
   circuitName: CompDefCircuitName,
   config: InitCompDefConfig = {}
-): Instruction {
+): Promise<Instruction> {
   const programId = config.programId ?? OPPORTUNITY_MARKET_PROGRAM_ADDRESS;
-  const mxeAccount = getMxeAccount(programId);
+  const mxeAccount = await getMxeAccount(rpc, programId);
   const compDefAccount = getCompDefAccount(circuitName, programId);
+  const lutAddress = getLookupTableAddress(
+    new PublicKey(programId.toString()),
+    new BN(mxeAccount.data.lutOffsetSlot)
+  );
 
   const baseInput = {
     payer,
-    mxeAccount,
+    mxeAccount: mxeAccount.address,
     compDefAccount,
+    addressLookupTable: toAddress(lutAddress),
+
   };
 
   switch (circuitName) {

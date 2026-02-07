@@ -20,7 +20,7 @@ pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 
-declare_id!("6Y2SL4PG9YUN3tkF8M4z83Si4sh72X5E41Xp9RDeBXje");
+declare_id!("AFJhmrwWC4DGh88yeLTBtJRu9vKN6gnAEra4163zGHS6");
 
 #[arcium_program]
 pub mod opportunity_market {
