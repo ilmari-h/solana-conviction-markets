@@ -478,7 +478,7 @@ describe("OpportunityMarket", () => {
         const tolerance = (lhs > rhs ? lhs : rhs) / 100n; // 1%
         expect(
           Math.abs(Number(lhs - rhs)) <= tolerance,
-          `Reward ratio mismatch between winner ${i} and ${i + j + 1}`
+          `Reward ratio mismatch between winner ${i} and ${i + j + 1}: ${lhs} - ${rhs}`
         ).to.be.true;
       })
     );

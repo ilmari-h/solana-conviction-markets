@@ -5,10 +5,9 @@ use anchor_lang::prelude::*;
 pub struct CentralState {
     pub bump: u8,
 
-    // Score component configuration - points at which returns are negligible
-    pub earliness_saturation: u64,
-    pub time_in_market_saturation: u64,
-    
+    // Point at which `earliness` becomes negligible
+    pub earliness_cutoff_seconds: u64,
+
     // Allowed to update
     pub authority: Pubkey
 }
@@ -50,7 +49,7 @@ pub struct OpportunityMarket {
     pub mint: Pubkey,
 
     // Score component configuration
-    pub earliness_saturation: u64,
+    pub earliness_cutoff_seconds: u64,
     pub time_in_market_saturation: u64
 }
 

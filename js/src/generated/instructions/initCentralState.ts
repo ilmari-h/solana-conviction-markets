@@ -73,21 +73,18 @@ export type InitCentralStateInstruction<
 
 export type InitCentralStateInstructionData = {
   discriminator: ReadonlyUint8Array;
-  earlinessSaturation: bigint;
-  timeInMarketSaturation: bigint;
+  earlinessCutoffSeconds: bigint;
 };
 
 export type InitCentralStateInstructionDataArgs = {
-  earlinessSaturation: number | bigint;
-  timeInMarketSaturation: number | bigint;
+  earlinessCutoffSeconds: number | bigint;
 };
 
 export function getInitCentralStateInstructionDataEncoder(): FixedSizeEncoder<InitCentralStateInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
-      ['earlinessSaturation', getU64Encoder()],
-      ['timeInMarketSaturation', getU64Encoder()],
+      ['earlinessCutoffSeconds', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: INIT_CENTRAL_STATE_DISCRIMINATOR })
   );
@@ -96,8 +93,7 @@ export function getInitCentralStateInstructionDataEncoder(): FixedSizeEncoder<In
 export function getInitCentralStateInstructionDataDecoder(): FixedSizeDecoder<InitCentralStateInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
-    ['earlinessSaturation', getU64Decoder()],
-    ['timeInMarketSaturation', getU64Decoder()],
+    ['earlinessCutoffSeconds', getU64Decoder()],
   ]);
 }
 
@@ -119,8 +115,7 @@ export type InitCentralStateAsyncInput<
   payer: TransactionSigner<TAccountPayer>;
   centralState?: Address<TAccountCentralState>;
   systemProgram?: Address<TAccountSystemProgram>;
-  earlinessSaturation: InitCentralStateInstructionDataArgs['earlinessSaturation'];
-  timeInMarketSaturation: InitCentralStateInstructionDataArgs['timeInMarketSaturation'];
+  earlinessCutoffSeconds: InitCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
 };
 
 export async function getInitCentralStateInstructionAsync<
@@ -206,8 +201,7 @@ export type InitCentralStateInput<
   payer: TransactionSigner<TAccountPayer>;
   centralState: Address<TAccountCentralState>;
   systemProgram?: Address<TAccountSystemProgram>;
-  earlinessSaturation: InitCentralStateInstructionDataArgs['earlinessSaturation'];
-  timeInMarketSaturation: InitCentralStateInstructionDataArgs['timeInMarketSaturation'];
+  earlinessCutoffSeconds: InitCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
 };
 
 export function getInitCentralStateInstruction<

@@ -67,21 +67,18 @@ export type UpdateCentralStateInstruction<
 
 export type UpdateCentralStateInstructionData = {
   discriminator: ReadonlyUint8Array;
-  earlinessSaturation: bigint;
-  timeInMarketSaturation: bigint;
+  earlinessCutoffSeconds: bigint;
 };
 
 export type UpdateCentralStateInstructionDataArgs = {
-  earlinessSaturation: number | bigint;
-  timeInMarketSaturation: number | bigint;
+  earlinessCutoffSeconds: number | bigint;
 };
 
 export function getUpdateCentralStateInstructionDataEncoder(): FixedSizeEncoder<UpdateCentralStateInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
-      ['earlinessSaturation', getU64Encoder()],
-      ['timeInMarketSaturation', getU64Encoder()],
+      ['earlinessCutoffSeconds', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: UPDATE_CENTRAL_STATE_DISCRIMINATOR })
   );
@@ -90,8 +87,7 @@ export function getUpdateCentralStateInstructionDataEncoder(): FixedSizeEncoder<
 export function getUpdateCentralStateInstructionDataDecoder(): FixedSizeDecoder<UpdateCentralStateInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
-    ['earlinessSaturation', getU64Decoder()],
-    ['timeInMarketSaturation', getU64Decoder()],
+    ['earlinessCutoffSeconds', getU64Decoder()],
   ]);
 }
 
@@ -111,8 +107,7 @@ export type UpdateCentralStateAsyncInput<
 > = {
   authority: TransactionSigner<TAccountAuthority>;
   centralState?: Address<TAccountCentralState>;
-  earlinessSaturation: UpdateCentralStateInstructionDataArgs['earlinessSaturation'];
-  timeInMarketSaturation: UpdateCentralStateInstructionDataArgs['timeInMarketSaturation'];
+  earlinessCutoffSeconds: UpdateCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
 };
 
 export async function getUpdateCentralStateInstructionAsync<
@@ -183,8 +178,7 @@ export type UpdateCentralStateInput<
 > = {
   authority: TransactionSigner<TAccountAuthority>;
   centralState: Address<TAccountCentralState>;
-  earlinessSaturation: UpdateCentralStateInstructionDataArgs['earlinessSaturation'];
-  timeInMarketSaturation: UpdateCentralStateInstructionDataArgs['timeInMarketSaturation'];
+  earlinessCutoffSeconds: UpdateCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
 };
 
 export function getUpdateCentralStateInstruction<

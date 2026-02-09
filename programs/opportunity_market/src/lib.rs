@@ -7,7 +7,7 @@ pub mod error;
 pub mod events;
 pub mod instructions;
 pub mod state;
-pub mod constants;
+pub mod score;
 
 pub use error::ErrorCode;
 pub use instructions::*;
@@ -53,10 +53,9 @@ pub mod opportunity_market {
 
     pub fn init_central_state(
         ctx: Context<InitCentralState>,
-        earliness_saturation: u64,
-        time_in_market_saturation: u64,
+        earliness_cutoff_seconds: u64,
     ) -> Result<()> {
-        instructions::init_central_state(ctx, earliness_saturation, time_in_market_saturation)
+        instructions::init_central_state(ctx, earliness_cutoff_seconds)
     }
 
     pub fn transfer_central_state_authority(
@@ -68,10 +67,9 @@ pub mod opportunity_market {
 
     pub fn update_central_state(
         ctx: Context<UpdateCentralState>,
-        earliness_saturation: u64,
-        time_in_market_saturation: u64,
+        earliness_cutoff_seconds: u64,
     ) -> Result<()> {
-        instructions::update_central_state(ctx, earliness_saturation, time_in_market_saturation)
+        instructions::update_central_state(ctx, earliness_cutoff_seconds)
     }
 
     pub fn create_market(

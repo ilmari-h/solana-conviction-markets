@@ -18,11 +18,9 @@ pub struct UpdateCentralState<'info> {
 
 pub fn update_central_state(
     ctx: Context<UpdateCentralState>,
-    earliness_saturation: u64,
-    time_in_market_saturation: u64,
+    earliness_cutoff_seconds: u64,
 ) -> Result<()> {
     let central_state = &mut ctx.accounts.central_state;
-    central_state.earliness_saturation = earliness_saturation;
-    central_state.time_in_market_saturation = time_in_market_saturation;
+    central_state.earliness_cutoff_seconds = earliness_cutoff_seconds;
     Ok(())
 }

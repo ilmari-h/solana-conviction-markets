@@ -52,15 +52,13 @@ export function getCentralStateDiscriminatorBytes() {
 export type CentralState = {
   discriminator: ReadonlyUint8Array;
   bump: number;
-  earlinessSaturation: bigint;
-  timeInMarketSaturation: bigint;
+  earlinessCutoffSeconds: bigint;
   authority: Address;
 };
 
 export type CentralStateArgs = {
   bump: number;
-  earlinessSaturation: number | bigint;
-  timeInMarketSaturation: number | bigint;
+  earlinessCutoffSeconds: number | bigint;
   authority: Address;
 };
 
@@ -69,8 +67,7 @@ export function getCentralStateEncoder(): FixedSizeEncoder<CentralStateArgs> {
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['bump', getU8Encoder()],
-      ['earlinessSaturation', getU64Encoder()],
-      ['timeInMarketSaturation', getU64Encoder()],
+      ['earlinessCutoffSeconds', getU64Encoder()],
       ['authority', getAddressEncoder()],
     ]),
     (value) => ({ ...value, discriminator: CENTRAL_STATE_DISCRIMINATOR })
@@ -81,8 +78,7 @@ export function getCentralStateDecoder(): FixedSizeDecoder<CentralState> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['bump', getU8Decoder()],
-    ['earlinessSaturation', getU64Decoder()],
-    ['timeInMarketSaturation', getU64Decoder()],
+    ['earlinessCutoffSeconds', getU64Decoder()],
     ['authority', getAddressDecoder()],
   ]);
 }

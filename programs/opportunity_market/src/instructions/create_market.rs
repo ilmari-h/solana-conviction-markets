@@ -105,8 +105,7 @@ pub fn create_market(
     market.reward_amount = reward_amount;
     market.mint = ctx.accounts.token_mint.key();
     market.market_authority = market_authority;
-    market.earliness_saturation = ctx.accounts.central_state.earliness_saturation;
-    market.time_in_market_saturation = ctx.accounts.central_state.time_in_market_saturation;
+    market.earliness_cutoff_seconds = ctx.accounts.central_state.earliness_cutoff_seconds;
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
