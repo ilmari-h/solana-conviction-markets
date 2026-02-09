@@ -28,6 +28,7 @@ import {
   type ParsedCreateMarketInstruction,
   type ParsedExtendRevealPeriodInstruction,
   type ParsedIncrementOptionTallyInstruction,
+  type ParsedInitCentralStateInstruction,
   type ParsedInitMarketSharesCallbackInstruction,
   type ParsedInitMarketSharesCompDefInstruction,
   type ParsedInitShareAccountInstruction,
@@ -40,13 +41,16 @@ import {
   type ParsedRevealSharesCompDefInstruction,
   type ParsedRevealSharesInstruction,
   type ParsedSelectOptionInstruction,
+  type ParsedTransferCentralStateAuthorityInstruction,
+  type ParsedUpdateCentralStateInstruction,
 } from '../instructions';
 
 export const OPPORTUNITY_MARKET_PROGRAM_ADDRESS =
-  'AFJhmrwWC4DGh88yeLTBtJRu9vKN6gnAEra4163zGHS6' as Address<'AFJhmrwWC4DGh88yeLTBtJRu9vKN6gnAEra4163zGHS6'>;
+  '73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i' as Address<'73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i'>;
 
 export enum OpportunityMarketAccount {
   ArciumSignerAccount,
+  CentralState,
   ClockAccount,
   Cluster,
   ComputationDefinitionAccount,
@@ -72,6 +76,17 @@ export function identifyOpportunityMarketAccount(
     )
   ) {
     return OpportunityMarketAccount.ArciumSignerAccount;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([201, 49, 35, 231, 4, 164, 205, 91])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketAccount.CentralState;
   }
   if (
     containsBytes(
@@ -192,6 +207,7 @@ export enum OpportunityMarketInstruction {
   CreateMarket,
   ExtendRevealPeriod,
   IncrementOptionTally,
+  InitCentralState,
   InitMarketSharesCallback,
   InitMarketSharesCompDef,
   InitShareAccount,
@@ -204,6 +220,8 @@ export enum OpportunityMarketInstruction {
   RevealSharesCallback,
   RevealSharesCompDef,
   SelectOption,
+  TransferCentralStateAuthority,
+  UpdateCentralState,
 }
 
 export function identifyOpportunityMarketInstruction(
@@ -368,6 +386,17 @@ export function identifyOpportunityMarketInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([132, 108, 150, 180, 190, 48, 103, 90])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.InitCentralState;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([249, 83, 52, 51, 57, 57, 87, 218])
       ),
       0
@@ -496,13 +525,35 @@ export function identifyOpportunityMarketInstruction(
   ) {
     return OpportunityMarketInstruction.SelectOption;
   }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([237, 33, 80, 239, 189, 157, 253, 90])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.TransferCentralStateAuthority;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([228, 211, 60, 53, 115, 153, 149, 194])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.UpdateCentralState;
+  }
   throw new Error(
     'The provided instruction could not be identified as a opportunityMarket instruction.'
   );
 }
 
 export type ParsedOpportunityMarketInstruction<
-  TProgram extends string = 'AFJhmrwWC4DGh88yeLTBtJRu9vKN6gnAEra4163zGHS6',
+  TProgram extends string = '73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i',
 > =
   | ({
       instructionType: OpportunityMarketInstruction.AddMarketOption;
@@ -547,6 +598,9 @@ export type ParsedOpportunityMarketInstruction<
       instructionType: OpportunityMarketInstruction.IncrementOptionTally;
     } & ParsedIncrementOptionTallyInstruction<TProgram>)
   | ({
+      instructionType: OpportunityMarketInstruction.InitCentralState;
+    } & ParsedInitCentralStateInstruction<TProgram>)
+  | ({
       instructionType: OpportunityMarketInstruction.InitMarketSharesCallback;
     } & ParsedInitMarketSharesCallbackInstruction<TProgram>)
   | ({
@@ -581,4 +635,10 @@ export type ParsedOpportunityMarketInstruction<
     } & ParsedRevealSharesCompDefInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.SelectOption;
-    } & ParsedSelectOptionInstruction<TProgram>);
+    } & ParsedSelectOptionInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.TransferCentralStateAuthority;
+    } & ParsedTransferCentralStateAuthorityInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.UpdateCentralState;
+    } & ParsedUpdateCentralStateInstruction<TProgram>);

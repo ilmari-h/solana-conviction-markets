@@ -7,6 +7,7 @@
  */
 
 export * from './arciumSignerAccount';
+export * from './centralState';
 export * from './clockAccount';
 export * from './cluster';
 export * from './computationDefinitionAccount';

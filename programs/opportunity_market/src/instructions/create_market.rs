@@ -7,7 +7,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::state::OpportunityMarket;
+use crate::state::{CentralState, OpportunityMarket};
 use crate::events::MarketCreatedEvent;
 use crate::COMP_DEF_OFFSET_INIT_MARKET_SHARES;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
@@ -20,6 +20,12 @@ pub struct CreateMarket<'info> {
     pub creator: Signer<'info>,
 
     pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        seeds = [b"central_state"],
+        bump = central_state.bump,
+    )]
+    pub central_state: Box<Account<'info, CentralState>>,
 
     #[account(
         init,
@@ -62,7 +68,7 @@ pub struct CreateMarket<'info> {
     /// CHECK: computation_account
     pub computation_account: UncheckedAccount<'info>,
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_INIT_MARKET_SHARES))]
-    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+    pub comp_def_account: Box<Account<'info, ComputationDefinitionAccount>>,
     #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
     #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
@@ -99,6 +105,8 @@ pub fn create_market(
     market.reward_amount = reward_amount;
     market.mint = ctx.accounts.token_mint.key();
     market.market_authority = market_authority;
+    market.earliness_saturation = ctx.accounts.central_state.earliness_saturation;
+    market.time_in_market_saturation = ctx.accounts.central_state.time_in_market_saturation;
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 

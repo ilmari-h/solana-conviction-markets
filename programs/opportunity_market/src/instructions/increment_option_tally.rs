@@ -64,9 +64,9 @@ pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, _option_index:
     );
 
     // Initialize total_score to 0 if None, then add user's amount
-    let bought_at_timestamp = ctx.accounts.share_account.bought_at_timestamp;
+    let staked_at_timestamp = ctx.accounts.share_account.staked_at_timestamp;
     let user_time_in_market = reveal_start
-        .checked_sub(bought_at_timestamp)
+        .checked_sub(staked_at_timestamp)
         .ok_or(ErrorCode::Overflow)?
         .max(1); // Ensure minimum of 1 to avoid zero scores
 

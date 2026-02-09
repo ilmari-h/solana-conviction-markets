@@ -1,5 +1,5 @@
 {
-  "address": "AFJhmrwWC4DGh88yeLTBtJRu9vKN6gnAEra4163zGHS6",
+  "address": "73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i",
   "metadata": {
     "name": "opportunity_market",
     "version": "0.1.0",
@@ -1145,6 +1145,31 @@
           "name": "token_mint"
         },
         {
+          "name": "central_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  101,
+                  110,
+                  116,
+                  114,
+                  97,
+                  108,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "market",
           "writable": true,
           "pda": {
@@ -1483,6 +1508,66 @@
         {
           "name": "option_index",
           "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "init_central_state",
+      "discriminator": [
+        132,
+        108,
+        150,
+        180,
+        190,
+        48,
+        103,
+        90
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "central_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  101,
+                  110,
+                  116,
+                  114,
+                  97,
+                  108,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "earliness_saturation",
+          "type": "u64"
+        },
+        {
+          "name": "time_in_market_saturation",
+          "type": "u64"
         }
       ]
     },
@@ -2588,6 +2673,112 @@
           "type": "u16"
         }
       ]
+    },
+    {
+      "name": "transfer_central_state_authority",
+      "discriminator": [
+        237,
+        33,
+        80,
+        239,
+        189,
+        157,
+        253,
+        90
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "central_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  101,
+                  110,
+                  116,
+                  114,
+                  97,
+                  108,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_central_state",
+      "discriminator": [
+        228,
+        211,
+        60,
+        53,
+        115,
+        153,
+        149,
+        194
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "central_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  101,
+                  110,
+                  116,
+                  114,
+                  97,
+                  108,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "earliness_saturation",
+          "type": "u64"
+        },
+        {
+          "name": "time_in_market_saturation",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -2602,6 +2793,19 @@
         44,
         214,
         74
+      ]
+    },
+    {
+      "name": "CentralState",
+      "discriminator": [
+        201,
+        49,
+        35,
+        231,
+        4,
+        164,
+        205,
+        91
       ]
     },
     {
@@ -3054,6 +3258,30 @@
                 ]
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CentralState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "earliness_saturation",
+            "type": "u64"
+          },
+          {
+            "name": "time_in_market_saturation",
+            "type": "u64"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           }
         ]
       }
@@ -3795,6 +4023,14 @@
           {
             "name": "mint",
             "type": "pubkey"
+          },
+          {
+            "name": "earliness_saturation",
+            "type": "u64"
+          },
+          {
+            "name": "time_in_market_saturation",
+            "type": "u64"
           }
         ]
       }
@@ -4100,7 +4336,7 @@
             "type": "u128"
           },
           {
-            "name": "bought_at_timestamp",
+            "name": "staked_at_timestamp",
             "type": "u64"
           },
           {

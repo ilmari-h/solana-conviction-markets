@@ -27,6 +27,7 @@ import {
   createMarket,
   fetchOpportunityMarket,
   randomComputationOffset,
+  getInitCentralStateInstructionAsync,
 } from "../../js/src";
 import { randomBytes } from "crypto";
 import * as anchor from "@coral-xyz/anchor";
@@ -243,8 +244,27 @@ export async function createTestEnvironment(
     initialAirdroppedLamports: airdropLamports,
   };
 
-  // Create the market
+  // Initialize central state
   const arciumEnv = getArciumEnv();
+
+  const initCentralStateIx = await getInitCentralStateInstructionAsync({
+    payer: creatorAccount.keypair,
+    earlinessSaturation: 0n,
+    timeInMarketSaturation: 0n,
+  });
+
+  const { value: csBlockhash } = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send();
+  const csTxMessage = pipe(
+    createTransactionMessage({ version: 0 }),
+    (msg) => setTransactionMessageFeePayer(creatorAccount.keypair.address, msg),
+    (msg) => setTransactionMessageLifetimeUsingBlockhash(csBlockhash, msg),
+    (msg) => appendTransactionMessageInstructions([initCentralStateIx], msg)
+  );
+  const csSignedTx = await signTransactionMessageWithSigners(csTxMessage);
+  await sendAndConfirmTransaction(csSignedTx, { commitment: "confirmed" });
+  console.log("  Central state initialized");
+
+  // Create the market
   const marketIndex = BigInt(Math.floor(Math.random() * 1000000));
   const nonce = deserializeLE(randomBytes(16));
   const computationOffset = randomComputationOffset();
@@ -302,7 +322,7 @@ export async function createTestEnvironment(
   // Send and confirm transaction using Kit RPC
   await sendAndConfirmTransaction(signedTransaction, { commitment: "confirmed" });
   // Get market address from the instruction accounts and fetch from chain
-  const marketAddress = createMarketIx.accounts[2].address as Address;
+  const marketAddress = createMarketIx.accounts[3].address as Address;
   const marketAccount = await fetchOpportunityMarket(rpc, marketAddress, { commitment: "confirmed" });
 
   return {

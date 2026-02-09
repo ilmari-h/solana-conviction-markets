@@ -2,6 +2,19 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
+pub struct CentralState {
+    pub bump: u8,
+
+    // Score component configuration - points at which returns are negligible
+    pub earliness_saturation: u64,
+    pub time_in_market_saturation: u64,
+    
+    // Allowed to update
+    pub authority: Pubkey
+}
+
+#[account]
+#[derive(InitSpace)]
 pub struct OpportunityMarket {
     pub encrypted_available_shares: [[u8; 32]; 1],
     pub bump: u8,
@@ -35,6 +48,10 @@ pub struct OpportunityMarket {
 
     // SPL token mint for this market (vote tokens and rewards)
     pub mint: Pubkey,
+
+    // Score component configuration
+    pub earliness_saturation: u64,
+    pub time_in_market_saturation: u64
 }
 
 #[account]
@@ -59,7 +76,8 @@ pub struct ShareAccount {
 
     pub encrypted_state_disclosure: [[u8; 32];2],
     pub state_nonce_disclosure: u128,
-    pub bought_at_timestamp: u64,
+    pub staked_at_timestamp: u64,
+    pub unstaked_at_timestamp: Option<u64>,
 
     pub revealed_amount: Option<u64>,
     pub revealed_option: Option<u16>,

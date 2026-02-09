@@ -113,7 +113,7 @@ This is the core voting action. The participant encrypts their vote client-side 
 - Deducts from  participant's vote token balance
 - Deducts from market's available shares
 - Stores encrypted position in share account (only decryptable by participant and decision maker)
-- Records `bought_at_timestamp` for conviction scoring
+- Records `staked_at_timestamp` for conviction scoring
 
 ---
 

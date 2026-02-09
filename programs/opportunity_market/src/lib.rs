@@ -20,7 +20,7 @@ pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 
-declare_id!("AFJhmrwWC4DGh88yeLTBtJRu9vKN6gnAEra4163zGHS6");
+declare_id!("73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i");
 
 #[arcium_program]
 pub mod opportunity_market {
@@ -44,6 +44,29 @@ pub mod opportunity_market {
 
     pub fn reveal_shares_comp_def(ctx: Context<RevealSharesCompDef>) -> Result<()> {
         instructions::reveal_shares_comp_def(ctx)
+    }
+
+    pub fn init_central_state(
+        ctx: Context<InitCentralState>,
+        earliness_saturation: u64,
+        time_in_market_saturation: u64,
+    ) -> Result<()> {
+        instructions::init_central_state(ctx, earliness_saturation, time_in_market_saturation)
+    }
+
+    pub fn transfer_central_state_authority(
+        ctx: Context<TransferCentralStateAuthority>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        instructions::transfer_central_state_authority(ctx, new_authority)
+    }
+
+    pub fn update_central_state(
+        ctx: Context<UpdateCentralState>,
+        earliness_saturation: u64,
+        time_in_market_saturation: u64,
+    ) -> Result<()> {
+        instructions::update_central_state(ctx, earliness_saturation, time_in_market_saturation)
     }
 
     pub fn create_market(

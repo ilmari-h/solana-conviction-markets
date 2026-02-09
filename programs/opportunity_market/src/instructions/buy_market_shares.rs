@@ -98,7 +98,7 @@ pub fn buy_market_shares(
     );
 
     // Capture timestamp when the buy is queued, not when callback runs
-    ctx.accounts.share_account.bought_at_timestamp = current_timestamp;
+    ctx.accounts.share_account.staked_at_timestamp = current_timestamp;
 
     let user_vta_key = ctx.accounts.user_vta.key();
     let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
