@@ -13,7 +13,7 @@ pub const SHARE_ACCOUNT_SEED: &[u8] = b"share_account";
 #[queue_computation_accounts("buy_opportunity_market_shares", signer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
-pub struct BuyMarketShares<'info> {
+pub struct Stake<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
@@ -71,8 +71,8 @@ pub struct BuyMarketShares<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
-pub fn buy_market_shares(
-    ctx: Context<BuyMarketShares>,
+pub fn stake(
+    ctx: Context<Stake>,
     computation_offset: u64,
     amount_ciphertext: [u8; 32],
     selected_option_ciphertext: [u8; 32],

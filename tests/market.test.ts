@@ -15,14 +15,13 @@ import {
   fetchToken,
 } from "@solana-program/token";
 import {
-  awaitComputationFinalization,
   initVoteTokenAccount,
   openMarket,
   randomComputationOffset,
   mintVoteTokens,
   addMarketOption,
   initShareAccount,
-  buyMarketShares,
+  stake,
   selectOption,
   fetchOpportunityMarket,
   revealShares,
@@ -266,7 +265,7 @@ describe("OpportunityMarket", () => {
           participant.keypair.address
         );
 
-        const ix = await buyMarketShares(
+        const ix = await stake(
           {
             signer: participant.keypair,
             market: env.market.address,

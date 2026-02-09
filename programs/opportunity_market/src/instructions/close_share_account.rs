@@ -4,7 +4,7 @@ use anchor_spl::token_interface::{
 };
 
 use crate::error::ErrorCode;
-use crate::instructions::buy_market_shares::SHARE_ACCOUNT_SEED;
+use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::state::{OpportunityMarket, OpportunityMarketOption, ShareAccount};
 
 #[derive(Accounts)]

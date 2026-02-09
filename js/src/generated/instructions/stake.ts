@@ -47,17 +47,15 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
-export const BUY_MARKET_SHARES_DISCRIMINATOR = new Uint8Array([
-  158, 98, 207, 246, 101, 20, 88, 96,
+export const STAKE_DISCRIMINATOR = new Uint8Array([
+  206, 176, 202, 18, 200, 209, 179, 108,
 ]);
 
-export function getBuyMarketSharesDiscriminatorBytes() {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    BUY_MARKET_SHARES_DISCRIMINATOR
-  );
+export function getStakeDiscriminatorBytes() {
+  return fixEncoderSize(getBytesEncoder(), 8).encode(STAKE_DISCRIMINATOR);
 }
 
-export type BuyMarketSharesInstruction<
+export type StakeInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountMarket extends string | AccountMeta<string> = string,
@@ -133,7 +131,7 @@ export type BuyMarketSharesInstruction<
     ]
   >;
 
-export type BuyMarketSharesInstructionData = {
+export type StakeInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
   amountCiphertext: Array<number>;
@@ -144,7 +142,7 @@ export type BuyMarketSharesInstructionData = {
   authorizedReaderNonce: bigint;
 };
 
-export type BuyMarketSharesInstructionDataArgs = {
+export type StakeInstructionDataArgs = {
   computationOffset: number | bigint;
   amountCiphertext: Array<number>;
   selectedOptionCiphertext: Array<number>;
@@ -154,7 +152,7 @@ export type BuyMarketSharesInstructionDataArgs = {
   authorizedReaderNonce: number | bigint;
 };
 
-export function getBuyMarketSharesInstructionDataEncoder(): FixedSizeEncoder<BuyMarketSharesInstructionDataArgs> {
+export function getStakeInstructionDataEncoder(): FixedSizeEncoder<StakeInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
@@ -169,11 +167,11 @@ export function getBuyMarketSharesInstructionDataEncoder(): FixedSizeEncoder<Buy
       ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['authorizedReaderNonce', getU128Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: BUY_MARKET_SHARES_DISCRIMINATOR })
+    (value) => ({ ...value, discriminator: STAKE_DISCRIMINATOR })
   );
 }
 
-export function getBuyMarketSharesInstructionDataDecoder(): FixedSizeDecoder<BuyMarketSharesInstructionData> {
+export function getStakeInstructionDataDecoder(): FixedSizeDecoder<StakeInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
@@ -186,17 +184,17 @@ export function getBuyMarketSharesInstructionDataDecoder(): FixedSizeDecoder<Buy
   ]);
 }
 
-export function getBuyMarketSharesInstructionDataCodec(): FixedSizeCodec<
-  BuyMarketSharesInstructionDataArgs,
-  BuyMarketSharesInstructionData
+export function getStakeInstructionDataCodec(): FixedSizeCodec<
+  StakeInstructionDataArgs,
+  StakeInstructionData
 > {
   return combineCodec(
-    getBuyMarketSharesInstructionDataEncoder(),
-    getBuyMarketSharesInstructionDataDecoder()
+    getStakeInstructionDataEncoder(),
+    getStakeInstructionDataDecoder()
   );
 }
 
-export type BuyMarketSharesAsyncInput<
+export type StakeAsyncInput<
   TAccountSigner extends string = string,
   TAccountMarket extends string = string,
   TAccountUserVta extends string = string,
@@ -228,16 +226,16 @@ export type BuyMarketSharesAsyncInput<
   clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
-  computationOffset: BuyMarketSharesInstructionDataArgs['computationOffset'];
-  amountCiphertext: BuyMarketSharesInstructionDataArgs['amountCiphertext'];
-  selectedOptionCiphertext: BuyMarketSharesInstructionDataArgs['selectedOptionCiphertext'];
-  userPubkey: BuyMarketSharesInstructionDataArgs['userPubkey'];
-  inputNonce: BuyMarketSharesInstructionDataArgs['inputNonce'];
-  authorizedReaderPubkey: BuyMarketSharesInstructionDataArgs['authorizedReaderPubkey'];
-  authorizedReaderNonce: BuyMarketSharesInstructionDataArgs['authorizedReaderNonce'];
+  computationOffset: StakeInstructionDataArgs['computationOffset'];
+  amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
+  selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
+  userPubkey: StakeInstructionDataArgs['userPubkey'];
+  inputNonce: StakeInstructionDataArgs['inputNonce'];
+  authorizedReaderPubkey: StakeInstructionDataArgs['authorizedReaderPubkey'];
+  authorizedReaderNonce: StakeInstructionDataArgs['authorizedReaderNonce'];
 };
 
-export async function getBuyMarketSharesInstructionAsync<
+export async function getStakeInstructionAsync<
   TAccountSigner extends string,
   TAccountMarket extends string,
   TAccountUserVta extends string,
@@ -255,7 +253,7 @@ export async function getBuyMarketSharesInstructionAsync<
   TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: BuyMarketSharesAsyncInput<
+  input: StakeAsyncInput<
     TAccountSigner,
     TAccountMarket,
     TAccountUserVta,
@@ -274,7 +272,7 @@ export async function getBuyMarketSharesInstructionAsync<
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
-  BuyMarketSharesInstruction<
+  StakeInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
@@ -390,11 +388,11 @@ export async function getBuyMarketSharesInstructionAsync<
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.arciumProgram),
     ],
-    data: getBuyMarketSharesInstructionDataEncoder().encode(
-      args as BuyMarketSharesInstructionDataArgs
+    data: getStakeInstructionDataEncoder().encode(
+      args as StakeInstructionDataArgs
     ),
     programAddress,
-  } as BuyMarketSharesInstruction<
+  } as StakeInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
@@ -414,7 +412,7 @@ export async function getBuyMarketSharesInstructionAsync<
   >);
 }
 
-export type BuyMarketSharesInput<
+export type StakeInput<
   TAccountSigner extends string = string,
   TAccountMarket extends string = string,
   TAccountUserVta extends string = string,
@@ -446,16 +444,16 @@ export type BuyMarketSharesInput<
   clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
-  computationOffset: BuyMarketSharesInstructionDataArgs['computationOffset'];
-  amountCiphertext: BuyMarketSharesInstructionDataArgs['amountCiphertext'];
-  selectedOptionCiphertext: BuyMarketSharesInstructionDataArgs['selectedOptionCiphertext'];
-  userPubkey: BuyMarketSharesInstructionDataArgs['userPubkey'];
-  inputNonce: BuyMarketSharesInstructionDataArgs['inputNonce'];
-  authorizedReaderPubkey: BuyMarketSharesInstructionDataArgs['authorizedReaderPubkey'];
-  authorizedReaderNonce: BuyMarketSharesInstructionDataArgs['authorizedReaderNonce'];
+  computationOffset: StakeInstructionDataArgs['computationOffset'];
+  amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
+  selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
+  userPubkey: StakeInstructionDataArgs['userPubkey'];
+  inputNonce: StakeInstructionDataArgs['inputNonce'];
+  authorizedReaderPubkey: StakeInstructionDataArgs['authorizedReaderPubkey'];
+  authorizedReaderNonce: StakeInstructionDataArgs['authorizedReaderNonce'];
 };
 
-export function getBuyMarketSharesInstruction<
+export function getStakeInstruction<
   TAccountSigner extends string,
   TAccountMarket extends string,
   TAccountUserVta extends string,
@@ -473,7 +471,7 @@ export function getBuyMarketSharesInstruction<
   TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: BuyMarketSharesInput<
+  input: StakeInput<
     TAccountSigner,
     TAccountMarket,
     TAccountUserVta,
@@ -491,7 +489,7 @@ export function getBuyMarketSharesInstruction<
     TAccountArciumProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): BuyMarketSharesInstruction<
+): StakeInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountMarket,
@@ -579,11 +577,11 @@ export function getBuyMarketSharesInstruction<
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.arciumProgram),
     ],
-    data: getBuyMarketSharesInstructionDataEncoder().encode(
-      args as BuyMarketSharesInstructionDataArgs
+    data: getStakeInstructionDataEncoder().encode(
+      args as StakeInstructionDataArgs
     ),
     programAddress,
-  } as BuyMarketSharesInstruction<
+  } as StakeInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
@@ -603,7 +601,7 @@ export function getBuyMarketSharesInstruction<
   >);
 }
 
-export type ParsedBuyMarketSharesInstruction<
+export type ParsedStakeInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -625,17 +623,17 @@ export type ParsedBuyMarketSharesInstruction<
     systemProgram: TAccountMetas[13];
     arciumProgram: TAccountMetas[14];
   };
-  data: BuyMarketSharesInstructionData;
+  data: StakeInstructionData;
 };
 
-export function parseBuyMarketSharesInstruction<
+export function parseStakeInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedBuyMarketSharesInstruction<TProgram, TAccountMetas> {
+): ParsedStakeInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 15) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -665,6 +663,6 @@ export function parseBuyMarketSharesInstruction<
       systemProgram: getNextAccount(),
       arciumProgram: getNextAccount(),
     },
-    data: getBuyMarketSharesInstructionDataDecoder().decode(instruction.data),
+    data: getStakeInstructionDataDecoder().decode(instruction.data),
   };
 }

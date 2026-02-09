@@ -7,7 +7,6 @@
  */
 
 export * from './addMarketOption';
-export * from './buyMarketShares';
 export * from './buyOpportunityMarketSharesCallback';
 export * from './buyOpportunityMarketSharesCompDef';
 export * from './buyVoteTokensCallback';
@@ -33,6 +32,7 @@ export * from './revealShares';
 export * from './revealSharesCallback';
 export * from './revealSharesCompDef';
 export * from './selectOption';
+export * from './stake';
 export * from './transferCentralStateAuthority';
 export * from './unstakeEarly';
 export * from './unstakeEarlyCallback';

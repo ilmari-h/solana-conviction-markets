@@ -7,7 +7,7 @@ import { PublicKey } from "@solana/web3.js";
 import {
   deriveShareAccountPda,
   initShareAccount,
-  buyMarketShares,
+  stake,
   awaitComputationFinalization,
 } from "@bench.games/conviction-markets";
 import { useDeriveX25519 } from "./use-derive-x25519";
@@ -84,7 +84,7 @@ export function useBuyShares() {
       // Step 2: Buy market shares
       console.log(`Buying ${amount} shares for option index ${optionIndex}...`);
 
-      const { transaction, computationOffset } = await buyMarketShares(
+      const { transaction, computationOffset } = await stake(
         provider,
         {
           signer: wallet.publicKey,

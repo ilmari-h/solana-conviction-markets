@@ -200,8 +200,8 @@ pub mod opportunity_market {
         instructions::buy_opportunity_market_shares_comp_def(ctx)
     }
 
-    pub fn buy_market_shares(
-        ctx: Context<BuyMarketShares>,
+    pub fn stake(
+        ctx: Context<Stake>,
         computation_offset: u64,
         amount_ciphertext: [u8; 32],
         selected_option_ciphertext: [u8; 32],
@@ -211,7 +211,7 @@ pub mod opportunity_market {
         authorized_reader_pubkey: [u8; 32],
         authorized_reader_nonce: u128,
     ) -> Result<()> {
-        instructions::buy_market_shares(
+        instructions::stake(
             ctx,
             computation_offset,
             amount_ciphertext,

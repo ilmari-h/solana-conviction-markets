@@ -15,7 +15,6 @@ import {
 } from '@solana/kit';
 import {
   type ParsedAddMarketOptionInstruction,
-  type ParsedBuyMarketSharesInstruction,
   type ParsedBuyOpportunityMarketSharesCallbackInstruction,
   type ParsedBuyOpportunityMarketSharesCompDefInstruction,
   type ParsedBuyVoteTokensCallbackInstruction,
@@ -41,6 +40,7 @@ import {
   type ParsedRevealSharesCompDefInstruction,
   type ParsedRevealSharesInstruction,
   type ParsedSelectOptionInstruction,
+  type ParsedStakeInstruction,
   type ParsedTransferCentralStateAuthorityInstruction,
   type ParsedUnstakeEarlyCallbackInstruction,
   type ParsedUnstakeEarlyCompDefInstruction,
@@ -197,7 +197,6 @@ export function identifyOpportunityMarketAccount(
 
 export enum OpportunityMarketInstruction {
   AddMarketOption,
-  BuyMarketShares,
   BuyOpportunityMarketSharesCallback,
   BuyOpportunityMarketSharesCompDef,
   BuyVoteTokensCallback,
@@ -223,6 +222,7 @@ export enum OpportunityMarketInstruction {
   RevealSharesCallback,
   RevealSharesCompDef,
   SelectOption,
+  Stake,
   TransferCentralStateAuthority,
   UnstakeEarly,
   UnstakeEarlyCallback,
@@ -244,17 +244,6 @@ export function identifyOpportunityMarketInstruction(
     )
   ) {
     return OpportunityMarketInstruction.AddMarketOption;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([158, 98, 207, 246, 101, 20, 88, 96])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.BuyMarketShares;
   }
   if (
     containsBytes(
@@ -535,6 +524,17 @@ export function identifyOpportunityMarketInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([206, 176, 202, 18, 200, 209, 179, 108])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.Stake;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([237, 33, 80, 239, 189, 157, 253, 90])
       ),
       0
@@ -597,9 +597,6 @@ export type ParsedOpportunityMarketInstruction<
   | ({
       instructionType: OpportunityMarketInstruction.AddMarketOption;
     } & ParsedAddMarketOptionInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.BuyMarketShares;
-    } & ParsedBuyMarketSharesInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.BuyOpportunityMarketSharesCallback;
     } & ParsedBuyOpportunityMarketSharesCallbackInstruction<TProgram>)
@@ -675,6 +672,9 @@ export type ParsedOpportunityMarketInstruction<
   | ({
       instructionType: OpportunityMarketInstruction.SelectOption;
     } & ParsedSelectOptionInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.Stake;
+    } & ParsedStakeInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.TransferCentralStateAuthority;
     } & ParsedTransferCentralStateAuthorityInstruction<TProgram>)

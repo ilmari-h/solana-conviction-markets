@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::state::{OpportunityMarket, ShareAccount};
-use crate::instructions::buy_market_shares::SHARE_ACCOUNT_SEED;
+use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 
 #[derive(Accounts)]
 pub struct InitShareAccount<'info> {

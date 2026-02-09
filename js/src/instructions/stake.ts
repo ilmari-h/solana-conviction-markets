@@ -1,12 +1,12 @@
 import { type TransactionSigner, type Address } from "@solana/kit";
 import {
-  getBuyMarketSharesInstructionAsync,
-  type BuyMarketSharesInstruction,
+  getStakeInstructionAsync,
+  type StakeInstruction,
 } from "../generated";
 import { type ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
 import { type ByteArray, toNumberArray } from "../utils";
 
-export interface BuyMarketSharesParams {
+export interface StakeParams {
   signer: TransactionSigner;
   market: Address;
   userVta: Address;
@@ -18,10 +18,10 @@ export interface BuyMarketSharesParams {
   authorizedReaderNonce: bigint;
 }
 
-export async function buyMarketShares(
-  input: BuyMarketSharesParams,
+export async function stake(
+  input: StakeParams,
   config: ArciumConfig
-): Promise<BuyMarketSharesInstruction> {
+): Promise<StakeInstruction> {
   const {
     signer,
     market,
@@ -34,7 +34,7 @@ export async function buyMarketShares(
     authorizedReaderNonce,
   } = input;
 
-  return getBuyMarketSharesInstructionAsync({
+  return getStakeInstructionAsync({
     ...getComputeAccounts("buy_opportunity_market_shares", config),
     signer,
     market,

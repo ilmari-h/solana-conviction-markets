@@ -1,5 +1,5 @@
 pub mod add_market_option;
-pub mod buy_market_shares;
+pub mod stake;
 pub mod claim_pending_deposit;
 pub mod claim_vote_tokens;
 pub mod close_share_account;
@@ -19,7 +19,7 @@ pub mod unstake_early;
 pub mod update_central_state;
 
 pub use add_market_option::*;
-pub use buy_market_shares::*;
+pub use stake::*;
 pub use claim_pending_deposit::*;
 pub use claim_vote_tokens::*;
 pub use close_share_account::*;
