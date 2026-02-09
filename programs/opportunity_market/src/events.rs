@@ -28,3 +28,9 @@ pub struct SharesRevealedEvent {
     pub shares_amount: u64,
     pub selected_option: u16,
 }
+
+#[event]
+pub struct SharesUnstakedEvent {
+    pub buyer: Pubkey,
+    pub market: Pubkey,
+}

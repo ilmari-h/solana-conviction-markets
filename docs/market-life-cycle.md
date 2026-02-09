@@ -13,7 +13,7 @@ Opportunity Markets allow users to influence decision making by staking. Decisio
 
 The protocol sets itself apart from other voting protocols with **confidential stake-to-vote mechanism** and **an arbitrary number of options**.
 
-A opportunity market progresses through distinct phases with time limits. A description of these phases follows.
+An opportunity market progresses through distinct phases with time limits. A description of these phases follows.
 
 ---
 
@@ -102,24 +102,24 @@ Creates a share account for the specific market.
 This account keeps track of the participant's purchased shares and which option they voted for.
 These values are encrypted and only visible to the participant and the decision maker.
 
-### Step 3.2: Buy Market Shares
+### Step 3.2: Stake
 
-**Instruction:** [`buy_market_shares`](../programs/opportunity_market/src/instructions/buy_market_shares.rs)
+**Instruction:** [`stake`](../programs/opportunity_market/src/instructions/stake.rs)
 
-This is the core voting action. The participant encrypts their vote client-side and passes it to the instruction.
+Users stake on their selected option. The participant encrypts their chosen option and stake amount client-side and passes this information to the instruction.
 
 **What happens:**
 - MPC decrypts inputs, validates balances
 - Deducts from  participant's vote token balance
 - Deducts from market's available shares
 - Stores encrypted position in share account (only decryptable by participant and decision maker)
-- Records `bought_at_timestamp` for conviction scoring
+- Records `staked_at_timestamp` for conviction scoring
 
 ---
 
 ## Phase 4: Decision & Resolution
 
-After reviewing disclosed votes, the decision maker selects a winner.
+After reviewing disclosed, per-option stake totals, the decision maker selects a winner.
 
 ### Step 4.1: Select Winning Option
 
@@ -132,7 +132,7 @@ This instruction takes as input the 1-based index of the selected option.
 - If still in staking period, immediately ends it
 - Enables the reveal phase
 
-**Note:** Idea is the decision maker has been monitoring disclosed votes throughout the staking period to make an informed decision.
+**Note:** Idea is the decision maker, being the sole disclosee of individual users' stake amounts and selected options, has been monitoring the total stake tallies per each option throughout the staking period, and uses this data to make an informed decision.
 
 ---
 
@@ -219,7 +219,7 @@ sequenceDiagram
     rect rgb(1, 30, 20)
         Note over DM,P: STAKING PERIOD
         P->>P: init_share_account
-        P->>P: buy_market_shares
+        P->>P: stake
         DM-->>P: (reads disclosed votes)
     end
 

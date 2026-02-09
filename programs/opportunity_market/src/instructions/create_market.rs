@@ -1,9 +1,13 @@
 use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_interface::{Mint, TokenAccount, TokenInterface},
+};
 use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::state::OpportunityMarket;
+use crate::state::{CentralState, OpportunityMarket};
 use crate::events::MarketCreatedEvent;
 use crate::COMP_DEF_OFFSET_INIT_MARKET_SHARES;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
@@ -15,6 +19,14 @@ pub struct CreateMarket<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
 
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        seeds = [b"central_state"],
+        bump = central_state.bump,
+    )]
+    pub central_state: Box<Account<'info, CentralState>>,
+
     #[account(
         init,
         payer = creator,
@@ -22,7 +34,17 @@ pub struct CreateMarket<'info> {
         seeds = [b"opportunity_market", creator.key().as_ref(), &market_index.to_le_bytes()],
         bump,
     )]
-    pub market: Account<'info, OpportunityMarket>,
+    pub market: Box<Account<'info, OpportunityMarket>>,
+
+    /// ATA owned by market PDA, holds reward tokens
+    #[account(
+        init,
+        payer = creator,
+        associated_token::mint = token_mint,
+        associated_token::authority = market,
+        associated_token::token_program = token_program,
+    )]
+    pub market_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
 
     // Arcium accounts
     #[account(
@@ -46,7 +68,7 @@ pub struct CreateMarket<'info> {
     /// CHECK: computation_account
     pub computation_account: UncheckedAccount<'info>,
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_INIT_MARKET_SHARES))]
-    pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+    pub comp_def_account: Box<Account<'info, ComputationDefinitionAccount>>,
     #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
     #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
@@ -54,6 +76,8 @@ pub struct CreateMarket<'info> {
     #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
     pub clock_account: Account<'info, ClockAccount>,
     pub system_program: Program<'info, System>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub arcium_program: Program<'info, Arcium>,
 }
 
@@ -61,27 +85,28 @@ pub fn create_market(
     ctx: Context<CreateMarket>,
     market_index: u64,
     computation_offset: u64,
-    max_options: u16,
     max_shares: u64,
-    reward_lamports: u64,
+    reward_amount: u64,
     time_to_stake: u64,
     time_to_reveal: u64,
     nonce: u128,
-    select_authority: Option<Pubkey>,
+    market_authority: Option<Pubkey>,
 ) -> Result<()> {
     let market = &mut ctx.accounts.market;
     market.bump = ctx.bumps.market;
     market.creator = ctx.accounts.creator.key();
     market.index = market_index;
     market.total_options = 0;
-    market.max_options = max_options;
     market.max_shares = max_shares;
     market.time_to_stake = time_to_stake;
     market.time_to_reveal = time_to_reveal;
     market.selected_option = None;
     market.state_nonce = 0;
-    market.reward_lamports = reward_lamports;
-    market.select_authority = select_authority;
+    market.reward_amount = reward_amount;
+    market.mint = ctx.accounts.token_mint.key();
+    market.market_authority = market_authority;
+    market.earliness_saturation = ctx.accounts.central_state.earliness_saturation;
+    market.time_in_market_saturation = ctx.accounts.central_state.time_in_market_saturation;
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
@@ -96,7 +121,6 @@ pub fn create_market(
         ctx.accounts,
         computation_offset,
         args,
-        None,
         vec![InitMarketSharesCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,

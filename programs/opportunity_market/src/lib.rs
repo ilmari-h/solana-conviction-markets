@@ -19,8 +19,9 @@ pub const COMP_DEF_OFFSET_CLAIM_VOTE_TOKENS: u32 = comp_def_offset("claim_vote_t
 pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("buy_opportunity_market_shares");
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
+pub const COMP_DEF_OFFSET_UNSTAKE_EARLY: u32 = comp_def_offset("unstake_early");
 
-declare_id!("6Y2SL4PG9YUN3tkF8M4z83Si4sh72X5E41Xp9RDeBXje");
+declare_id!("73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i");
 
 #[arcium_program]
 pub mod opportunity_market {
@@ -46,29 +47,54 @@ pub mod opportunity_market {
         instructions::reveal_shares_comp_def(ctx)
     }
 
+    pub fn unstake_early_comp_def(ctx: Context<UnstakeEarlyCompDef>) -> Result<()> {
+        instructions::unstake_early_comp_def(ctx)
+    }
+
+    pub fn init_central_state(
+        ctx: Context<InitCentralState>,
+        earliness_saturation: u64,
+        time_in_market_saturation: u64,
+    ) -> Result<()> {
+        instructions::init_central_state(ctx, earliness_saturation, time_in_market_saturation)
+    }
+
+    pub fn transfer_central_state_authority(
+        ctx: Context<TransferCentralStateAuthority>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        instructions::transfer_central_state_authority(ctx, new_authority)
+    }
+
+    pub fn update_central_state(
+        ctx: Context<UpdateCentralState>,
+        earliness_saturation: u64,
+        time_in_market_saturation: u64,
+    ) -> Result<()> {
+        instructions::update_central_state(ctx, earliness_saturation, time_in_market_saturation)
+    }
+
     pub fn create_market(
         ctx: Context<CreateMarket>,
         market_index: u64,
         computation_offset: u64,
-        max_options: u16,
         max_shares: u64,
-        reward_lamports: u64,
+        reward_amount: u64,
         time_to_stake: u64,
         time_to_reveal: u64,
         nonce: u128,
-        select_authority: Option<Pubkey>,
+        market_authority: Option<Pubkey>,
     ) -> Result<()> {
         instructions::create_market(
             ctx,
             market_index,
             computation_offset,
-            max_options,
             max_shares,
-            reward_lamports,
+            reward_amount,
             time_to_stake,
             time_to_reveal,
             nonce,
-            select_authority
+            market_authority
         )
     }
 
@@ -96,12 +122,20 @@ pub mod opportunity_market {
         instructions::select_option(ctx, option_index)
     }
 
+    pub fn extend_reveal_period(ctx: Context<ExtendRevealPeriod>, new_time_to_reveal: u64) -> Result<()> {
+        instructions::extend_reveal_period(ctx, new_time_to_reveal)
+    }
+
     pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, option_index: u16) -> Result<()> {
         instructions::increment_option_tally(ctx, option_index)
     }
 
     pub fn close_share_account(ctx: Context<CloseShareAccount>, option_index: u16) -> Result<()> {
         instructions::close_share_account(ctx, option_index)
+    }
+
+    pub fn claim_pending_deposit(ctx: Context<ClaimPendingDeposit>) -> Result<()> {
+        instructions::claim_pending_deposit(ctx)
     }
 
     pub fn init_share_account(
@@ -166,8 +200,8 @@ pub mod opportunity_market {
         instructions::buy_opportunity_market_shares_comp_def(ctx)
     }
 
-    pub fn buy_market_shares(
-        ctx: Context<BuyMarketShares>,
+    pub fn stake(
+        ctx: Context<Stake>,
         computation_offset: u64,
         amount_ciphertext: [u8; 32],
         selected_option_ciphertext: [u8; 32],
@@ -177,7 +211,7 @@ pub mod opportunity_market {
         authorized_reader_pubkey: [u8; 32],
         authorized_reader_nonce: u128,
     ) -> Result<()> {
-        instructions::buy_market_shares(
+        instructions::stake(
             ctx,
             computation_offset,
             amount_ciphertext,
@@ -210,5 +244,21 @@ pub mod opportunity_market {
         output: SignedComputationOutputs<RevealSharesOutput>,
     ) -> Result<()> {
         instructions::reveal_shares_callback(ctx, output)
+    }
+
+    pub fn unstake_early(
+        ctx: Context<UnstakeEarly>,
+        computation_offset: u64,
+        user_pubkey: [u8; 32],
+    ) -> Result<()> {
+        instructions::unstake_early(ctx, computation_offset, user_pubkey)
+    }
+
+    #[arcium_callback(encrypted_ix = "unstake_early")]
+    pub fn unstake_early_callback(
+        ctx: Context<UnstakeEarlyCallback>,
+        output: SignedComputationOutputs<UnstakeEarlyOutput>,
+    ) -> Result<()> {
+        instructions::unstake_early_callback(ctx, output)
     }
 }

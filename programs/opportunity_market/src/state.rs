@@ -2,13 +2,25 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
+pub struct CentralState {
+    pub bump: u8,
+
+    // Score component configuration - points at which returns are negligible
+    pub earliness_saturation: u64,
+    pub time_in_market_saturation: u64,
+    
+    // Allowed to update
+    pub authority: Pubkey
+}
+
+#[account]
+#[derive(InitSpace)]
 pub struct OpportunityMarket {
     pub encrypted_available_shares: [[u8; 32]; 1],
     pub bump: u8,
     pub creator: Pubkey,      // part of PDA seed
     pub index: u64,           // part of PDA seed
     pub total_options: u16,
-    pub max_options: u16,
 
     // If set, means market is funded and ready to be opened for staking.
     // What actions are possible depends on current timestamp in relation to
@@ -28,11 +40,18 @@ pub struct OpportunityMarket {
     // Max available shares. 1 shares = 1 vote token
     pub max_shares: u64,
 
-    // Reward to be shared with stakers
-    pub reward_lamports: u64,
+    // Reward to be shared with stakers (in SPL token base units)
+    pub reward_amount: u64,
 
-    // Optional authority that can select the winning option (same rights as creator)
-    pub select_authority: Option<Pubkey>,
+    // Optional authority that can manage the market (select winning option, extend reveal period)
+    pub market_authority: Option<Pubkey>,
+
+    // SPL token mint for this market (vote tokens and rewards)
+    pub mint: Pubkey,
+
+    // Score component configuration
+    pub earliness_saturation: u64,
+    pub time_in_market_saturation: u64
 }
 
 #[account]
@@ -42,6 +61,8 @@ pub struct VoteTokenAccount {
     pub bump: u8,
     pub owner: Pubkey,
     pub state_nonce: u128,
+    pub token_mint: Pubkey,
+    pub pending_deposit: u64,  // tracks unconfirmed deposits for safety
 }
 
 #[account]
@@ -55,7 +76,8 @@ pub struct ShareAccount {
 
     pub encrypted_state_disclosure: [[u8; 32];2],
     pub state_nonce_disclosure: u128,
-    pub bought_at_timestamp: u64,
+    pub staked_at_timestamp: Option<u64>,
+    pub unstaked_at_timestamp: Option<u64>,
 
     pub revealed_amount: Option<u64>,
     pub revealed_option: Option<u16>,
