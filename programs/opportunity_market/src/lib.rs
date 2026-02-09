@@ -19,6 +19,7 @@ pub const COMP_DEF_OFFSET_CLAIM_VOTE_TOKENS: u32 = comp_def_offset("claim_vote_t
 pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("buy_opportunity_market_shares");
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
+pub const COMP_DEF_OFFSET_UNSTAKE_EARLY: u32 = comp_def_offset("unstake_early");
 
 declare_id!("73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i");
 
@@ -44,6 +45,10 @@ pub mod opportunity_market {
 
     pub fn reveal_shares_comp_def(ctx: Context<RevealSharesCompDef>) -> Result<()> {
         instructions::reveal_shares_comp_def(ctx)
+    }
+
+    pub fn unstake_early_comp_def(ctx: Context<UnstakeEarlyCompDef>) -> Result<()> {
+        instructions::unstake_early_comp_def(ctx)
     }
 
     pub fn init_central_state(
@@ -239,5 +244,21 @@ pub mod opportunity_market {
         output: SignedComputationOutputs<RevealSharesOutput>,
     ) -> Result<()> {
         instructions::reveal_shares_callback(ctx, output)
+    }
+
+    pub fn unstake_early(
+        ctx: Context<UnstakeEarly>,
+        computation_offset: u64,
+        user_pubkey: [u8; 32],
+    ) -> Result<()> {
+        instructions::unstake_early(ctx, computation_offset, user_pubkey)
+    }
+
+    #[arcium_callback(encrypted_ix = "unstake_early")]
+    pub fn unstake_early_callback(
+        ctx: Context<UnstakeEarlyCallback>,
+        output: SignedComputationOutputs<UnstakeEarlyOutput>,
+    ) -> Result<()> {
+        instructions::unstake_early_callback(ctx, output)
     }
 }

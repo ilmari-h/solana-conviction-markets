@@ -180,9 +180,11 @@ pub fn reveal_shares_callback(
     ctx.accounts.share_account.revealed_amount = Some(revealed_amount);
     ctx.accounts.share_account.revealed_option = Some(revealed_option);
 
-    // Update user VTA with credited balance
-    ctx.accounts.user_vta.state_nonce = new_user_balance.nonce;
-    ctx.accounts.user_vta.encrypted_state = new_user_balance.ciphertexts;
+    // Only credit VTA if shares were not already unstaked
+    if ctx.accounts.share_account.unstaked_at_timestamp.is_none() {
+        ctx.accounts.user_vta.state_nonce = new_user_balance.nonce;
+        ctx.accounts.user_vta.encrypted_state = new_user_balance.ciphertexts;
+    }
 
     emit!(SharesRevealedEvent{
         buyer: ctx.accounts.user_vta.owner,

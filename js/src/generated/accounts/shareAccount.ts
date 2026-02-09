@@ -70,7 +70,8 @@ export type ShareAccount = {
   market: Address;
   encryptedStateDisclosure: Array<Array<number>>;
   stateNonceDisclosure: bigint;
-  boughtAtTimestamp: bigint;
+  stakedAtTimestamp: Option<bigint>;
+  unstakedAtTimestamp: Option<bigint>;
   revealedAmount: Option<bigint>;
   revealedOption: Option<number>;
   revealedScore: Option<bigint>;
@@ -85,7 +86,8 @@ export type ShareAccountArgs = {
   market: Address;
   encryptedStateDisclosure: Array<Array<number>>;
   stateNonceDisclosure: number | bigint;
-  boughtAtTimestamp: number | bigint;
+  stakedAtTimestamp: OptionOrNullable<number | bigint>;
+  unstakedAtTimestamp: OptionOrNullable<number | bigint>;
   revealedAmount: OptionOrNullable<number | bigint>;
   revealedOption: OptionOrNullable<number>;
   revealedScore: OptionOrNullable<number | bigint>;
@@ -113,7 +115,8 @@ export function getShareAccountEncoder(): Encoder<ShareAccountArgs> {
         }),
       ],
       ['stateNonceDisclosure', getU128Encoder()],
-      ['boughtAtTimestamp', getU64Encoder()],
+      ['stakedAtTimestamp', getOptionEncoder(getU64Encoder())],
+      ['unstakedAtTimestamp', getOptionEncoder(getU64Encoder())],
       ['revealedAmount', getOptionEncoder(getU64Encoder())],
       ['revealedOption', getOptionEncoder(getU16Encoder())],
       ['revealedScore', getOptionEncoder(getU64Encoder())],
@@ -143,7 +146,8 @@ export function getShareAccountDecoder(): Decoder<ShareAccount> {
       }),
     ],
     ['stateNonceDisclosure', getU128Decoder()],
-    ['boughtAtTimestamp', getU64Decoder()],
+    ['stakedAtTimestamp', getOptionDecoder(getU64Decoder())],
+    ['unstakedAtTimestamp', getOptionDecoder(getU64Decoder())],
     ['revealedAmount', getOptionDecoder(getU64Decoder())],
     ['revealedOption', getOptionDecoder(getU16Decoder())],
     ['revealedScore', getOptionDecoder(getU64Decoder())],

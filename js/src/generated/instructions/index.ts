@@ -34,4 +34,7 @@ export * from './revealSharesCallback';
 export * from './revealSharesCompDef';
 export * from './selectOption';
 export * from './transferCentralStateAuthority';
+export * from './unstakeEarly';
+export * from './unstakeEarlyCallback';
+export * from './unstakeEarlyCompDef';
 export * from './updateCentralState';

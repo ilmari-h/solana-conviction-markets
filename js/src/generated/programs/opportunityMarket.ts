@@ -42,6 +42,9 @@ import {
   type ParsedRevealSharesInstruction,
   type ParsedSelectOptionInstruction,
   type ParsedTransferCentralStateAuthorityInstruction,
+  type ParsedUnstakeEarlyCallbackInstruction,
+  type ParsedUnstakeEarlyCompDefInstruction,
+  type ParsedUnstakeEarlyInstruction,
   type ParsedUpdateCentralStateInstruction,
 } from '../instructions';
 
@@ -221,6 +224,9 @@ export enum OpportunityMarketInstruction {
   RevealSharesCompDef,
   SelectOption,
   TransferCentralStateAuthority,
+  UnstakeEarly,
+  UnstakeEarlyCallback,
+  UnstakeEarlyCompDef,
   UpdateCentralState,
 }
 
@@ -540,6 +546,39 @@ export function identifyOpportunityMarketInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([246, 212, 81, 180, 65, 2, 126, 125])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.UnstakeEarly;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([106, 110, 72, 0, 25, 127, 188, 205])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.UnstakeEarlyCallback;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([40, 120, 116, 55, 117, 67, 141, 9])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.UnstakeEarlyCompDef;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([228, 211, 60, 53, 115, 153, 149, 194])
       ),
       0
@@ -639,6 +678,15 @@ export type ParsedOpportunityMarketInstruction<
   | ({
       instructionType: OpportunityMarketInstruction.TransferCentralStateAuthority;
     } & ParsedTransferCentralStateAuthorityInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.UnstakeEarly;
+    } & ParsedUnstakeEarlyInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.UnstakeEarlyCallback;
+    } & ParsedUnstakeEarlyCallbackInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.UnstakeEarlyCompDef;
+    } & ParsedUnstakeEarlyCompDefInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.UpdateCentralState;
     } & ParsedUpdateCentralStateInstruction<TProgram>);

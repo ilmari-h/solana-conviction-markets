@@ -175,4 +175,27 @@ mod circuits {
             user_vta_ctx.owner.from_arcis(user_balance),
         )
     }
+
+    // Unstake early: refund VTA and return shares to market
+    #[instruction]
+    pub fn unstake_early(
+        share_account_ctx: Enc<Shared, SharePurchase>,
+        user_vta_ctx: Enc<Shared, VoteTokenBalance>,
+        market_shares_ctx: Enc<Mxe, MarketShareState>,
+    ) -> (
+        Enc<Shared, VoteTokenBalance>,     // refunded VTA balance
+        Enc<Mxe, MarketShareState>,        // updated market available shares
+    ) {
+        let share_data = share_account_ctx.to_arcis();
+        let mut user_balance = user_vta_ctx.to_arcis();
+        let mut market_shares = market_shares_ctx.to_arcis();
+
+        user_balance.amount = user_balance.amount + share_data.amount;
+        market_shares.shares = market_shares.shares + share_data.amount;
+
+        (
+            user_vta_ctx.owner.from_arcis(user_balance),
+            market_shares_ctx.owner.from_arcis(market_shares),
+        )
+    }
 }

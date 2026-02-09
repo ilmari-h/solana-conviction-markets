@@ -5,7 +5,8 @@ import {
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   sendAndConfirmTransactionFactory,
-  some
+  some,
+  isSome,
 } from "@solana/kit";
 import {
   getTransferInstruction,
@@ -383,12 +384,13 @@ describe("OpportunityMarket", () => {
     const updatedMarket = await fetchOpportunityMarket(rpc, env.market.address);
     const marketCloseTimestamp = BigInt(updatedMarket.data.openTimestamp.__option === 'Some' ? updatedMarket.data.openTimestamp.value : 0n) + updatedMarket.data.timeToStake;
 
-    // Fetch boughtAtTimestamp for each winner before share accounts are closed
     const winnerTimestamps = await Promise.all(
       winners.map(async (participant) => {
         const [shareAccountAddress] = await getShareAccountAddress(participant.keypair.address, env.market.address);
         const shareAccount = await fetchShareAccount(rpc, shareAccountAddress);
-        return shareAccount.data.boughtAtTimestamp;
+        const ts = shareAccount.data.stakedAtTimestamp;
+        if (!isSome(ts)) throw new Error('stakedAtTimestamp is None');
+        return ts.value;
       })
     );
 

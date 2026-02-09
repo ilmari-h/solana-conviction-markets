@@ -2726,6 +2726,265 @@
       ]
     },
     {
+      "name": "unstake_early",
+      "discriminator": [
+        246,
+        212,
+        81,
+        180,
+        65,
+        2,
+        126,
+        125
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "market"
+        },
+        {
+          "name": "user_vta"
+        },
+        {
+          "name": "share_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sign_pda_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  65,
+                  114,
+                  99,
+                  105,
+                  117,
+                  109,
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mxe_account"
+        },
+        {
+          "name": "mempool_account",
+          "writable": true
+        },
+        {
+          "name": "executing_pool",
+          "writable": true
+        },
+        {
+          "name": "computation_account",
+          "writable": true
+        },
+        {
+          "name": "comp_def_account"
+        },
+        {
+          "name": "cluster_account",
+          "writable": true
+        },
+        {
+          "name": "pool_account",
+          "writable": true,
+          "address": "G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC"
+        },
+        {
+          "name": "clock_account",
+          "writable": true,
+          "address": "7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "arcium_program",
+          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
+        }
+      ],
+      "args": [
+        {
+          "name": "computation_offset",
+          "type": "u64"
+        },
+        {
+          "name": "user_pubkey",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "unstake_early_callback",
+      "discriminator": [
+        106,
+        110,
+        72,
+        0,
+        25,
+        127,
+        188,
+        205
+      ],
+      "accounts": [
+        {
+          "name": "arcium_program",
+          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
+        },
+        {
+          "name": "comp_def_account"
+        },
+        {
+          "name": "mxe_account"
+        },
+        {
+          "name": "computation_account"
+        },
+        {
+          "name": "cluster_account"
+        },
+        {
+          "name": "instructions_sysvar",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "user_vta",
+          "writable": true
+        },
+        {
+          "name": "market",
+          "writable": true
+        },
+        {
+          "name": "share_account",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "output",
+          "type": {
+            "defined": {
+              "name": "SignedComputationOutputs",
+              "generics": [
+                {
+                  "kind": "type",
+                  "type": {
+                    "defined": {
+                      "name": "UnstakeEarlyOutput"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unstake_early_comp_def",
+      "discriminator": [
+        40,
+        120,
+        116,
+        55,
+        117,
+        67,
+        141,
+        9
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mxe_account",
+          "writable": true
+        },
+        {
+          "name": "comp_def_account",
+          "writable": true
+        },
+        {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
+        },
+        {
+          "name": "arcium_program",
+          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "update_central_state",
       "discriminator": [
         228,
@@ -2967,6 +3226,19 @@
       ]
     },
     {
+      "name": "SharesUnstakedEvent",
+      "discriminator": [
+        35,
+        192,
+        145,
+        204,
+        234,
+        75,
+        241,
+        235
+      ]
+    },
+    {
       "name": "VoteTokenPurchasedEvent",
       "discriminator": [
         37,
@@ -3075,6 +3347,16 @@
       "code": 6018,
       "name": "InvalidMint",
       "msg": "Token mint does not match market mint"
+    },
+    {
+      "code": 6019,
+      "name": "AlreadyUnstaked",
+      "msg": "Shares already unstaked"
+    },
+    {
+      "code": 6020,
+      "name": "AlreadyPurchased",
+      "msg": "Shares already purchased for this share account"
     }
   ],
   "types": [
@@ -4337,7 +4619,15 @@
           },
           {
             "name": "staked_at_timestamp",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "unstaked_at_timestamp",
+            "type": {
+              "option": "u64"
+            }
           },
           {
             "name": "revealed_amount",
@@ -4454,6 +4744,22 @@
       }
     },
     {
+      "name": "SharesUnstakedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
       "name": "SignedComputationOutputs",
       "generics": [
         {
@@ -4500,6 +4806,62 @@
           {
             "name": "timestamp",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakeEarlyOutput",
+      "docs": [
+        "The output of the callback instruction. Provided as a struct with ordered fields",
+        "as anchor does not support tuples and tuple structs yet."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field_0",
+            "type": {
+              "defined": {
+                "name": "UnstakeEarlyOutputStruct0"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakeEarlyOutputStruct0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field_0",
+            "type": {
+              "defined": {
+                "name": "SharedEncryptedStruct",
+                "generics": [
+                  {
+                    "kind": "const",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type": {
+              "defined": {
+                "name": "MXEEncryptedStruct",
+                "generics": [
+                  {
+                    "kind": "const",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
           }
         ]
       }

@@ -40,4 +40,8 @@ pub enum ErrorCode {
     RevealPeriodEnded,
     #[msg("Token mint does not match market mint")]
     InvalidMint,
+    #[msg("Shares already unstaked")]
+    AlreadyUnstaked,
+    #[msg("Shares already purchased for this share account")]
+    AlreadyPurchased,
 }

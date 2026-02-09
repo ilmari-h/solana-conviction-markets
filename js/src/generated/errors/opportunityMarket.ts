@@ -52,10 +52,16 @@ export const OPPORTUNITY_MARKET_ERROR__OVERFLOW = 0x1780; // 6016
 export const OPPORTUNITY_MARKET_ERROR__REVEAL_PERIOD_ENDED = 0x1781; // 6017
 /** InvalidMint: Token mint does not match market mint */
 export const OPPORTUNITY_MARKET_ERROR__INVALID_MINT = 0x1782; // 6018
+/** AlreadyUnstaked: Shares already unstaked */
+export const OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED = 0x1783; // 6019
+/** AlreadyPurchased: Shares already purchased for this share account */
+export const OPPORTUNITY_MARKET_ERROR__ALREADY_PURCHASED = 0x1784; // 6020
 
 export type OpportunityMarketError =
   | typeof OPPORTUNITY_MARKET_ERROR__ABORTED_COMPUTATION
+  | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_PURCHASED
   | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_REVEALED
+  | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED
   | typeof OPPORTUNITY_MARKET_ERROR__CLUSTER_NOT_SET
   | typeof OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_BALANCE
   | typeof OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_REWARD_FUNDING
@@ -80,7 +86,9 @@ let opportunityMarketErrorMessages:
 if (process.env.NODE_ENV !== 'production') {
   opportunityMarketErrorMessages = {
     [OPPORTUNITY_MARKET_ERROR__ABORTED_COMPUTATION]: `Computation aborted`,
+    [OPPORTUNITY_MARKET_ERROR__ALREADY_PURCHASED]: `Shares already purchased for this share account`,
     [OPPORTUNITY_MARKET_ERROR__ALREADY_REVEALED]: `Shares already revealed`,
+    [OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED]: `Shares already unstaked`,
     [OPPORTUNITY_MARKET_ERROR__CLUSTER_NOT_SET]: `Cluster not set`,
     [OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_BALANCE]: `Insufficient balance`,
     [OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_REWARD_FUNDING]: `Insufficient reward funding`,

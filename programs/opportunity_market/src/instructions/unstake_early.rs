@@ -3,17 +3,16 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::SharesPurchasedEvent;
+use crate::events::SharesUnstakedEvent;
+use crate::instructions::buy_market_shares::SHARE_ACCOUNT_SEED;
 use crate::state::{OpportunityMarket, ShareAccount, VoteTokenAccount};
-use crate::COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES;
-use crate::{ID, ID_CONST, ArciumSignerAccount};
+use crate::COMP_DEF_OFFSET_UNSTAKE_EARLY;
+use crate::{ArciumSignerAccount, ID, ID_CONST};
 
-pub const SHARE_ACCOUNT_SEED: &[u8] = b"share_account";
-
-#[queue_computation_accounts("buy_opportunity_market_shares", signer)]
+#[queue_computation_accounts("unstake_early", signer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
-pub struct BuyMarketShares<'info> {
+pub struct UnstakeEarly<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
@@ -28,12 +27,10 @@ pub struct BuyMarketShares<'info> {
     )]
     pub user_vta: Box<Account<'info, VoteTokenAccount>>,
 
-    // Boxed due to heap overflow
     #[account(
         mut,
         seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref()],
-        bump,
-        constraint = share_account.staked_at_timestamp.is_none() @ ErrorCode::AlreadyPurchased,
+        bump = share_account.bump,
         constraint = share_account.unstaked_at_timestamp.is_none() @ ErrorCode::AlreadyUnstaked,
     )]
     pub share_account: Box<Account<'info, ShareAccount>>,
@@ -47,9 +44,9 @@ pub struct BuyMarketShares<'info> {
         bump,
         address = derive_sign_pda!(),
     )]
-    pub sign_pda_account: Account<'info, ArciumSignerAccount>,
+    pub sign_pda_account: Box<Account<'info, ArciumSignerAccount>>,
     #[account(address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
     #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     /// CHECK: mempool_account
     pub mempool_account: UncheckedAccount<'info>,
@@ -59,7 +56,7 @@ pub struct BuyMarketShares<'info> {
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
     /// CHECK: computation_account
     pub computation_account: UncheckedAccount<'info>,
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_UNSTAKE_EARLY))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
     #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
@@ -71,20 +68,11 @@ pub struct BuyMarketShares<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
-pub fn buy_market_shares(
-    ctx: Context<BuyMarketShares>,
+pub fn unstake_early(
+    ctx: Context<UnstakeEarly>,
     computation_offset: u64,
-    amount_ciphertext: [u8; 32],
-    selected_option_ciphertext: [u8; 32],
-
     user_pubkey: [u8; 32],
-    input_nonce: u128,
-
-    // Optional voluntary disclosure - to opt out, pass user's own pubkey or of deleted keypair.
-    authorized_reader_pubkey: [u8; 32],
-    authorized_reader_nonce: u128,
 ) -> Result<()> {
-
     require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_vta.token_mint), ErrorCode::InvalidMint);
 
     // Enforce staking period is active
@@ -99,8 +87,8 @@ pub fn buy_market_shares(
         ErrorCode::StakingNotActive
     );
 
-    // Capture timestamp when the buy is queued, not when callback runs
-    ctx.accounts.share_account.staked_at_timestamp = Some(current_timestamp);
+    let share_account_key = ctx.accounts.share_account.key();
+    let share_account_nonce = ctx.accounts.share_account.state_nonce;
 
     let user_vta_key = ctx.accounts.user_vta.key();
     let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
@@ -110,17 +98,12 @@ pub fn buy_market_shares(
 
     // Build args for encrypted computation
     let args = ArgBuilder::new()
-        // User's trade input (Enc<Shared, BuySharesInput>)
+        // Share account encrypted state (Enc<Shared, SharePurchase>)
         .x25519_pubkey(user_pubkey)
-        .plaintext_u128(input_nonce)
-        .encrypted_u64(amount_ciphertext)
-        .encrypted_u16(selected_option_ciphertext)
+        .plaintext_u128(share_account_nonce)
+        .account(share_account_key, 8, 32 * 2)
 
-        // Authorized reader context (Shared)
-        .x25519_pubkey(authorized_reader_pubkey)
-        .plaintext_u128(authorized_reader_nonce)
-
-        // User's VTA (Enc<Shared, VoteTokenBalance>)
+        // User VTA encrypted state (Enc<Shared, VoteTokenBalance>)
         .x25519_pubkey(user_pubkey)
         .plaintext_u128(user_vta_nonce)
         .account(user_vta_key, 8, 32 * 1)
@@ -128,10 +111,6 @@ pub fn buy_market_shares(
         // Available market shares (Enc<Mxe, MarketShareState>)
         .plaintext_u128(market_state_nonce)
         .account(market_key, 8, 32 * 1)
-
-        // Share account context (Mxe for output encryption)
-        .x25519_pubkey(user_pubkey)
-        .plaintext_u128(ctx.accounts.share_account.state_nonce)
         .build();
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
@@ -141,7 +120,7 @@ pub fn buy_market_shares(
         ctx.accounts,
         computation_offset,
         args,
-        vec![BuyOpportunityMarketSharesCallback::callback_ix(
+        vec![UnstakeEarlyCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,
             &[
@@ -154,7 +133,7 @@ pub fn buy_market_shares(
                     is_writable: true,
                 },
                 CallbackAccount {
-                    pubkey: ctx.accounts.share_account.key(),
+                    pubkey: share_account_key,
                     is_writable: true,
                 },
             ],
@@ -166,11 +145,11 @@ pub fn buy_market_shares(
     Ok(())
 }
 
-#[callback_accounts("buy_opportunity_market_shares")]
+#[callback_accounts("unstake_early")]
 #[derive(Accounts)]
-pub struct BuyOpportunityMarketSharesCallback<'info> {
+pub struct UnstakeEarlyCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_UNSTAKE_EARLY))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
@@ -184,55 +163,43 @@ pub struct BuyOpportunityMarketSharesCallback<'info> {
 
     // Callback accounts
     #[account(mut)]
-    pub user_vote_token_account: Account<'info, VoteTokenAccount>,
-
+    pub user_vta: Account<'info, VoteTokenAccount>,
     #[account(mut)]
     pub market: Account<'info, OpportunityMarket>,
-
     #[account(mut)]
     pub share_account: Account<'info, ShareAccount>,
 }
 
-pub fn buy_opportunity_market_shares_callback(
-    ctx: Context<BuyOpportunityMarketSharesCallback>,
-    output: SignedComputationOutputs<BuyOpportunityMarketSharesOutput>,
+pub fn unstake_early_callback(
+    ctx: Context<UnstakeEarlyCallback>,
+    output: SignedComputationOutputs<UnstakeEarlyOutput>,
 ) -> Result<()> {
-
     let res = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
-        Ok(BuyOpportunityMarketSharesOutput { field_0 }) => field_0,
+        Ok(UnstakeEarlyOutput { field_0 }) => field_0,
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
-    let has_error = res.field_0;
-    let new_user_balance = res.field_1;
-    let new_market_shares = res.field_2;
-    let bought_shares_mxe = res.field_3;
-    let bought_shares_shared = res.field_4;
 
-    if has_error {
-        return Err(ErrorCode::SharePurchaseFailed.into());
-    }
+    let new_user_balance = res.field_0;
+    let new_market_shares = res.field_1;
 
-    // Update user balance to <previous balance> - <bought shares>
-    ctx.accounts.user_vote_token_account.state_nonce = new_user_balance.nonce;
-    ctx.accounts.user_vote_token_account.encrypted_state = new_user_balance.ciphertexts;
+    // Mark share account as unstaked
+    let clock = Clock::get()?;
+    ctx.accounts.share_account.unstaked_at_timestamp = Some(clock.unix_timestamp as u64);
 
-    // Update market shares, decrement user shares.
+    // Update user VTA with refunded balance
+    ctx.accounts.user_vta.state_nonce = new_user_balance.nonce;
+    ctx.accounts.user_vta.encrypted_state = new_user_balance.ciphertexts;
+
+    // Update market with returned shares
     ctx.accounts.market.state_nonce = new_market_shares.nonce;
     ctx.accounts.market.encrypted_available_shares = new_market_shares.ciphertexts;
 
-    // Update share account to the value of bought shares.
-    ctx.accounts.share_account.state_nonce = bought_shares_mxe.nonce;
-    ctx.accounts.share_account.encrypted_state = bought_shares_mxe.ciphertexts;
-    ctx.accounts.share_account.state_nonce_disclosure = bought_shares_shared.nonce;
-    ctx.accounts.share_account.encrypted_state_disclosure = bought_shares_shared.ciphertexts;
-
-    emit!(SharesPurchasedEvent{
-        buyer: ctx.accounts.user_vote_token_account.owner,
-        encrypted_disclosed_amount: bought_shares_shared.ciphertexts[0],
-        nonce: bought_shares_shared.nonce
+    emit!(SharesUnstakedEvent {
+        buyer: ctx.accounts.user_vta.owner,
+        market: ctx.accounts.market.key(),
     });
 
     Ok(())
