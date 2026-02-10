@@ -649,7 +649,7 @@ describe("OpportunityMarket", () => {
     // Total market loss should equal the full reward amount, tolerance of 1 token for rounding error.
     const marketLoss = marketBalanceBefore - marketBalanceAfter;
     console.log("MARKET BALANCES", marketBalanceBefore, marketBalanceAfter, marketLoss)
-    expect(marketLoss >= marketFundingAmount - 1n && marketLoss <= marketFundingAmount + 1n).to.be.true;
+    expect(marketLoss >= marketFundingAmount - 2n && marketLoss <= marketFundingAmount).to.be.true;
 
     // Verify proportional reward distribution among participant winners:
     // gainA / gainB ~= scoreA / scoreB (where score = shares * timeInMarket)
@@ -673,7 +673,7 @@ describe("OpportunityMarket", () => {
 
     // Verify total gains (participants + creator) equal the reward amount
     const totalGains = gains.reduce((sum, { gain }) => sum + gain, 0n) + creatorGain;
-    expect(totalGains >= marketFundingAmount - 1n).to.be.true; // Allow for rounding
-    expect(totalGains <= marketFundingAmount + 1n).to.be.true;
+    expect(totalGains >= marketFundingAmount - 2n).to.be.true; // Allow for floor() rounding with 3 winners
+    expect(totalGains <= marketFundingAmount).to.be.true;
   });
 });
