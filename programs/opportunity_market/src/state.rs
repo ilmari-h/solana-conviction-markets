@@ -9,7 +9,10 @@ pub struct CentralState {
     pub earliness_cutoff_seconds: u64,
 
     // Allowed to update
-    pub authority: Pubkey
+    pub authority: Pubkey,
+
+    // Minimum deposit required when creating a market option
+    pub min_option_deposit: u64,
 }
 
 #[account]
@@ -50,7 +53,6 @@ pub struct OpportunityMarket {
 
     // Score component configuration
     pub earliness_cutoff_seconds: u64,
-    pub time_in_market_saturation: u64
 }
 
 #[account]
@@ -62,6 +64,8 @@ pub struct VoteTokenAccount {
     pub state_nonce: u128,
     pub token_mint: Pubkey,
     pub pending_deposit: u64,  // tracks unconfirmed deposits for safety
+    pub locked_option: Option<u16>,    // None = unlocked, Some(idx) = locked to specific option
+    pub locked_market: Option<Pubkey>, // None = unlocked, Some(market) = locked to specific market
 }
 
 #[account]

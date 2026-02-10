@@ -20,6 +20,7 @@ pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 pub const COMP_DEF_OFFSET_UNSTAKE_EARLY: u32 = comp_def_offset("unstake_early");
+pub const COMP_DEF_OFFSET_LOCK_OPTION_DEPOSIT: u32 = comp_def_offset("lock_option_deposit");
 
 declare_id!("73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i");
 
@@ -51,11 +52,16 @@ pub mod opportunity_market {
         instructions::unstake_early_comp_def(ctx)
     }
 
+    pub fn lock_option_deposit_comp_def(ctx: Context<LockOptionDepositCompDef>) -> Result<()> {
+        instructions::lock_option_deposit_comp_def(ctx)
+    }
+
     pub fn init_central_state(
         ctx: Context<InitCentralState>,
         earliness_cutoff_seconds: u64,
+        min_option_deposit: u64,
     ) -> Result<()> {
-        instructions::init_central_state(ctx, earliness_cutoff_seconds)
+        instructions::init_central_state(ctx, earliness_cutoff_seconds, min_option_deposit)
     }
 
     pub fn transfer_central_state_authority(
@@ -68,8 +74,9 @@ pub mod opportunity_market {
     pub fn update_central_state(
         ctx: Context<UpdateCentralState>,
         earliness_cutoff_seconds: u64,
+        min_option_deposit: u64,
     ) -> Result<()> {
-        instructions::update_central_state(ctx, earliness_cutoff_seconds)
+        instructions::update_central_state(ctx, earliness_cutoff_seconds, min_option_deposit)
     }
 
     pub fn create_market(
@@ -106,10 +113,22 @@ pub mod opportunity_market {
 
     pub fn add_market_option(
         ctx: Context<AddMarketOption>,
+        computation_offset: u64,
         option_index: u16,
         name: String,
+        amount: u64,
+        user_pubkey: [u8; 32],
+        locked_vta_nonce: u128,
     ) -> Result<()> {
-        instructions::add_market_option(ctx, option_index, name)
+        instructions::add_market_option(ctx, computation_offset, option_index, name, amount, user_pubkey, locked_vta_nonce)
+    }
+
+    #[arcium_callback(encrypted_ix = "lock_option_deposit")]
+    pub fn lock_option_deposit_callback(
+        ctx: Context<LockOptionDepositCallback>,
+        output: SignedComputationOutputs<LockOptionDepositOutput>,
+    ) -> Result<()> {
+        instructions::add_market_option_callback(ctx, output)
     }
 
     pub fn open_market(ctx: Context<OpenMarket>, open_timestamp: u64) -> Result<()> {

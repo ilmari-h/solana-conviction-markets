@@ -19,8 +19,10 @@ pub struct UpdateCentralState<'info> {
 pub fn update_central_state(
     ctx: Context<UpdateCentralState>,
     earliness_cutoff_seconds: u64,
+    min_option_deposit: u64,
 ) -> Result<()> {
     let central_state = &mut ctx.accounts.central_state;
     central_state.earliness_cutoff_seconds = earliness_cutoff_seconds;
+    central_state.min_option_deposit = min_option_deposit;
     Ok(())
 }

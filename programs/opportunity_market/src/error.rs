@@ -44,4 +44,10 @@ pub enum ErrorCode {
     AlreadyUnstaked,
     #[msg("Shares already purchased for this share account")]
     AlreadyPurchased,
+    #[msg("Deposit amount below minimum required for option creation")]
+    DepositBelowMinimum,
+    #[msg("Locked VTA used on wrong market")]
+    LockedVtaMarketMismatch,
+    #[msg("Lock deposit failed: insufficient source balance")]
+    LockDepositFailed,
 }

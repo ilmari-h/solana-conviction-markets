@@ -25,10 +25,12 @@ pub struct Stake<'info> {
 
     #[account(
         constraint = user_vta.owner == signer.key() @ ErrorCode::Unauthorized,
+        constraint = user_vta.locked_market.is_none()
+            || user_vta.locked_market == Some(market.key())
+            @ ErrorCode::LockedVtaMarketMismatch,
     )]
     pub user_vta: Box<Account<'info, VoteTokenAccount>>,
 
-    // Boxed due to heap overflow
     #[account(
         mut,
         seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref()],
@@ -132,6 +134,9 @@ pub fn stake(
         // Share account context (Mxe for output encryption)
         .x25519_pubkey(user_pubkey)
         .plaintext_u128(ctx.accounts.share_account.state_nonce)
+
+        // Locked option constraint (0 = unlocked, >0 = must match selected option)
+        .plaintext_u64(ctx.accounts.user_vta.locked_option.map(|o| o as u64).unwrap_or(0))
         .build();
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;

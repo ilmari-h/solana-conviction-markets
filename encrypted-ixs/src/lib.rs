@@ -90,8 +90,29 @@ mod circuits {
         (insufficient_balance.reveal(), sold.reveal(), balance_ctx.owner.from_arcis(balance))
     }
 
+    // Lock option deposit: transfer from source VTA to locked VTA
+    // Returns: (error, new_source_balance, new_dest_balance)
+    #[instruction]
+    pub fn lock_option_deposit(
+        source_vta_ctx: Enc<Shared, VoteTokenBalance>,
+        amount: u64,
+        dest_ctx: Shared,
+    ) -> (bool, Enc<Shared, VoteTokenBalance>, Enc<Shared, VoteTokenBalance>) {
+        let mut source = source_vta_ctx.to_arcis();
+        let insufficient = amount > source.amount;
+
+        source.amount = if insufficient { source.amount } else { source.amount - amount };
+        let dest = VoteTokenBalance { amount: if insufficient { 0 } else { amount } };
+
+        (
+            insufficient.reveal(),
+            source_vta_ctx.owner.from_arcis(source),
+            dest_ctx.from_arcis(dest),
+        )
+    }
+
     // Buy shares: deduct from user's vote token balance and market's available shares
-    // TODO: enforce that selected option > 0 <= max_options
+    // locked_option: if > 0, enforces that selected_option matches (for locked VTAs)
     // Returns: (error, new_user_balance, new_market_shares, bought_shares_mxe, bought_shares_shared)
     #[instruction]
     pub fn buy_opportunity_market_shares(
@@ -100,6 +121,7 @@ mod circuits {
         user_vta_ctx: Enc<Shared, VoteTokenBalance>,
         market_shares_ctx: Enc<Mxe, MarketShareState>,
         share_account_ctx: Shared,
+        locked_option: u64,
     ) -> (
         bool,
         Enc<Shared, VoteTokenBalance>,
@@ -119,8 +141,15 @@ mod circuits {
         // Check if market has sufficient shares available
         let insufficient_market_shares = amount > market_shares.shares;
 
-        // Error if either check fails
-        let error = insufficient_user_balance || insufficient_market_shares;
+        // If locked_option > 0, enforce that selected option matches
+        let locked_mismatch = if locked_option > 0 {
+            (input.selected_option as u64) != locked_option
+        } else {
+            false
+        };
+
+        // Error if any check fails
+        let error = insufficient_user_balance || insufficient_market_shares || locked_mismatch;
 
         // Calculate bought shares (0 on error)
         let bought_amount = if error { 0 } else { amount };
