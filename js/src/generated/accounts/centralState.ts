@@ -54,12 +54,14 @@ export type CentralState = {
   bump: number;
   earlinessCutoffSeconds: bigint;
   authority: Address;
+  minOptionDeposit: bigint;
 };
 
 export type CentralStateArgs = {
   bump: number;
   earlinessCutoffSeconds: number | bigint;
   authority: Address;
+  minOptionDeposit: number | bigint;
 };
 
 export function getCentralStateEncoder(): FixedSizeEncoder<CentralStateArgs> {
@@ -69,6 +71,7 @@ export function getCentralStateEncoder(): FixedSizeEncoder<CentralStateArgs> {
       ['bump', getU8Encoder()],
       ['earlinessCutoffSeconds', getU64Encoder()],
       ['authority', getAddressEncoder()],
+      ['minOptionDeposit', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: CENTRAL_STATE_DISCRIMINATOR })
   );
@@ -80,6 +83,7 @@ export function getCentralStateDecoder(): FixedSizeDecoder<CentralState> {
     ['bump', getU8Decoder()],
     ['earlinessCutoffSeconds', getU64Decoder()],
     ['authority', getAddressDecoder()],
+    ['minOptionDeposit', getU64Decoder()],
   ]);
 }
 

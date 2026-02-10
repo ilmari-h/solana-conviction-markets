@@ -26,6 +26,8 @@ export * from './initShareAccount';
 export * from './initVoteTokenAccount';
 export * from './initVoteTokenAccountCallback';
 export * from './initVoteTokenAccountCompDef';
+export * from './lockOptionDepositCallback';
+export * from './lockOptionDepositCompDef';
 export * from './mintVoteTokens';
 export * from './openMarket';
 export * from './revealShares';

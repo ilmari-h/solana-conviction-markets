@@ -46,8 +46,6 @@ pub enum ErrorCode {
     AlreadyPurchased,
     #[msg("Deposit amount below minimum required for option creation")]
     DepositBelowMinimum,
-    #[msg("Locked VTA used on wrong market")]
-    LockedVtaMarketMismatch,
-    #[msg("Lock deposit failed: insufficient source balance")]
-    LockDepositFailed,
+    #[msg("Add option stake failed: insufficient balance, shares, or below minimum deposit")]
+    AddOptionStakeFailed,
 }

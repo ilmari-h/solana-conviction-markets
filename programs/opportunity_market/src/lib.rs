@@ -20,7 +20,7 @@ pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("
 pub const COMP_DEF_OFFSET_INIT_MARKET_SHARES: u32 = comp_def_offset("init_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 pub const COMP_DEF_OFFSET_UNSTAKE_EARLY: u32 = comp_def_offset("unstake_early");
-pub const COMP_DEF_OFFSET_LOCK_OPTION_DEPOSIT: u32 = comp_def_offset("lock_option_deposit");
+pub const COMP_DEF_OFFSET_ADD_OPTION_STAKE: u32 = comp_def_offset("add_option_stake");
 
 declare_id!("73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i");
 
@@ -52,8 +52,8 @@ pub mod opportunity_market {
         instructions::unstake_early_comp_def(ctx)
     }
 
-    pub fn lock_option_deposit_comp_def(ctx: Context<LockOptionDepositCompDef>) -> Result<()> {
-        instructions::lock_option_deposit_comp_def(ctx)
+    pub fn add_option_stake_comp_def(ctx: Context<AddOptionStakeCompDef>) -> Result<()> {
+        instructions::add_option_stake_comp_def(ctx)
     }
 
     pub fn init_central_state(
@@ -116,17 +116,31 @@ pub mod opportunity_market {
         computation_offset: u64,
         option_index: u16,
         name: String,
-        amount: u64,
+        amount_ciphertext: [u8; 32],
         user_pubkey: [u8; 32],
-        locked_vta_nonce: u128,
+        input_nonce: u128,
+        authorized_reader_pubkey: [u8; 32],
+        authorized_reader_nonce: u128,
+        share_account_nonce: u128,
     ) -> Result<()> {
-        instructions::add_market_option(ctx, computation_offset, option_index, name, amount, user_pubkey, locked_vta_nonce)
+        instructions::add_market_option(
+            ctx,
+            computation_offset,
+            option_index,
+            name,
+            amount_ciphertext,
+            user_pubkey,
+            input_nonce,
+            authorized_reader_pubkey,
+            authorized_reader_nonce,
+            share_account_nonce,
+        )
     }
 
-    #[arcium_callback(encrypted_ix = "lock_option_deposit")]
-    pub fn lock_option_deposit_callback(
-        ctx: Context<LockOptionDepositCallback>,
-        output: SignedComputationOutputs<LockOptionDepositOutput>,
+    #[arcium_callback(encrypted_ix = "add_option_stake")]
+    pub fn add_option_stake_callback(
+        ctx: Context<AddOptionStakeCallback>,
+        output: SignedComputationOutputs<AddOptionStakeOutput>,
     ) -> Result<()> {
         instructions::add_market_option_callback(ctx, output)
     }
@@ -143,12 +157,12 @@ pub mod opportunity_market {
         instructions::extend_reveal_period(ctx, new_time_to_reveal)
     }
 
-    pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, option_index: u16) -> Result<()> {
-        instructions::increment_option_tally(ctx, option_index)
+    pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, option_index: u16, is_option_creator: bool) -> Result<()> {
+        instructions::increment_option_tally(ctx, option_index, is_option_creator)
     }
 
-    pub fn close_share_account(ctx: Context<CloseShareAccount>, option_index: u16) -> Result<()> {
-        instructions::close_share_account(ctx, option_index)
+    pub fn close_share_account(ctx: Context<CloseShareAccount>, option_index: u16, is_option_creator: bool) -> Result<()> {
+        instructions::close_share_account(ctx, option_index, is_option_creator)
     }
 
     pub fn claim_pending_deposit(ctx: Context<ClaimPendingDeposit>) -> Result<()> {
@@ -250,9 +264,10 @@ pub mod opportunity_market {
     pub fn reveal_shares(
         ctx: Context<RevealShares>,
         computation_offset: u64,
+        is_option_creator: bool,
         user_pubkey: [u8; 32],
     ) -> Result<()> {
-        instructions::reveal_shares(ctx, computation_offset, user_pubkey)
+        instructions::reveal_shares(ctx, computation_offset, is_option_creator, user_pubkey)
     }
 
     #[arcium_callback(encrypted_ix = "reveal_shares")]
@@ -266,9 +281,10 @@ pub mod opportunity_market {
     pub fn unstake_early(
         ctx: Context<UnstakeEarly>,
         computation_offset: u64,
+        is_option_creator: bool,
         user_pubkey: [u8; 32],
     ) -> Result<()> {
-        instructions::unstake_early(ctx, computation_offset, user_pubkey)
+        instructions::unstake_early(ctx, computation_offset, is_option_creator, user_pubkey)
     }
 
     #[arcium_callback(encrypted_ix = "unstake_early")]

@@ -32,7 +32,9 @@ import {
   fetchOpportunityMarketOption,
   getOpportunityMarketOptionAddress,
   awaitBatchComputationFinalization,
+  awaitComputationFinalization,
   getVoteTokenAccountAddress,
+  getLockedVoteTokenAccountAddress,
 } from "../js/src";
 import { createTestEnvironment } from "./utils/environment";
 import { initializeAllCompDefs } from "./utils/comp-defs";
@@ -170,7 +172,7 @@ describe("OpportunityMarket", () => {
     // Wait for all VTA computations to finalize in parallel
     await awaitBatchComputationFinalization(rpc, initVtaData.map(({offset}) => offset))
 
-    // Mint vote tokens for all participants + add market options in parallel
+    // Mint vote tokens for all participants
     const mintAmount = 100_000_000n;
     const mintData = await Promise.all(
       env.participants.map(async (participant, idx) => {
@@ -193,35 +195,124 @@ describe("OpportunityMarket", () => {
       })
     );
 
-    const addOptionAIx = await addMarketOption({
-      creator: env.market.creatorAccount.keypair,
-      market: env.market.address,
-      optionIndex: 1,
-      name: "Option A",
+    // Creator also needs a VTA to deposit from when adding options
+    const creatorAccount = env.market.creatorAccount;
+    const creatorX25519 = creatorAccount.x25519Keypair;
+    const creatorInitVtaOffset = randomComputationOffset();
+    const creatorInitVtaNonce = deserializeLE(randomBytes(16));
+    const creatorInitVtaIx = await initVoteTokenAccount(
+      {
+        signer: creatorAccount.keypair,
+        tokenMint: env.mint.address,
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        userPubkey: creatorX25519.publicKey,
+        nonce: creatorInitVtaNonce,
+      },
+      {
+        clusterOffset: arciumEnv.arciumClusterOffset,
+        computationOffset: creatorInitVtaOffset,
+      }
+    );
+    await sendTransaction(rpc, sendAndConfirmTransaction, creatorAccount.keypair, [creatorInitVtaIx], {
+      label: "Init creator VTA",
     });
+    await awaitComputationFinalization(rpc, creatorInitVtaOffset);
 
-    const addOptionBIx = await addMarketOption({
-      creator: env.market.creatorAccount.keypair,
-      market: env.market.address,
-      optionIndex: 2,
-      name: "Option B",
-    });
+    // Mint vote tokens for creator (enough for option deposits)
+    const creatorMintAmount = 100n;
+    const creatorMintOffset = randomComputationOffset();
+    const creatorMintIx = await mintVoteTokens(
+      {
+        signer: creatorAccount.keypair,
+        tokenMint: env.mint.address,
+        signerTokenAccount: creatorAccount.tokenAccount,
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        userPubkey: creatorX25519.publicKey,
+        amount: creatorMintAmount,
+      },
+      {
+        clusterOffset: arciumEnv.arciumClusterOffset,
+        computationOffset: creatorMintOffset,
+      }
+    );
 
     for(const {participant, ix, idx} of mintData) {
       await sendTransaction(rpc, sendAndConfirmTransaction, participant.keypair, [ix], {
         label: `Mint vote tokens ${idx}`
       })
     }
+    await sendTransaction(rpc, sendAndConfirmTransaction, creatorAccount.keypair, [creatorMintIx], {
+      label: "Mint creator vote tokens",
+    });
 
-    // Options must be crearted in sequence
-    await sendTransaction(rpc, sendAndConfirmTransaction, env.market.creatorAccount.keypair, [addOptionAIx], {
+    await awaitBatchComputationFinalization(rpc, [...mintData.map(({ offset }) => offset), creatorMintOffset]);
+
+    // Add options (must be in sequence, each requires MPC deposit)
+    const [creatorVtaAddress] = await getVoteTokenAccountAddress(
+      env.mint.address,
+      creatorAccount.keypair.address,
+    );
+    const minDeposit = 1n;
+
+    // Option A
+    const optionAOffset = randomComputationOffset();
+    const [lockedVtaA] = await getLockedVoteTokenAccountAddress(
+      env.mint.address,
+      creatorAccount.keypair.address,
+      env.market.address,
+      1,
+    );
+    const addOptionAIx = await addMarketOption(
+      {
+        creator: creatorAccount.keypair,
+        market: env.market.address,
+        sourceVta: creatorVtaAddress,
+        lockedVta: lockedVtaA,
+        optionIndex: 1,
+        name: "Option A",
+        amount: minDeposit,
+        userPubkey: creatorX25519.publicKey,
+        lockedVtaNonce: deserializeLE(randomBytes(16)),
+      },
+      {
+        clusterOffset: arciumEnv.arciumClusterOffset,
+        computationOffset: optionAOffset,
+      }
+    );
+    await sendTransaction(rpc, sendAndConfirmTransaction, creatorAccount.keypair, [addOptionAIx], {
       label: "Add Option A",
-    })
-    await sendTransaction(rpc, sendAndConfirmTransaction, env.market.creatorAccount.keypair, [addOptionBIx], {
-      label: "Add Option B",
-    })
+    });
+    await awaitComputationFinalization(rpc, optionAOffset);
 
-    await awaitBatchComputationFinalization(rpc, mintData.map(({ offset }) => offset))
+    // Option B
+    const optionBOffset = randomComputationOffset();
+    const [lockedVtaB] = await getLockedVoteTokenAccountAddress(
+      env.mint.address,
+      creatorAccount.keypair.address,
+      env.market.address,
+      2,
+    );
+    const addOptionBIx = await addMarketOption(
+      {
+        creator: creatorAccount.keypair,
+        market: env.market.address,
+        sourceVta: creatorVtaAddress,
+        lockedVta: lockedVtaB,
+        optionIndex: 2,
+        name: "Option B",
+        amount: minDeposit,
+        userPubkey: creatorX25519.publicKey,
+        lockedVtaNonce: deserializeLE(randomBytes(16)),
+      },
+      {
+        clusterOffset: arciumEnv.arciumClusterOffset,
+        computationOffset: optionBOffset,
+      }
+    );
+    await sendTransaction(rpc, sendAndConfirmTransaction, creatorAccount.keypair, [addOptionBIx], {
+      label: "Add Option B",
+    });
+    await awaitComputationFinalization(rpc, optionBOffset);
 
     // Wait for market to be open
     await sleepUntilOnChainTimestamp(openTimestamp + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);

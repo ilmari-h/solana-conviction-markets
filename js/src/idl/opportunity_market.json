@@ -30,6 +30,31 @@
           "writable": true
         },
         {
+          "name": "central_state",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  101,
+                  110,
+                  116,
+                  114,
+                  97,
+                  108,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "option",
           "writable": true,
           "pda": {
@@ -57,11 +82,134 @@
           }
         },
         {
+          "name": "source_vta"
+        },
+        {
+          "name": "locked_vta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "OpportunityMarket"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "option_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sign_pda_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  65,
+                  114,
+                  99,
+                  105,
+                  117,
+                  109,
+                  83,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114,
+                  65,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mxe_account"
+        },
+        {
+          "name": "mempool_account",
+          "writable": true
+        },
+        {
+          "name": "executing_pool",
+          "writable": true
+        },
+        {
+          "name": "computation_account",
+          "writable": true
+        },
+        {
+          "name": "comp_def_account"
+        },
+        {
+          "name": "cluster_account",
+          "writable": true
+        },
+        {
+          "name": "pool_account",
+          "writable": true,
+          "address": "G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC"
+        },
+        {
+          "name": "clock_account",
+          "writable": true,
+          "address": "7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "arcium_program",
+          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
       ],
       "args": [
+        {
+          "name": "computation_offset",
+          "type": "u64"
+        },
         {
           "name": "option_index",
           "type": "u16"
@@ -69,6 +217,23 @@
         {
           "name": "name",
           "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "user_pubkey",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "locked_vta_nonce",
+          "type": "u128"
         }
       ]
     },
@@ -1382,6 +1547,10 @@
         {
           "name": "earliness_cutoff_seconds",
           "type": "u64"
+        },
+        {
+          "name": "min_option_deposit",
+          "type": "u64"
         }
       ]
     },
@@ -1846,6 +2015,114 @@
         96,
         65,
         172
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mxe_account",
+          "writable": true
+        },
+        {
+          "name": "comp_def_account",
+          "writable": true
+        },
+        {
+          "name": "address_lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lut_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
+        },
+        {
+          "name": "arcium_program",
+          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "lock_option_deposit_callback",
+      "discriminator": [
+        81,
+        125,
+        99,
+        113,
+        240,
+        213,
+        121,
+        26
+      ],
+      "accounts": [
+        {
+          "name": "arcium_program",
+          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
+        },
+        {
+          "name": "comp_def_account"
+        },
+        {
+          "name": "mxe_account"
+        },
+        {
+          "name": "computation_account"
+        },
+        {
+          "name": "cluster_account"
+        },
+        {
+          "name": "instructions_sysvar",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "source_vta",
+          "writable": true
+        },
+        {
+          "name": "locked_vta",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "output",
+          "type": {
+            "defined": {
+              "name": "SignedComputationOutputs",
+              "generics": [
+                {
+                  "kind": "type",
+                  "type": {
+                    "defined": {
+                      "name": "LockOptionDepositOutput"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "lock_option_deposit_comp_def",
+      "discriminator": [
+        73,
+        43,
+        158,
+        70,
+        153,
+        88,
+        112,
+        176
       ],
       "accounts": [
         {
@@ -3028,6 +3305,10 @@
         {
           "name": "earliness_cutoff_seconds",
           "type": "u64"
+        },
+        {
+          "name": "min_option_deposit",
+          "type": "u64"
         }
       ]
     }
@@ -3349,6 +3630,21 @@
       "code": 6020,
       "name": "AlreadyPurchased",
       "msg": "Shares already purchased for this share account"
+    },
+    {
+      "code": 6021,
+      "name": "DepositBelowMinimum",
+      "msg": "Deposit amount below minimum required for option creation"
+    },
+    {
+      "code": 6022,
+      "name": "LockedVtaMarketMismatch",
+      "msg": "Locked VTA used on wrong market"
+    },
+    {
+      "code": 6023,
+      "name": "LockDepositFailed",
+      "msg": "Lock deposit failed: insufficient source balance"
     }
   ],
   "types": [
@@ -3552,6 +3848,10 @@
           {
             "name": "authority",
             "type": "pubkey"
+          },
+          {
+            "name": "min_option_deposit",
+            "type": "u64"
           }
         ]
       }
@@ -3971,6 +4271,66 @@
       }
     },
     {
+      "name": "LockOptionDepositOutput",
+      "docs": [
+        "The output of the callback instruction. Provided as a struct with ordered fields",
+        "as anchor does not support tuples and tuple structs yet."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field_0",
+            "type": {
+              "defined": {
+                "name": "LockOptionDepositOutputStruct0"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockOptionDepositOutputStruct0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field_0",
+            "type": "bool"
+          },
+          {
+            "name": "field_1",
+            "type": {
+              "defined": {
+                "name": "SharedEncryptedStruct",
+                "generics": [
+                  {
+                    "kind": "const",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type": {
+              "defined": {
+                "name": "SharedEncryptedStruct",
+                "generics": [
+                  {
+                    "kind": "const",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "MXEAccount",
       "docs": [
         "A MPC Execution Environment."
@@ -4296,10 +4656,6 @@
           },
           {
             "name": "earliness_cutoff_seconds",
-            "type": "u64"
-          },
-          {
-            "name": "time_in_market_saturation",
             "type": "u64"
           }
         ]
@@ -4936,6 +5292,18 @@
           {
             "name": "pending_deposit",
             "type": "u64"
+          },
+          {
+            "name": "locked_option",
+            "type": {
+              "option": "u16"
+            }
+          },
+          {
+            "name": "locked_market",
+            "type": {
+              "option": "pubkey"
+            }
           }
         ]
       }

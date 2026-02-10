@@ -56,6 +56,12 @@ export const OPPORTUNITY_MARKET_ERROR__INVALID_MINT = 0x1782; // 6018
 export const OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED = 0x1783; // 6019
 /** AlreadyPurchased: Shares already purchased for this share account */
 export const OPPORTUNITY_MARKET_ERROR__ALREADY_PURCHASED = 0x1784; // 6020
+/** DepositBelowMinimum: Deposit amount below minimum required for option creation */
+export const OPPORTUNITY_MARKET_ERROR__DEPOSIT_BELOW_MINIMUM = 0x1785; // 6021
+/** LockedVtaMarketMismatch: Locked VTA used on wrong market */
+export const OPPORTUNITY_MARKET_ERROR__LOCKED_VTA_MARKET_MISMATCH = 0x1786; // 6022
+/** LockDepositFailed: Lock deposit failed: insufficient source balance */
+export const OPPORTUNITY_MARKET_ERROR__LOCK_DEPOSIT_FAILED = 0x1787; // 6023
 
 export type OpportunityMarketError =
   | typeof OPPORTUNITY_MARKET_ERROR__ABORTED_COMPUTATION
@@ -63,11 +69,14 @@ export type OpportunityMarketError =
   | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_REVEALED
   | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED
   | typeof OPPORTUNITY_MARKET_ERROR__CLUSTER_NOT_SET
+  | typeof OPPORTUNITY_MARKET_ERROR__DEPOSIT_BELOW_MINIMUM
   | typeof OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_BALANCE
   | typeof OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_REWARD_FUNDING
   | typeof OPPORTUNITY_MARKET_ERROR__INVALID_MINT
   | typeof OPPORTUNITY_MARKET_ERROR__INVALID_OPTION_INDEX
   | typeof OPPORTUNITY_MARKET_ERROR__INVALID_TIMESTAMP
+  | typeof OPPORTUNITY_MARKET_ERROR__LOCK_DEPOSIT_FAILED
+  | typeof OPPORTUNITY_MARKET_ERROR__LOCKED_VTA_MARKET_MISMATCH
   | typeof OPPORTUNITY_MARKET_ERROR__MARKET_ALREADY_OPEN
   | typeof OPPORTUNITY_MARKET_ERROR__MARKET_NOT_OPEN
   | typeof OPPORTUNITY_MARKET_ERROR__MARKET_NOT_RESOLVED
@@ -90,11 +99,14 @@ if (process.env.NODE_ENV !== 'production') {
     [OPPORTUNITY_MARKET_ERROR__ALREADY_REVEALED]: `Shares already revealed`,
     [OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED]: `Shares already unstaked`,
     [OPPORTUNITY_MARKET_ERROR__CLUSTER_NOT_SET]: `Cluster not set`,
+    [OPPORTUNITY_MARKET_ERROR__DEPOSIT_BELOW_MINIMUM]: `Deposit amount below minimum required for option creation`,
     [OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_BALANCE]: `Insufficient balance`,
     [OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_REWARD_FUNDING]: `Insufficient reward funding`,
     [OPPORTUNITY_MARKET_ERROR__INVALID_MINT]: `Token mint does not match market mint`,
     [OPPORTUNITY_MARKET_ERROR__INVALID_OPTION_INDEX]: `Invalid option index`,
     [OPPORTUNITY_MARKET_ERROR__INVALID_TIMESTAMP]: `Timestamp must be in the future`,
+    [OPPORTUNITY_MARKET_ERROR__LOCK_DEPOSIT_FAILED]: `Lock deposit failed: insufficient source balance`,
+    [OPPORTUNITY_MARKET_ERROR__LOCKED_VTA_MARKET_MISMATCH]: `Locked VTA used on wrong market`,
     [OPPORTUNITY_MARKET_ERROR__MARKET_ALREADY_OPEN]: `Market is already open`,
     [OPPORTUNITY_MARKET_ERROR__MARKET_NOT_OPEN]: `Market is not open`,
     [OPPORTUNITY_MARKET_ERROR__MARKET_NOT_RESOLVED]: `Staking period not over`,

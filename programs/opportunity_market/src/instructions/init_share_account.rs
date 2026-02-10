@@ -14,7 +14,7 @@ pub struct InitShareAccount<'info> {
         init,
         payer = signer,
         space = 8 + ShareAccount::INIT_SPACE,
-        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref(), &[0u8]],
         bump,
     )]
     pub share_account: Account<'info, ShareAccount>,

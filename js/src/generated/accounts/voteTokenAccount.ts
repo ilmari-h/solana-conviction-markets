@@ -21,10 +21,14 @@ import {
   getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU128Decoder,
   getU128Encoder,
+  getU16Decoder,
+  getU16Encoder,
   getU64Decoder,
   getU64Encoder,
   getU8Decoder,
@@ -32,14 +36,16 @@ import {
   transformEncoder,
   type Account,
   type Address,
+  type Codec,
+  type Decoder,
   type EncodedAccount,
+  type Encoder,
   type FetchAccountConfig,
   type FetchAccountsConfig,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type MaybeAccount,
   type MaybeEncodedAccount,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyUint8Array,
 } from '@solana/kit';
 
@@ -61,6 +67,8 @@ export type VoteTokenAccount = {
   stateNonce: bigint;
   tokenMint: Address;
   pendingDeposit: bigint;
+  lockedOption: Option<number>;
+  lockedMarket: Option<Address>;
 };
 
 export type VoteTokenAccountArgs = {
@@ -70,9 +78,11 @@ export type VoteTokenAccountArgs = {
   stateNonce: number | bigint;
   tokenMint: Address;
   pendingDeposit: number | bigint;
+  lockedOption: OptionOrNullable<number>;
+  lockedMarket: OptionOrNullable<Address>;
 };
 
-export function getVoteTokenAccountEncoder(): FixedSizeEncoder<VoteTokenAccountArgs> {
+export function getVoteTokenAccountEncoder(): Encoder<VoteTokenAccountArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
@@ -87,12 +97,14 @@ export function getVoteTokenAccountEncoder(): FixedSizeEncoder<VoteTokenAccountA
       ['stateNonce', getU128Encoder()],
       ['tokenMint', getAddressEncoder()],
       ['pendingDeposit', getU64Encoder()],
+      ['lockedOption', getOptionEncoder(getU16Encoder())],
+      ['lockedMarket', getOptionEncoder(getAddressEncoder())],
     ]),
     (value) => ({ ...value, discriminator: VOTE_TOKEN_ACCOUNT_DISCRIMINATOR })
   );
 }
 
-export function getVoteTokenAccountDecoder(): FixedSizeDecoder<VoteTokenAccount> {
+export function getVoteTokenAccountDecoder(): Decoder<VoteTokenAccount> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     [
@@ -106,10 +118,12 @@ export function getVoteTokenAccountDecoder(): FixedSizeDecoder<VoteTokenAccount>
     ['stateNonce', getU128Decoder()],
     ['tokenMint', getAddressDecoder()],
     ['pendingDeposit', getU64Decoder()],
+    ['lockedOption', getOptionDecoder(getU16Decoder())],
+    ['lockedMarket', getOptionDecoder(getAddressDecoder())],
   ]);
 }
 
-export function getVoteTokenAccountCodec(): FixedSizeCodec<
+export function getVoteTokenAccountCodec(): Codec<
   VoteTokenAccountArgs,
   VoteTokenAccount
 > {

@@ -68,10 +68,12 @@ export type UpdateCentralStateInstruction<
 export type UpdateCentralStateInstructionData = {
   discriminator: ReadonlyUint8Array;
   earlinessCutoffSeconds: bigint;
+  minOptionDeposit: bigint;
 };
 
 export type UpdateCentralStateInstructionDataArgs = {
   earlinessCutoffSeconds: number | bigint;
+  minOptionDeposit: number | bigint;
 };
 
 export function getUpdateCentralStateInstructionDataEncoder(): FixedSizeEncoder<UpdateCentralStateInstructionDataArgs> {
@@ -79,6 +81,7 @@ export function getUpdateCentralStateInstructionDataEncoder(): FixedSizeEncoder<
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['earlinessCutoffSeconds', getU64Encoder()],
+      ['minOptionDeposit', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: UPDATE_CENTRAL_STATE_DISCRIMINATOR })
   );
@@ -88,6 +91,7 @@ export function getUpdateCentralStateInstructionDataDecoder(): FixedSizeDecoder<
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['earlinessCutoffSeconds', getU64Decoder()],
+    ['minOptionDeposit', getU64Decoder()],
   ]);
 }
 
@@ -108,6 +112,7 @@ export type UpdateCentralStateAsyncInput<
   authority: TransactionSigner<TAccountAuthority>;
   centralState?: Address<TAccountCentralState>;
   earlinessCutoffSeconds: UpdateCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
+  minOptionDeposit: UpdateCentralStateInstructionDataArgs['minOptionDeposit'];
 };
 
 export async function getUpdateCentralStateInstructionAsync<
@@ -179,6 +184,7 @@ export type UpdateCentralStateInput<
   authority: TransactionSigner<TAccountAuthority>;
   centralState: Address<TAccountCentralState>;
   earlinessCutoffSeconds: UpdateCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
+  minOptionDeposit: UpdateCentralStateInstructionDataArgs['minOptionDeposit'];
 };
 
 export function getUpdateCentralStateInstruction<

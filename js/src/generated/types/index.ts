@@ -21,6 +21,8 @@ export * from './epoch';
 export * from './initMarketSharesOutput';
 export * from './initVoteTokenAccountOutput';
 export * from './localCircuitSource';
+export * from './lockOptionDepositOutput';
+export * from './lockOptionDepositOutputStruct0';
 export * from './marketCreatedEvent';
 export * from './mxeStatus';
 export * from './nodeMetadata';

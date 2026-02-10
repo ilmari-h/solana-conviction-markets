@@ -8,7 +8,7 @@ use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::state::{OpportunityMarket, OpportunityMarketOption, ShareAccount};
 
 #[derive(Accounts)]
-#[instruction(option_index: u16)]
+#[instruction(option_index: u16, is_option_creator: bool)]
 pub struct CloseShareAccount<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
@@ -18,7 +18,7 @@ pub struct CloseShareAccount<'info> {
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref(), &[is_option_creator as u8]],
         bump = share_account.bump,
         close = owner,
     )]
@@ -55,7 +55,7 @@ pub struct CloseShareAccount<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn close_share_account(ctx: Context<CloseShareAccount>, option_index: u16) -> Result<()> {
+pub fn close_share_account(ctx: Context<CloseShareAccount>, option_index: u16, _is_option_creator: bool) -> Result<()> {
     let share_account = &ctx.accounts.share_account;
     let market = &ctx.accounts.market;
     let option = &ctx.accounts.option;

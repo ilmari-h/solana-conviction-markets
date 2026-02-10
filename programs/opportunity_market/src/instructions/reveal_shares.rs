@@ -11,7 +11,7 @@ use crate::{ArciumSignerAccount, ID, ID_CONST};
 
 #[queue_computation_accounts("reveal_shares", signer)]
 #[derive(Accounts)]
-#[instruction(computation_offset: u64)]
+#[instruction(computation_offset: u64, is_option_creator: bool)]
 pub struct RevealShares<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -23,7 +23,7 @@ pub struct RevealShares<'info> {
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref(), &[is_option_creator as u8]],
         bump = share_account.bump,
         constraint = share_account.revealed_amount.is_none() @ ErrorCode::AlreadyRevealed,
     )]
@@ -71,6 +71,7 @@ pub struct RevealShares<'info> {
 pub fn reveal_shares(
     ctx: Context<RevealShares>,
     computation_offset: u64,
+    _is_option_creator: bool,
     user_pubkey: [u8; 32],
 ) -> Result<()> {
 

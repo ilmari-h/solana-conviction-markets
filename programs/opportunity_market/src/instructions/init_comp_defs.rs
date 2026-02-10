@@ -240,9 +240,9 @@ pub fn reveal_shares_comp_def(ctx: Context<RevealSharesCompDef>) -> Result<()> {
     Ok(())
 }
 
-#[init_computation_definition_accounts("lock_option_deposit", payer)]
+#[init_computation_definition_accounts("add_option_stake", payer)]
 #[derive(Accounts)]
-pub struct LockOptionDepositCompDef<'info> {
+pub struct AddOptionStakeCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(mut, address = derive_mxe_pda!())]
@@ -260,14 +260,14 @@ pub struct LockOptionDepositCompDef<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn lock_option_deposit_comp_def(ctx: Context<LockOptionDepositCompDef>) -> Result<()> {
+pub fn add_option_stake_comp_def(ctx: Context<AddOptionStakeCompDef>) -> Result<()> {
     #[cfg(feature = "hosted-compdefs")]
     {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
-                source: "https://pub-f4c38b2a6f20431a8856eb3b17373497.r2.dev/lock_option_deposit.arcis".to_string(),
-                hash: circuit_hash!("lock_option_deposit"),
+                source: "https://pub-f4c38b2a6f20431a8856eb3b17373497.r2.dev/add_option_stake.arcis".to_string(),
+                hash: circuit_hash!("add_option_stake"),
             })),
             None,
         )?;

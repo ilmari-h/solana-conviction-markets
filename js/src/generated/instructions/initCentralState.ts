@@ -74,10 +74,12 @@ export type InitCentralStateInstruction<
 export type InitCentralStateInstructionData = {
   discriminator: ReadonlyUint8Array;
   earlinessCutoffSeconds: bigint;
+  minOptionDeposit: bigint;
 };
 
 export type InitCentralStateInstructionDataArgs = {
   earlinessCutoffSeconds: number | bigint;
+  minOptionDeposit: number | bigint;
 };
 
 export function getInitCentralStateInstructionDataEncoder(): FixedSizeEncoder<InitCentralStateInstructionDataArgs> {
@@ -85,6 +87,7 @@ export function getInitCentralStateInstructionDataEncoder(): FixedSizeEncoder<In
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['earlinessCutoffSeconds', getU64Encoder()],
+      ['minOptionDeposit', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: INIT_CENTRAL_STATE_DISCRIMINATOR })
   );
@@ -94,6 +97,7 @@ export function getInitCentralStateInstructionDataDecoder(): FixedSizeDecoder<In
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['earlinessCutoffSeconds', getU64Decoder()],
+    ['minOptionDeposit', getU64Decoder()],
   ]);
 }
 
@@ -116,6 +120,7 @@ export type InitCentralStateAsyncInput<
   centralState?: Address<TAccountCentralState>;
   systemProgram?: Address<TAccountSystemProgram>;
   earlinessCutoffSeconds: InitCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
+  minOptionDeposit: InitCentralStateInstructionDataArgs['minOptionDeposit'];
 };
 
 export async function getInitCentralStateInstructionAsync<
@@ -202,6 +207,7 @@ export type InitCentralStateInput<
   centralState: Address<TAccountCentralState>;
   systemProgram?: Address<TAccountSystemProgram>;
   earlinessCutoffSeconds: InitCentralStateInstructionDataArgs['earlinessCutoffSeconds'];
+  minOptionDeposit: InitCentralStateInstructionDataArgs['minOptionDeposit'];
 };
 
 export function getInitCentralStateInstruction<
