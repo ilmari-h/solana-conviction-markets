@@ -4,6 +4,7 @@ use crate::state::{OpportunityMarket, ShareAccount};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 
 #[derive(Accounts)]
+#[instruction(state_nonce: u128, share_account_id: u32)]
 pub struct InitShareAccount<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -14,7 +15,7 @@ pub struct InitShareAccount<'info> {
         init,
         payer = signer,
         space = 8 + ShareAccount::INIT_SPACE,
-        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref(), &[0u8]],
+        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump,
     )]
     pub share_account: Account<'info, ShareAccount>,
@@ -25,6 +26,7 @@ pub struct InitShareAccount<'info> {
 pub fn init_share_account(
     ctx: Context<InitShareAccount>,
     state_nonce: u128,
+    _share_account_id: u32,
 ) -> Result<()> {
     let share_account = &mut ctx.accounts.share_account;
 

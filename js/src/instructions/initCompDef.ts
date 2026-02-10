@@ -21,7 +21,7 @@ import {
   getInitMarketSharesCompDefInstruction,
   getRevealSharesCompDefInstruction,
   getUnstakeEarlyCompDefInstruction,
-  getLockOptionDepositCompDefInstruction,
+  getAddOptionStakeCompDefInstruction,
   OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   fetchMXEAccount,
 } from "../generated";
@@ -35,7 +35,7 @@ export type CompDefCircuitName =
   | "init_market_shares"
   | "reveal_shares"
   | "unstake_early"
-  | "lock_option_deposit";
+  | "add_option_stake";
 
 export const ALL_COMP_DEF_CIRCUITS: CompDefCircuitName[] = [
   "init_vote_token_account",
@@ -45,7 +45,7 @@ export const ALL_COMP_DEF_CIRCUITS: CompDefCircuitName[] = [
   "init_market_shares",
   "reveal_shares",
   "unstake_early",
-  "lock_option_deposit",
+  "add_option_stake",
 ];
 
 
@@ -125,8 +125,8 @@ export async function getInitCompDefInstruction(
     case "unstake_early":
       return getUnstakeEarlyCompDefInstruction(baseInput, { programAddress: programId });
 
-    case "lock_option_deposit":
-      return getLockOptionDepositCompDefInstruction(baseInput, { programAddress: programId });
+    case "add_option_stake":
+      return getAddOptionStakeCompDefInstruction(baseInput, { programAddress: programId });
 
     default:
       throw new Error(`Unknown circuit: ${circuitName}`);

@@ -12,13 +12,14 @@ export interface RevealSharesParams {
   market: Address;
   userVta: Address;
   userPubkey: ByteArray;
+  shareAccountId: number;
 }
 
 export async function revealShares(
   input: RevealSharesParams,
   config: ArciumConfig
 ): Promise<RevealSharesInstruction> {
-  const { signer, owner, market, userVta, userPubkey } = input;
+  const { signer, owner, market, userVta, userPubkey, shareAccountId } = input;
 
   return getRevealSharesInstructionAsync({
     ...getComputeAccounts("reveal_shares", config),
@@ -27,5 +28,6 @@ export async function revealShares(
     market,
     userVta,
     userPubkey: toNumberArray(userPubkey),
+    shareAccountId,
   });
 }

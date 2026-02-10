@@ -8,6 +8,7 @@ export interface InitShareAccountParams {
   signer: TransactionSigner;
   market: Address;
   stateNonce: bigint;
+  shareAccountId: number;
 }
 
 export async function initShareAccount(

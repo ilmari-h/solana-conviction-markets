@@ -154,6 +154,7 @@ export type AddMarketOptionInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
   optionIndex: number;
+  shareAccountId: number;
   name: string;
   amountCiphertext: Array<number>;
   userPubkey: Array<number>;
@@ -166,6 +167,7 @@ export type AddMarketOptionInstructionData = {
 export type AddMarketOptionInstructionDataArgs = {
   computationOffset: number | bigint;
   optionIndex: number;
+  shareAccountId: number;
   name: string;
   amountCiphertext: Array<number>;
   userPubkey: Array<number>;
@@ -181,6 +183,7 @@ export function getAddMarketOptionInstructionDataEncoder(): Encoder<AddMarketOpt
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
       ['optionIndex', getU16Encoder()],
+      ['shareAccountId', getU32Encoder()],
       ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['amountCiphertext', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
@@ -198,6 +201,7 @@ export function getAddMarketOptionInstructionDataDecoder(): Decoder<AddMarketOpt
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
     ['optionIndex', getU16Decoder()],
+    ['shareAccountId', getU32Decoder()],
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['amountCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
@@ -242,7 +246,7 @@ export type AddMarketOptionAsyncInput<
   centralState?: Address<TAccountCentralState>;
   option?: Address<TAccountOption>;
   sourceVta: Address<TAccountSourceVta>;
-  shareAccount: Address<TAccountShareAccount>;
+  shareAccount?: Address<TAccountShareAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -256,6 +260,7 @@ export type AddMarketOptionAsyncInput<
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: AddMarketOptionInstructionDataArgs['computationOffset'];
   optionIndex: AddMarketOptionInstructionDataArgs['optionIndex'];
+  shareAccountId: AddMarketOptionInstructionDataArgs['shareAccountId'];
   name: AddMarketOptionInstructionDataArgs['name'];
   amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
   userPubkey: AddMarketOptionInstructionDataArgs['userPubkey'];
@@ -387,6 +392,21 @@ export async function getAddMarketOptionInstructionAsync<
       ],
     });
   }
+  if (!accounts.shareAccount.value) {
+    accounts.shareAccount.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([
+            115, 104, 97, 114, 101, 95, 97, 99, 99, 111, 117, 110, 116,
+          ])
+        ),
+        getAddressEncoder().encode(expectAddress(accounts.creator.value)),
+        getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
+      ],
+    });
+  }
   if (!accounts.signPdaAccount.value) {
     accounts.signPdaAccount.value = await getProgramDerivedAddress({
       programAddress,
@@ -502,6 +522,7 @@ export type AddMarketOptionInput<
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: AddMarketOptionInstructionDataArgs['computationOffset'];
   optionIndex: AddMarketOptionInstructionDataArgs['optionIndex'];
+  shareAccountId: AddMarketOptionInstructionDataArgs['shareAccountId'];
   name: AddMarketOptionInstructionDataArgs['name'];
   amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
   userPubkey: AddMarketOptionInstructionDataArgs['userPubkey'];

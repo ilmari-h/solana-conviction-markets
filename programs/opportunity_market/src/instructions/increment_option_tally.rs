@@ -6,7 +6,7 @@ use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::state::{OpportunityMarket, OpportunityMarketOption, ShareAccount};
 
 #[derive(Accounts)]
-#[instruction(option_index: u16, is_option_creator: bool)]
+#[instruction(option_index: u16, share_account_id: u32)]
 pub struct IncrementOptionTally<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -18,7 +18,7 @@ pub struct IncrementOptionTally<'info> {
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref(), &[is_option_creator as u8]],
+        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump = share_account.bump,
 
         constraint = !share_account.total_incremented @ ErrorCode::TallyAlreadyIncremented,
@@ -35,7 +35,7 @@ pub struct IncrementOptionTally<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, _option_index: u16, _is_option_creator: bool) -> Result<()> {
+pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, _option_index: u16, _share_account_id: u32) -> Result<()> {
     // Check that we are within the reveal window
     let market = &ctx.accounts.market;
     let open_timestamp = market.open_timestamp.ok_or(ErrorCode::MarketNotOpen)?;

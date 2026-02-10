@@ -10,12 +10,15 @@ export interface AddMarketOptionParams {
   creator: TransactionSigner;
   market: Address;
   sourceVta: Address;
-  lockedVta: Address;
   optionIndex: number;
+  shareAccountId: number;
   name: string;
-  amount: bigint;
+  amountCiphertext: ByteArray;
   userPubkey: ByteArray;
-  lockedVtaNonce: bigint;
+  inputNonce: bigint;
+  authorizedReaderPubkey: ByteArray;
+  authorizedReaderNonce: bigint;
+  shareAccountNonce: bigint;
 }
 
 export async function addMarketOption(
@@ -26,24 +29,30 @@ export async function addMarketOption(
     creator,
     market,
     sourceVta,
-    lockedVta,
     optionIndex,
+    shareAccountId,
     name,
-    amount,
+    amountCiphertext,
     userPubkey,
-    lockedVtaNonce,
+    inputNonce,
+    authorizedReaderPubkey,
+    authorizedReaderNonce,
+    shareAccountNonce,
   } = input;
 
   return getAddMarketOptionInstructionAsync({
-    ...getComputeAccounts("lock_option_deposit", config),
+    ...getComputeAccounts("add_option_stake", config),
     creator,
     market,
     sourceVta,
-    lockedVta,
     optionIndex,
+    shareAccountId,
     name,
-    amount,
+    amountCiphertext: toNumberArray(amountCiphertext),
     userPubkey: toNumberArray(userPubkey),
-    lockedVtaNonce,
+    inputNonce,
+    authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
+    authorizedReaderNonce,
+    shareAccountNonce,
   });
 }

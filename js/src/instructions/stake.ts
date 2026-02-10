@@ -10,6 +10,7 @@ export interface StakeParams {
   signer: TransactionSigner;
   market: Address;
   userVta: Address;
+  shareAccountId: number;
   amountCiphertext: ByteArray;
   selectedOptionCiphertext: ByteArray;
   userPubkey: ByteArray;
@@ -26,6 +27,7 @@ export async function stake(
     signer,
     market,
     userVta,
+    shareAccountId,
     amountCiphertext,
     selectedOptionCiphertext,
     userPubkey,
@@ -39,6 +41,7 @@ export async function stake(
     signer,
     market,
     userVta,
+    shareAccountId,
     amountCiphertext: toNumberArray(amountCiphertext),
     selectedOptionCiphertext: toNumberArray(selectedOptionCiphertext),
     userPubkey: toNumberArray(userPubkey),

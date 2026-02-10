@@ -12,7 +12,7 @@ pub const SHARE_ACCOUNT_SEED: &[u8] = b"share_account";
 
 #[queue_computation_accounts("buy_opportunity_market_shares", signer)]
 #[derive(Accounts)]
-#[instruction(computation_offset: u64)]
+#[instruction(computation_offset: u64, share_account_id: u32)]
 pub struct Stake<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -30,7 +30,7 @@ pub struct Stake<'info> {
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref(), &[0u8]],
+        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump,
         constraint = share_account.staked_at_timestamp.is_none() @ ErrorCode::AlreadyPurchased,
         constraint = share_account.unstaked_at_timestamp.is_none() @ ErrorCode::AlreadyUnstaked,
@@ -73,6 +73,7 @@ pub struct Stake<'info> {
 pub fn stake(
     ctx: Context<Stake>,
     computation_offset: u64,
+    _share_account_id: u32,
     amount_ciphertext: [u8; 32],
     selected_option_ciphertext: [u8; 32],
 

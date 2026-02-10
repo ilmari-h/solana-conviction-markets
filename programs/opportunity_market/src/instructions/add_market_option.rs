@@ -11,7 +11,7 @@ use crate::{ID, ID_CONST, ArciumSignerAccount};
 
 #[queue_computation_accounts("add_option_stake", creator)]
 #[derive(Accounts)]
-#[instruction(computation_offset: u64, option_index: u16)]
+#[instruction(computation_offset: u64, option_index: u16, share_account_id: u32)]
 pub struct AddMarketOption<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
@@ -48,7 +48,7 @@ pub struct AddMarketOption<'info> {
         init,
         payer = creator,
         space = 8 + ShareAccount::INIT_SPACE,
-        seeds = [SHARE_ACCOUNT_SEED, creator.key().as_ref(), market.key().as_ref(), &[1u8]],
+        seeds = [SHARE_ACCOUNT_SEED, creator.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump,
     )]
     pub share_account: Box<Account<'info, ShareAccount>>,
@@ -90,6 +90,7 @@ pub fn add_market_option(
     ctx: Context<AddMarketOption>,
     computation_offset: u64,
     option_index: u16,
+    _share_account_id: u32,
     name: String,
     amount_ciphertext: [u8; 32],
     user_pubkey: [u8; 32],

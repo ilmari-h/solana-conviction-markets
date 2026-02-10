@@ -86,7 +86,41 @@
         },
         {
           "name": "share_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "share_account_id"
+              }
+            ]
+          }
         },
         {
           "name": "sign_pda_account",
@@ -169,6 +203,10 @@
         {
           "name": "option_index",
           "type": "u16"
+        },
+        {
+          "name": "share_account_id",
+          "type": "u32"
         },
         {
           "name": "name",
@@ -1053,7 +1091,41 @@
         },
         {
           "name": "share_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "share_account_id"
+              }
+            ]
+          }
         },
         {
           "name": "option",
@@ -1165,8 +1237,8 @@
           "type": "u16"
         },
         {
-          "name": "is_option_creator",
-          "type": "bool"
+          "name": "share_account_id",
+          "type": "u32"
         }
       ]
     },
@@ -1487,7 +1559,41 @@
         },
         {
           "name": "share_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "share_account_id"
+              }
+            ]
+          }
         },
         {
           "name": "option",
@@ -1527,8 +1633,8 @@
           "type": "u16"
         },
         {
-          "name": "is_option_creator",
-          "type": "bool"
+          "name": "share_account_id",
+          "type": "u32"
         }
       ]
     },
@@ -1719,7 +1825,41 @@
         },
         {
           "name": "share_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "share_account_id"
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
@@ -1730,6 +1870,10 @@
         {
           "name": "state_nonce",
           "type": "u128"
+        },
+        {
+          "name": "share_account_id",
+          "type": "u32"
         }
       ]
     },
@@ -2403,7 +2547,41 @@
         },
         {
           "name": "share_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "share_account_id"
+              }
+            ]
+          }
         },
         {
           "name": "user_vta",
@@ -2488,8 +2666,8 @@
           "type": "u64"
         },
         {
-          "name": "is_option_creator",
-          "type": "bool"
+          "name": "share_account_id",
+          "type": "u32"
         },
         {
           "name": "user_pubkey",
@@ -2665,7 +2843,41 @@
         },
         {
           "name": "share_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "share_account_id"
+              }
+            ]
+          }
         },
         {
           "name": "sign_pda_account",
@@ -2744,6 +2956,10 @@
         {
           "name": "computation_offset",
           "type": "u64"
+        },
+        {
+          "name": "share_account_id",
+          "type": "u32"
         },
         {
           "name": "amount_ciphertext",
@@ -2868,7 +3084,41 @@
         },
         {
           "name": "share_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "arg",
+                "path": "share_account_id"
+              }
+            ]
+          }
         },
         {
           "name": "sign_pda_account",
@@ -2949,8 +3199,8 @@
           "type": "u64"
         },
         {
-          "name": "is_option_creator",
-          "type": "bool"
+          "name": "share_account_id",
+          "type": "u32"
         },
         {
           "name": "user_pubkey",

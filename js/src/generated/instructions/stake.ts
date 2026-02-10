@@ -10,6 +10,7 @@ import {
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
+  getAddressEncoder,
   getArrayDecoder,
   getArrayEncoder,
   getBytesDecoder,
@@ -19,6 +20,8 @@ import {
   getStructEncoder,
   getU128Decoder,
   getU128Encoder,
+  getU32Decoder,
+  getU32Encoder,
   getU64Decoder,
   getU64Encoder,
   getU8Decoder,
@@ -40,7 +43,12 @@ import {
   type WritableSignerAccount,
 } from '@solana/kit';
 import { OPPORTUNITY_MARKET_PROGRAM_ADDRESS } from '../programs';
-import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  expectAddress,
+  expectSome,
+  getAccountMetaFactory,
+  type ResolvedAccount,
+} from '../shared';
 
 export const STAKE_DISCRIMINATOR = new Uint8Array([
   206, 176, 202, 18, 200, 209, 179, 108,
@@ -129,6 +137,7 @@ export type StakeInstruction<
 export type StakeInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
+  shareAccountId: number;
   amountCiphertext: Array<number>;
   selectedOptionCiphertext: Array<number>;
   userPubkey: Array<number>;
@@ -139,6 +148,7 @@ export type StakeInstructionData = {
 
 export type StakeInstructionDataArgs = {
   computationOffset: number | bigint;
+  shareAccountId: number;
   amountCiphertext: Array<number>;
   selectedOptionCiphertext: Array<number>;
   userPubkey: Array<number>;
@@ -152,6 +162,7 @@ export function getStakeInstructionDataEncoder(): FixedSizeEncoder<StakeInstruct
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
+      ['shareAccountId', getU32Encoder()],
       ['amountCiphertext', getArrayEncoder(getU8Encoder(), { size: 32 })],
       [
         'selectedOptionCiphertext',
@@ -170,6 +181,7 @@ export function getStakeInstructionDataDecoder(): FixedSizeDecoder<StakeInstruct
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
+    ['shareAccountId', getU32Decoder()],
     ['amountCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['selectedOptionCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
@@ -209,7 +221,7 @@ export type StakeAsyncInput<
   signer: TransactionSigner<TAccountSigner>;
   market: Address<TAccountMarket>;
   userVta: Address<TAccountUserVta>;
-  shareAccount: Address<TAccountShareAccount>;
+  shareAccount?: Address<TAccountShareAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -222,6 +234,7 @@ export type StakeAsyncInput<
   systemProgram?: Address<TAccountSystemProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: StakeInstructionDataArgs['computationOffset'];
+  shareAccountId: StakeInstructionDataArgs['shareAccountId'];
   amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
   selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
   userPubkey: StakeInstructionDataArgs['userPubkey'];
@@ -320,6 +333,21 @@ export async function getStakeInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
+  if (!accounts.shareAccount.value) {
+    accounts.shareAccount.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([
+            115, 104, 97, 114, 101, 95, 97, 99, 99, 111, 117, 110, 116,
+          ])
+        ),
+        getAddressEncoder().encode(expectAddress(accounts.signer.value)),
+        getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
+      ],
+    });
+  }
   if (!accounts.signPdaAccount.value) {
     accounts.signPdaAccount.value = await getProgramDerivedAddress({
       programAddress,
@@ -426,6 +454,7 @@ export type StakeInput<
   systemProgram?: Address<TAccountSystemProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: StakeInstructionDataArgs['computationOffset'];
+  shareAccountId: StakeInstructionDataArgs['shareAccountId'];
   amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
   selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
   userPubkey: StakeInstructionDataArgs['userPubkey'];

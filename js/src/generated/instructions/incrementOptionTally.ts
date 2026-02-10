@@ -11,8 +11,6 @@ import {
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
-  getBooleanDecoder,
-  getBooleanEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
@@ -20,6 +18,8 @@ import {
   getStructEncoder,
   getU16Decoder,
   getU16Encoder,
+  getU32Decoder,
+  getU32Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -94,12 +94,12 @@ export type IncrementOptionTallyInstruction<
 export type IncrementOptionTallyInstructionData = {
   discriminator: ReadonlyUint8Array;
   optionIndex: number;
-  isOptionCreator: boolean;
+  shareAccountId: number;
 };
 
 export type IncrementOptionTallyInstructionDataArgs = {
   optionIndex: number;
-  isOptionCreator: boolean;
+  shareAccountId: number;
 };
 
 export function getIncrementOptionTallyInstructionDataEncoder(): FixedSizeEncoder<IncrementOptionTallyInstructionDataArgs> {
@@ -107,7 +107,7 @@ export function getIncrementOptionTallyInstructionDataEncoder(): FixedSizeEncode
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['optionIndex', getU16Encoder()],
-      ['isOptionCreator', getBooleanEncoder()],
+      ['shareAccountId', getU32Encoder()],
     ]),
     (value) => ({
       ...value,
@@ -120,7 +120,7 @@ export function getIncrementOptionTallyInstructionDataDecoder(): FixedSizeDecode
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['optionIndex', getU16Decoder()],
-    ['isOptionCreator', getBooleanDecoder()],
+    ['shareAccountId', getU32Decoder()],
   ]);
 }
 
@@ -145,11 +145,11 @@ export type IncrementOptionTallyAsyncInput<
   signer: TransactionSigner<TAccountSigner>;
   owner: Address<TAccountOwner>;
   market: Address<TAccountMarket>;
-  shareAccount: Address<TAccountShareAccount>;
+  shareAccount?: Address<TAccountShareAccount>;
   option?: Address<TAccountOption>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: IncrementOptionTallyInstructionDataArgs['optionIndex'];
-  isOptionCreator: IncrementOptionTallyInstructionDataArgs['isOptionCreator'];
+  shareAccountId: IncrementOptionTallyInstructionDataArgs['shareAccountId'];
 };
 
 export async function getIncrementOptionTallyInstructionAsync<
@@ -203,6 +203,21 @@ export async function getIncrementOptionTallyInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
+  if (!accounts.shareAccount.value) {
+    accounts.shareAccount.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([
+            115, 104, 97, 114, 101, 95, 97, 99, 99, 111, 117, 110, 116,
+          ])
+        ),
+        getAddressEncoder().encode(expectAddress(accounts.owner.value)),
+        getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
+      ],
+    });
+  }
   if (!accounts.option.value) {
     accounts.option.value = await getProgramDerivedAddress({
       programAddress,
@@ -260,7 +275,7 @@ export type IncrementOptionTallyInput<
   option: Address<TAccountOption>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: IncrementOptionTallyInstructionDataArgs['optionIndex'];
-  isOptionCreator: IncrementOptionTallyInstructionDataArgs['isOptionCreator'];
+  shareAccountId: IncrementOptionTallyInstructionDataArgs['shareAccountId'];
 };
 
 export function getIncrementOptionTallyInstruction<
