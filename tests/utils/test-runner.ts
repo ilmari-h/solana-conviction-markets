@@ -54,12 +54,18 @@ import { sendTransaction, type SendAndConfirmFn } from "./transaction";
 // Types
 // ============================================================================
 
+export interface ShareAccountInfo {
+  id: number;
+  amount: bigint;
+  optionIndex: number;
+}
+
 interface TestUser {
   solanaKeypair: KeyPairSigner;
   x25519Keypair: X25519Keypair;
   tokenAccount: Address;
   voteTokenAccount?: Address;
-  shareAccountIds: Map<string, number[]>; // marketAddress -> ids used
+  shareAccounts: ShareAccountInfo[];
 }
 
 interface MarketConfig {
@@ -165,7 +171,6 @@ export class TestRunner {
 
   // Market
   private mint: KeyPairSigner;
-  private tokenProgram: Address;
   private marketAddress: Address;
   private marketCreator: TestUser;
   private marketConfig: MarketConfig;
@@ -203,7 +208,6 @@ export class TestRunner {
     // Store config
     runner.marketConfig = marketConfig as MarketConfig;
     runner.programId = programId;
-    runner.tokenProgram = TOKEN_PROGRAM_ADDRESS;
     runner.arciumEnv = getArciumEnv();
 
     // Initialize RPC clients
@@ -292,7 +296,7 @@ export class TestRunner {
         solanaKeypair: acc.keypair,
         x25519Keypair: acc.x25519Keypair,
         tokenAccount: acc.tokenAccount,
-        shareAccountIds: new Map(),
+        shareAccounts: [],
       };
       runner.users.set(acc.keypair.address.toString(), user);
     }
@@ -303,7 +307,7 @@ export class TestRunner {
       solanaKeypair: creatorAcc.keypair,
       x25519Keypair: creatorAcc.x25519Keypair,
       tokenAccount: creatorAcc.tokenAccount,
-      shareAccountIds: new Map(),
+      shareAccounts: [],
     };
     // Also add creator to users map so they can be looked up
     runner.users.set(creatorAcc.keypair.address.toString(), runner.marketCreator);
@@ -399,15 +403,12 @@ export class TestRunner {
     };
   }
 
-  private getNextShareAccountId(user: TestUser, market: Address): number {
-    const marketKey = market.toString();
-    if (!user.shareAccountIds.has(marketKey)) {
-      user.shareAccountIds.set(marketKey, []);
-    }
-    const ids = user.shareAccountIds.get(marketKey)!;
-    const nextId = ids.length;
-    ids.push(nextId);
-    return nextId;
+  private getNextShareAccountId(user: TestUser): number {
+    return user.shareAccounts.length;
+  }
+
+  private addShareAccount(user: TestUser, info: ShareAccountInfo): void {
+    user.shareAccounts.push(info);
   }
 
   private assertVtaInitialized(user: TestUser): void {
@@ -550,7 +551,7 @@ export class TestRunner {
 
     const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
     const optionIndex = ++this.optionCount;
-    const shareAccountId = this.getNextShareAccountId(user, this.marketAddress);
+    const shareAccountId = this.getNextShareAccountId(user);
 
     const inputNonce = randomBytes(16);
     const amountCiphertext = cipher.encrypt([depositAmount], inputNonce);
@@ -580,6 +581,9 @@ export class TestRunner {
 
     await awaitComputationFinalization(this.rpc, offset);
 
+    // Store share account info
+    this.addShareAccount(user, { id: shareAccountId, amount: depositAmount, optionIndex });
+
     return { optionIndex, shareAccountId };
   }
 
@@ -595,7 +599,7 @@ export class TestRunner {
         this.assertVtaInitialized(user);
 
         const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
-        const shareAccountId = this.getNextShareAccountId(user, this.marketAddress);
+        const shareAccountId = this.getNextShareAccountId(user);
 
         // Init share account instruction
         const initIx = await initShareAccount({
@@ -628,7 +632,7 @@ export class TestRunner {
           this.getArciumConfig(computationOffset)
         );
 
-        return { user, initIx, stakeIx, computationOffset, shareAccountId };
+        return { user, initIx, stakeIx, computationOffset, shareAccountId, amount: p.amount, optionIndex: p.optionIndex };
       })
     );
 
@@ -651,6 +655,15 @@ export class TestRunner {
       this.rpc,
       purchaseData.map((d) => d.computationOffset)
     );
+
+    // Store share account info for each user
+    for (const data of purchaseData) {
+      this.addShareAccount(data.user, {
+        id: data.shareAccountId,
+        amount: data.amount,
+        optionIndex: data.optionIndex,
+      });
+    }
 
     return purchaseData.map((d) => d.shareAccountId);
   }
@@ -782,6 +795,16 @@ export class TestRunner {
   /** Get a user's token account address */
   getUserTokenAccount(userId: Address): Address {
     return this.getUser(userId).tokenAccount;
+  }
+
+  /** Get a user's share accounts info (id, amount, optionIndex for each) */
+  getUserShareAccounts(userId: Address): ShareAccountInfo[] {
+    return this.getUser(userId).shareAccounts;
+  }
+
+  /** Get share accounts for a user filtered by option index */
+  getUserShareAccountsForOption(userId: Address, optionIndex: number): ShareAccountInfo[] {
+    return this.getUser(userId).shareAccounts.filter((sa) => sa.optionIndex === optionIndex);
   }
 
   /** Get the open timestamp (set after openMarket is called) */

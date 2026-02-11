@@ -1,11 +1,11 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { address, some, isSome } from "@solana/kit";
-import { fetchToken, TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
+import { fetchToken } from "@solana-program/token";
 import { expect } from "chai";
 
 import { OpportunityMarket } from "../target/types/opportunity_market";
-import { TestRunner } from "./utils/test-runner";
+import { TestRunner, ShareAccountInfo } from "./utils/test-runner";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sleepUntilOnChainTimestamp } from "./utils/sleep";
 
@@ -78,16 +78,8 @@ describe("OpportunityMarket", () => {
     await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
 
     // Add two options (creator deposits minDeposit for each)
-    const { optionIndex: optionA, shareAccountId: creatorShareA } = await runner.addMarketOption(
-      runner.creator,
-      "Option A",
-      minDeposit
-    );
-    const { optionIndex: optionB, shareAccountId: creatorShareB } = await runner.addMarketOption(
-      runner.creator,
-      "Option B",
-      minDeposit
-    );
+    const { optionIndex: optionA } = await runner.addMarketOption(runner.creator, "Option A", minDeposit);
+    const { optionIndex: optionB } = await runner.addMarketOption(runner.creator, "Option B", minDeposit);
 
     // Define voting: first half vote Option A (winning), second half vote Option B
     const winningOptionIndex = optionA;
@@ -99,8 +91,7 @@ describe("OpportunityMarket", () => {
       amount: buySharesAmounts[idx],
       optionIndex: idx < numParticipants / 2 ? optionA : optionB,
     }));
-    // TODO: mutate internal state accounts with shares
-    const shareIds = await runner.buySharesBatch(purchases);
+    await runner.buySharesBatch(purchases);
 
     // Market creator selects winning option
     await runner.selectOption(winningOptionIndex);
@@ -109,55 +100,60 @@ describe("OpportunityMarket", () => {
     const resolvedMarket = await runner.fetchMarket();
     expect(resolvedMarket.data.selectedOption).to.deep.equal(some(winningOptionIndex));
 
-    // Reveal shares for winners (first half who voted Option A)
-    const winnerIndices = [0, 1];
-    const winners = winnerIndices.map((i) => runner.participants[i]);
-    const winnerShareIds = winnerIndices.map((i) => shareIds[i]);
-    const winnerAmounts = winnerIndices.map((i) => buySharesAmounts[i]);
+    // Get winners (participants who voted for winning option) using stored share account info
+    const winners = runner.participants.filter(
+      (userId) => runner.getUserShareAccountsForOption(userId, winningOptionIndex).length > 0
+    );
+    const winnerShareAccounts = winners.map(
+      (userId) => runner.getUserShareAccountsForOption(userId, winningOptionIndex)[0]
+    );
 
+    // Reveal shares for winners
     await runner.revealSharesBatch(
-      winners.map((userId, i) => ({ userId, shareAccountId: winnerShareIds[i] }))
+      winners.map((userId, i) => ({ userId, shareAccountId: winnerShareAccounts[i].id }))
     );
 
     // Reveal creator's share accounts
-    await runner.revealSharesBatch([
-      { userId: runner.creator, shareAccountId: creatorShareA },
-      { userId: runner.creator, shareAccountId: creatorShareB },
-    ]);
+    const creatorShareAccounts = runner.getUserShareAccounts(runner.creator);
+    await runner.revealSharesBatch(
+      creatorShareAccounts.map((sa) => ({ userId: runner.creator, shareAccountId: sa.id }))
+    );
 
     // Verify revealed shares for winners
     for (let i = 0; i < winners.length; i++) {
-      const shareAccount = await runner.fetchShareAccountData(winners[i], winnerShareIds[i]);
-      expect(shareAccount.data.revealedAmount).to.deep.equal(some(winnerAmounts[i]));
+      const sa = winnerShareAccounts[i];
+      const shareAccount = await runner.fetchShareAccountData(winners[i], sa.id);
+      expect(shareAccount.data.revealedAmount).to.deep.equal(some(sa.amount));
       expect(shareAccount.data.revealedOption).to.deep.equal(some(winningOptionIndex));
     }
 
     // Verify creator's revealed shares
-    const creatorShareAAccount = await runner.fetchShareAccountData(runner.creator, creatorShareA);
-    expect(creatorShareAAccount.data.revealedAmount).to.deep.equal(some(minDeposit));
-    expect(creatorShareAAccount.data.revealedOption).to.deep.equal(some(optionA));
-
-    const creatorShareBAccount = await runner.fetchShareAccountData(runner.creator, creatorShareB);
-    expect(creatorShareBAccount.data.revealedAmount).to.deep.equal(some(minDeposit));
-    expect(creatorShareBAccount.data.revealedOption).to.deep.equal(some(optionB));
+    for (const sa of creatorShareAccounts) {
+      const shareAccount = await runner.fetchShareAccountData(runner.creator, sa.id);
+      expect(shareAccount.data.revealedAmount).to.deep.equal(some(sa.amount));
+      expect(shareAccount.data.revealedOption).to.deep.equal(some(sa.optionIndex));
+    }
 
     // Increment option tally for winners
     await runner.incrementOptionTallyBatch(
       winners.map((userId, i) => ({
         userId,
         optionIndex: winningOptionIndex,
-        shareAccountId: winnerShareIds[i],
+        shareAccountId: winnerShareAccounts[i].id,
       }))
     );
 
     // Increment tally for creator's share accounts
-    await runner.incrementOptionTallyBatch([
-      { userId: runner.creator, optionIndex: optionA, shareAccountId: creatorShareA },
-      { userId: runner.creator, optionIndex: optionB, shareAccountId: creatorShareB },
-    ]);
+    await runner.incrementOptionTallyBatch(
+      creatorShareAccounts.map((sa) => ({
+        userId: runner.creator,
+        optionIndex: sa.optionIndex,
+        shareAccountId: sa.id,
+      }))
+    );
 
     // Verify option tally
-    const totalWinningShares = winnerAmounts.reduce((a, b) => a + b, 0n) + minDeposit;
+    const totalWinningShares = winnerShareAccounts.reduce((sum, sa) => sum + sa.amount, 0n) + minDeposit;
     const optionAccount = await runner.fetchOptionData(winningOptionIndex);
     expect(optionAccount.data.totalShares).to.deep.equal(some(totalWinningShares));
 
@@ -172,7 +168,7 @@ describe("OpportunityMarket", () => {
 
     const winnerTimestamps = await Promise.all(
       winners.map(async (userId, i) => {
-        const shareAccount = await runner.fetchShareAccountData(userId, winnerShareIds[i]);
+        const shareAccount = await runner.fetchShareAccountData(userId, winnerShareAccounts[i].id);
         const ts = shareAccount.data.stakedAtTimestamp;
         if (!isSome(ts)) throw new Error("stakedAtTimestamp is None");
         return ts.value;
@@ -202,20 +198,23 @@ describe("OpportunityMarket", () => {
       winners.map((userId, i) => ({
         userId,
         optionIndex: winningOptionIndex,
-        shareAccountId: winnerShareIds[i],
+        shareAccountId: winnerShareAccounts[i].id,
       }))
     );
 
     // Close creator's share accounts
-    await runner.closeShareAccountBatch([
-      { userId: runner.creator, optionIndex: optionA, shareAccountId: creatorShareA },
-      { userId: runner.creator, optionIndex: optionB, shareAccountId: creatorShareB },
-    ]);
+    await runner.closeShareAccountBatch(
+      creatorShareAccounts.map((sa) => ({
+        userId: runner.creator,
+        optionIndex: sa.optionIndex,
+        shareAccountId: sa.id,
+      }))
+    );
 
     // Verify share accounts were closed
     for (let i = 0; i < winners.length; i++) {
-      const address = await runner.getShareAccountAddress(winners[i], winnerShareIds[i]);
-      const exists = await runner.accountExists(address);
+      const addr = await runner.getShareAccountAddress(winners[i], winnerShareAccounts[i].id);
+      const exists = await runner.accountExists(addr);
       expect(exists).to.be.false;
     }
 
@@ -234,7 +233,7 @@ describe("OpportunityMarket", () => {
     const gains = winners.map((userId, i) => ({
       userId,
       gain: balancesAfter[i].balance - balancesBefore[i].balance,
-      shares: winnerAmounts[i],
+      shares: winnerShareAccounts[i].amount,
     }));
     const creatorGain = creatorBalanceAfter - creatorBalanceBefore;
 
