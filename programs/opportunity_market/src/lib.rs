@@ -22,7 +22,7 @@ pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 pub const COMP_DEF_OFFSET_UNSTAKE_EARLY: u32 = comp_def_offset("unstake_early");
 pub const COMP_DEF_OFFSET_ADD_OPTION_STAKE: u32 = comp_def_offset("add_option_stake");
 
-declare_id!("73tDkY74h8TGA6acCNrBgejuYkNKgTMaD5oysxE74B1i");
+declare_id!("jsK4sUrViFZvKTCFw2ekhyTtCydyntGZ1fdY7PXtbgw");
 
 #[arcium_program]
 pub mod opportunity_market {
