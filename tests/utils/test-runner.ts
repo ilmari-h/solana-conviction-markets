@@ -12,6 +12,8 @@ import {
   createSolanaRpcSubscriptions,
   lamports,
   sendAndConfirmTransactionFactory,
+  getProgramDerivedAddress,
+  getBytesEncoder,
   type Rpc,
   type SolanaRpcApi,
 } from "@solana/kit";
@@ -23,6 +25,7 @@ import {
 import {
   createMarket,
   fetchOpportunityMarket,
+  fetchMaybeCentralState,
   randomComputationOffset,
   getInitCentralStateInstructionAsync,
   initVoteTokenAccount,
@@ -115,7 +118,7 @@ export interface CloseRequest {
 const DEFAULT_CONFIG: Required<TestRunnerConfig> = {
   rpcUrl: "http://127.0.0.1:8899",
   wsUrl: "ws://127.0.0.1:8900",
-  numParticipants: 5,
+  numParticipants: 2,
   airdropLamports: 2_000_000_000n, // 2 SOL
   initialTokenAmount: 1_000_000_000n, // 1 billion tokens per account
   marketConfig: {
@@ -312,17 +315,27 @@ export class TestRunner {
     // Also add creator to users map so they can be looked up
     runner.users.set(creatorAcc.keypair.address.toString(), runner.marketCreator);
 
-    // Initialize central state
-    console.log("Initializing central state...");
-    const initCentralStateIx = await getInitCentralStateInstructionAsync({
-      payer: runner.marketCreator.solanaKeypair,
-      earlinessCutoffSeconds: 0n,
-      minOptionDeposit: 1n,
+    // Initialize central state (skip if already exists)
+    const [centralStateAddress] = await getProgramDerivedAddress({
+      programAddress: programId,
+      seeds: [getBytesEncoder().encode(new Uint8Array([99, 101, 110, 116, 114, 97, 108, 95, 115, 116, 97, 116, 101]))], // "central_state"
     });
+    const centralStateAccount = await fetchMaybeCentralState(runner.rpc, centralStateAddress);
 
-    await sendTransaction(runner.rpc, runner.sendAndConfirm, runner.marketCreator.solanaKeypair, [initCentralStateIx], {
-      label: "Init central state",
-    });
+    if (!centralStateAccount.exists) {
+      console.log("Initializing central state...");
+      const initCentralStateIx = await getInitCentralStateInstructionAsync({
+        payer: runner.marketCreator.solanaKeypair,
+        earlinessCutoffSeconds: 0n,
+        minOptionDeposit: 1n,
+      });
+
+      await sendTransaction(runner.rpc, runner.sendAndConfirm, runner.marketCreator.solanaKeypair, [initCentralStateIx], {
+        label: "Init central state",
+      });
+    } else {
+      console.log("Central state already exists, skipping initialization...");
+    }
 
     // Create the market
     console.log("Creating market...");
@@ -592,14 +605,25 @@ export class TestRunner {
   // ============================================================================
 
   async buySharesBatch(purchases: SharePurchase[]): Promise<number[]> {
+    // Pre-allocate share account IDs to avoid conflicts when same user has multiple purchases
+    const userShareAccountOffsets = new Map<string, number>();
+    const preAllocatedIds = purchases.map((p) => {
+      const userKey = p.userId.toString();
+      const user = this.getUser(p.userId);
+      const baseId = this.getNextShareAccountId(user);
+      const offset = userShareAccountOffsets.get(userKey) ?? 0;
+      userShareAccountOffsets.set(userKey, offset + 1);
+      return baseId + offset;
+    });
+
     // Build all instruction data in parallel
     const purchaseData = await Promise.all(
-      purchases.map(async (p) => {
+      purchases.map(async (p, idx) => {
         const user = this.getUser(p.userId);
         this.assertVtaInitialized(user);
 
         const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
-        const shareAccountId = this.getNextShareAccountId(user);
+        const shareAccountId = preAllocatedIds[idx];
 
         // Init share account instruction
         const initIx = await initShareAccount({

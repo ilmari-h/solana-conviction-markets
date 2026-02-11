@@ -103,6 +103,8 @@ pub fn mint_vote_tokens(
         ctx.accounts.token_mint.decimals,
     )?;
 
+    require!(vta.pending_deposit == 0, ErrorCode::Locked);
+
     // Track the pending deposit for safety (can be reclaimed if callback fails)
     vta.pending_deposit = vta
         .pending_deposit
@@ -165,10 +167,7 @@ pub fn buy_vote_tokens_callback(
     ctx: Context<BuyVoteTokensCallback>,
     output: SignedComputationOutputs<BuyVoteTokensOutput>,
 ) -> Result<()> {
-    // Output is (u64, Enc<Shared, VoteTokenBalance>)
-    // field_0 = amount bought (plaintext)
-    // field_1 = updated encrypted balance
-    let res = match output.verify_output(
+    let encrypted_balance = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
@@ -176,19 +175,10 @@ pub fn buy_vote_tokens_callback(
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
 
-    let amount_bought = res.field_0;
-    let encrypted_balance = res.field_1;
-
     let vta = &mut ctx.accounts.vote_token_account;
 
-    // Verify amount_bought doesn't exceed pending_deposit
-    require!(
-        amount_bought <= vta.pending_deposit,
-        ErrorCode::InsufficientBalance
-    );
-
     // Deduct from pending_deposit (tokens already in VTA ATA)
-    vta.pending_deposit = vta.pending_deposit - amount_bought;
+    vta.pending_deposit = 0;
 
     // Update encrypted state
     vta.state_nonce = encrypted_balance.nonce;

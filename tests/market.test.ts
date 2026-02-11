@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { address, some, isSome } from "@solana/kit";
+import { address, some, isSome, createSolanaRpc, createSolanaRpcSubscriptions, sendAndConfirmTransactionFactory  } from "@solana/kit";
 import { fetchToken } from "@solana-program/token";
 import { expect } from "chai";
 
@@ -11,6 +11,7 @@ import { sleepUntilOnChainTimestamp } from "./utils/sleep";
 
 import * as fs from "fs";
 import * as os from "os";
+import { error } from "console";
 
 const ONCHAIN_TIMESTAMP_BUFFER_SECONDS = 6;
 
@@ -32,7 +33,6 @@ describe("OpportunityMarket", () => {
     const secretKey = new Uint8Array(JSON.parse(file.toString()));
 
     // Initialize all computation definitions
-    const { createSolanaRpc, createSolanaRpcSubscriptions, sendAndConfirmTransactionFactory } = await import("@solana/kit");
     const rpc = createSolanaRpc(RPC_URL);
     const rpcSubscriptions = createSolanaRpcSubscriptions(WS_URL);
     const sendAndConfirmTransaction = sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions });
@@ -55,7 +55,7 @@ describe("OpportunityMarket", () => {
       marketConfig: {
         rewardAmount: marketFundingAmount,
         timeToStake: 120n,
-        timeToReveal: 25n,
+        timeToReveal: 15n,
       },
     });
 
@@ -269,4 +269,123 @@ describe("OpportunityMarket", () => {
     expect(totalGains >= marketFundingAmount - 2n).to.be.true;
     expect(totalGains <= marketFundingAmount).to.be.true;
   });
+
+  it("allows users to vote for multiple options", async () => {
+    const marketFundingAmount = 1_000_000_000n;
+    const numParticipants = 1;
+
+    // Initialize TestRunner with 1 participant
+    const runner = await TestRunner.initialize(provider, programId, {
+      rpcUrl: RPC_URL,
+      wsUrl: WS_URL,
+      numParticipants,
+      airdropLamports: 2_000_000_000n,
+      initialTokenAmount: 2_000_000_000n,
+      marketConfig: {
+        rewardAmount: marketFundingAmount,
+        timeToStake: 120n,
+        timeToReveal: 15n,
+      },
+    });
+
+    // Fund and open market
+    await runner.fundMarket();
+    const openTimestamp = await runner.openMarket();
+
+    // Get the single participant
+    const user = runner.participants[0];
+
+    // Initialize VTA and mint vote tokens for user
+    const voteTokenMintAmount = 100_000_000n;
+    await runner.initVoteTokenAccount(user);
+    await runner.mintVoteTokens(user, voteTokenMintAmount);
+
+    // Calculate stake amounts: 1/4 of vote tokens for each action
+    const quarterAmount = voteTokenMintAmount / 4n; // 25_000_000n
+
+    // Wait for market staking period to be active
+    await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
+
+    // User adds 2 options, staking 1/4 of vote tokens for each
+    // This creates share accounts 0 and 1
+    const { optionIndex: optionA } = await runner.addMarketOption(user, "Option A", quarterAmount);
+    const { optionIndex: optionB } = await runner.addMarketOption(user, "Option B", quarterAmount);
+
+    // User explicitly stakes more shares for both options (1/4 each)
+    // This creates share accounts 2 and 3
+    await runner.buySharesBatch([
+      { userId: user, amount: quarterAmount, optionIndex: optionA },
+      { userId: user, amount: quarterAmount, optionIndex: optionB },
+    ]);
+
+    // User now has 4 share accounts, with all vote tokens staked
+    const userShareAccounts = runner.getUserShareAccounts(user);
+    console.log("SHARE ACCOUNTS",userShareAccounts)
+    expect(userShareAccounts.length).to.equal(4);
+
+    // Market creator selects winning option (Option A)
+    const winningOptionIndex = optionA;
+    await runner.selectOption(winningOptionIndex);
+
+    // Reveal ALL share accounts sequentially (one at a time to avoid concurrent MPC issues)
+    for (const sa of userShareAccounts) {
+      await runner.revealShares(user, sa.id);
+    }
+
+
+    // Verify all shares are revealed
+    for (const sa of userShareAccounts) {
+      const shareAccount = await runner.fetchShareAccountData(user, sa.id);
+      console.log("SHARE ACCOUNT", shareAccount.data)
+      // expect(shareAccount.data.revealedAmount).to.deep.equal(some(sa.amount));
+      // expect(shareAccount.data.revealedOption).to.deep.equal(some(sa.optionIndex));
+    }
+
+    throw new Error("OK")
+
+    // Increment tally for winning option share accounts
+    const winningShareAccounts = runner.getUserShareAccountsForOption(user, winningOptionIndex);
+    await runner.incrementOptionTallyBatch(
+      winningShareAccounts.map((sa) => ({
+        userId: user,
+        optionIndex: winningOptionIndex,
+        shareAccountId: sa.id,
+      }))
+    );
+
+    // Wait for reveal period to end
+    const timeToReveal = Number(runner.getTimeToReveal());
+    await sleepUntilOnChainTimestamp(new Date().getTime() / 1000 + timeToReveal);
+
+    // Get token balance before closing
+    const rpc = runner.getRpc();
+    const balanceBefore = (await fetchToken(rpc, runner.getUserTokenAccount(user))).data.amount;
+
+    // Close ALL share accounts (both winning and losing)
+    await runner.closeShareAccountBatch(
+      userShareAccounts.map((sa) => ({
+        userId: user,
+        optionIndex: sa.optionIndex,
+        shareAccountId: sa.id,
+      }))
+    );
+
+    // Verify all share accounts were closed
+    for (const sa of userShareAccounts) {
+      const addr = await runner.getShareAccountAddress(user, sa.id);
+      const exists = await runner.accountExists(addr);
+      expect(exists).to.be.false;
+    }
+
+    // Get token balance after closing
+    const balanceAfter = (await fetchToken(rpc, runner.getUserTokenAccount(user))).data.amount;
+
+    // User should receive back at least their full stake
+    // (plus rewards for winning shares since user is only participant)
+    const totalStaked = voteTokenMintAmount; // All 4 quarters were staked
+    const gained = balanceAfter - balanceBefore;
+
+    // User should receive back ALL their stake plus rewards from winning option
+    expect(gained >= totalStaked).to.be.true;
+  })
 });

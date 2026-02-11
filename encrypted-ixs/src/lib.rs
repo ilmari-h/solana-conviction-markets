@@ -59,10 +59,10 @@ mod circuits {
     pub fn buy_vote_tokens(
         balance_ctx: Enc<Shared, VoteTokenBalance>,
         amount: u64,
-    ) -> (u64, Enc<Shared, VoteTokenBalance>) {
+    ) -> Enc<Shared, VoteTokenBalance> {
         let mut balance = balance_ctx.to_arcis();
         balance.amount = balance.amount + amount;
-        (amount.reveal(), balance_ctx.owner.from_arcis(balance))
+        balance_ctx.owner.from_arcis(balance)
     }
 
     // Claim vote tokens (sell): subtract from balance
