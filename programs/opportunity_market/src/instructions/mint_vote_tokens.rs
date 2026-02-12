@@ -173,12 +173,18 @@ pub fn buy_vote_tokens_callback(
         &ctx.accounts.computation_account,
     ) {
         Ok(BuyVoteTokensOutput { field_0 }) => field_0,
+
+        // We do not reset account state here because can be done manually via
+        // `claim_pending_deposit`
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
 
     let vta = &mut ctx.accounts.vote_token_account;
 
-    // Deduct from pending_deposit (tokens already in VTA ATA)
+    // Check that pending deposit exists. User could have withdrawn funds.
+    require!(vta.pending_deposit > 0 && vta.locked, ErrorCode::InsufficientBalance);
+
+    // Set pending deposit to 0 and unlock account.
     vta.pending_deposit = 0;
     vta.locked = false;
 

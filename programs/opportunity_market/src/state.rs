@@ -18,7 +18,6 @@ pub struct CentralState {
 #[account]
 #[derive(InitSpace)]
 pub struct OpportunityMarket {
-    pub encrypted_available_shares: [[u8; 32]; 1],
     pub bump: u8,
     pub creator: Pubkey,      // part of PDA seed
     pub index: u64,           // part of PDA seed
@@ -38,9 +37,6 @@ pub struct OpportunityMarket {
     pub selected_option: Option<u16>,
 
     pub state_nonce: u128,
-
-    // Max available shares. 1 shares = 1 vote token
-    pub max_shares: u64,
 
     // Reward to be shared with stakers (in SPL token base units)
     pub reward_amount: u64,

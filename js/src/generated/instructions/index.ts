@@ -22,8 +22,6 @@ export * from './createMarket';
 export * from './extendRevealPeriod';
 export * from './incrementOptionTally';
 export * from './initCentralState';
-export * from './initMarketSharesCallback';
-export * from './initMarketSharesCompDef';
 export * from './initShareAccount';
 export * from './initVoteTokenAccount';
 export * from './initVoteTokenAccountCallback';

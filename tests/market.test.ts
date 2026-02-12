@@ -282,7 +282,6 @@ describe("OpportunityMarket", () => {
       initialTokenAmount: 2_000_000_000n,
       marketConfig: {
         rewardAmount: marketFundingAmount,
-        maxShares: 100_000_000n, // Must accommodate stake amounts (quarterAmount = 25M each)
         timeToStake: 120n,
         timeToReveal: 20n,
       },
@@ -397,4 +396,5 @@ describe("OpportunityMarket", () => {
     // Market ATA should be empty (or nearly empty due to rounding)
     expect(marketBalanceAfter <= 1n, `Market ATA should be empty, has ${marketBalanceAfter}`).to.be.true;
   })
+
 });

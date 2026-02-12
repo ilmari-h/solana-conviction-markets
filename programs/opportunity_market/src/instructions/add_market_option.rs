@@ -274,9 +274,8 @@ pub fn add_market_option_callback(
     ctx.accounts.source_vta.encrypted_state = new_user_balance.ciphertexts;
     ctx.accounts.source_vta.locked = false;
 
-    // Update market available shares
+    // Update market state nonce
     ctx.accounts.market.state_nonce = new_market_shares.nonce;
-    ctx.accounts.market.encrypted_available_shares = new_market_shares.ciphertexts;
 
     // Update share account encrypted state
     ctx.accounts.share_account.state_nonce = bought_shares_mxe.nonce;

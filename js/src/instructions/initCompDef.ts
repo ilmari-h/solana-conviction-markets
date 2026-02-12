@@ -18,7 +18,6 @@ import {
   getBuyVoteTokensCompDefInstruction,
   getClaimVoteTokensCompDefInstruction,
   getBuyOpportunityMarketSharesCompDefInstruction,
-  getInitMarketSharesCompDefInstruction,
   getRevealSharesCompDefInstruction,
   getUnstakeEarlyCompDefInstruction,
   getAddOptionStakeCompDefInstruction,
@@ -32,7 +31,6 @@ export type CompDefCircuitName =
   | "buy_vote_tokens"
   | "claim_vote_tokens"
   | "buy_opportunity_market_shares"
-  | "init_market_shares"
   | "reveal_shares"
   | "unstake_early"
   | "add_option_stake";
@@ -42,7 +40,6 @@ export const ALL_COMP_DEF_CIRCUITS: CompDefCircuitName[] = [
   "buy_vote_tokens",
   "claim_vote_tokens",
   "buy_opportunity_market_shares",
-  "init_market_shares",
   "reveal_shares",
   "unstake_early",
   "add_option_stake",
@@ -115,9 +112,6 @@ export async function getInitCompDefInstruction(
 
     case "buy_opportunity_market_shares":
       return getBuyOpportunityMarketSharesCompDefInstruction(baseInput, { programAddress: programId });
-
-    case "init_market_shares":
-      return getInitMarketSharesCompDefInstruction(baseInput, { programAddress: programId });
 
     case "reveal_shares":
       return getRevealSharesCompDefInstruction(baseInput, { programAddress: programId });

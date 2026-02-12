@@ -73,7 +73,6 @@ interface TestUser {
 }
 
 interface MarketConfig {
-  maxShares: bigint;
   rewardAmount: bigint;
   timeToStake: bigint;
   timeToReveal: bigint;
@@ -123,7 +122,6 @@ const DEFAULT_CONFIG: Required<TestRunnerConfig> = {
   airdropLamports: 2_000_000_000n, // 2 SOL
   initialTokenAmount: 1_000_000_000n, // 1 billion tokens per account
   marketConfig: {
-    maxShares: 1000n,
     rewardAmount: 1_000_000_000n,
     timeToStake: 120n, // 2 minutes
     timeToReveal: 60n, // 1 minute
@@ -341,28 +339,17 @@ export class TestRunner {
     // Create the market
     console.log("Creating market...");
     const marketIndex = BigInt(Math.floor(Math.random() * 1000000));
-    const nonce = deserializeLE(randomBytes(16));
-    const computationOffset = randomComputationOffset();
 
-    const createMarketIx = await createMarket(
-      {
-        creator: runner.marketCreator.solanaKeypair,
-        tokenMint: runner.mint.address,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        marketIndex,
-        maxShares: marketConfig.maxShares,
-        rewardAmount: marketConfig.rewardAmount,
-        timeToStake: marketConfig.timeToStake,
-        timeToReveal: marketConfig.timeToReveal,
-        marketAuthority: null,
-        nonce,
-      },
-      {
-        clusterOffset: runner.arciumEnv.arciumClusterOffset,
-        computationOffset,
-        programId,
-      }
-    );
+    const createMarketIx = await createMarket({
+      creator: runner.marketCreator.solanaKeypair,
+      tokenMint: runner.mint.address,
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
+      marketIndex,
+      rewardAmount: marketConfig.rewardAmount,
+      timeToStake: marketConfig.timeToStake,
+      timeToReveal: marketConfig.timeToReveal,
+      marketAuthority: null,
+    });
 
     await sendTransaction(runner.rpc, runner.sendAndConfirm, runner.marketCreator.solanaKeypair, [createMarketIx], {
       label: "Create market",

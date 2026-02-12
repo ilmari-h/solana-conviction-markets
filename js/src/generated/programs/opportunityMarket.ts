@@ -30,8 +30,6 @@ import {
   type ParsedExtendRevealPeriodInstruction,
   type ParsedIncrementOptionTallyInstruction,
   type ParsedInitCentralStateInstruction,
-  type ParsedInitMarketSharesCallbackInstruction,
-  type ParsedInitMarketSharesCompDefInstruction,
   type ParsedInitShareAccountInstruction,
   type ParsedInitVoteTokenAccountCallbackInstruction,
   type ParsedInitVoteTokenAccountCompDefInstruction,
@@ -214,8 +212,6 @@ export enum OpportunityMarketInstruction {
   ExtendRevealPeriod,
   IncrementOptionTally,
   InitCentralState,
-  InitMarketSharesCallback,
-  InitMarketSharesCompDef,
   InitShareAccount,
   InitVoteTokenAccount,
   InitVoteTokenAccountCallback,
@@ -413,28 +409,6 @@ export function identifyOpportunityMarketInstruction(
     )
   ) {
     return OpportunityMarketInstruction.InitCentralState;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([249, 83, 52, 51, 57, 57, 87, 218])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.InitMarketSharesCallback;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([64, 74, 81, 33, 11, 137, 110, 200])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.InitMarketSharesCompDef;
   }
   if (
     containsBytes(
@@ -668,12 +642,6 @@ export type ParsedOpportunityMarketInstruction<
   | ({
       instructionType: OpportunityMarketInstruction.InitCentralState;
     } & ParsedInitCentralStateInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.InitMarketSharesCallback;
-    } & ParsedInitMarketSharesCallbackInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.InitMarketSharesCompDef;
-    } & ParsedInitMarketSharesCompDefInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.InitShareAccount;
     } & ParsedInitShareAccountInstruction<TProgram>)

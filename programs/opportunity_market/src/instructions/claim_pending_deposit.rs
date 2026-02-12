@@ -19,7 +19,6 @@ pub struct ClaimPendingDeposit<'info> {
         seeds = [VOTE_TOKEN_ACCOUNT_SEED, token_mint.key().as_ref(), signer.key().as_ref()],
         bump = vote_token_account.bump,
         constraint = vote_token_account.owner == signer.key(),
-        constraint = !vote_token_account.locked @ ErrorCode::Locked
     )]
     pub vote_token_account: Account<'info, VoteTokenAccount>,
 
@@ -46,10 +45,9 @@ pub struct ClaimPendingDeposit<'info> {
 
 pub fn claim_pending_deposit(ctx: Context<ClaimPendingDeposit>) -> Result<()> {
     let vta = &mut ctx.accounts.vote_token_account;
-    let pending = vta.pending_deposit;
 
     // If no pending deposit, return success (no-op)
-    if pending == 0 {
+    if vta.pending_deposit == 0 {
         return Ok(());
     }
 
@@ -75,12 +73,13 @@ pub fn claim_pending_deposit(ctx: Context<ClaimPendingDeposit>) -> Result<()> {
             },
             signer_seeds,
         ),
-        pending,
+        vta.pending_deposit,
         ctx.accounts.token_mint.decimals,
     )?;
 
     // Clear pending deposit
     vta.pending_deposit = 0;
+    vta.locked = false;
 
     Ok(())
 }

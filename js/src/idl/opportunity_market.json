@@ -1389,70 +1389,6 @@
           }
         },
         {
-          "name": "sign_pda_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  65,
-                  114,
-                  99,
-                  105,
-                  117,
-                  109,
-                  83,
-                  105,
-                  103,
-                  110,
-                  101,
-                  114,
-                  65,
-                  99,
-                  99,
-                  111,
-                  117,
-                  110,
-                  116
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "mxe_account"
-        },
-        {
-          "name": "mempool_account",
-          "writable": true
-        },
-        {
-          "name": "executing_pool",
-          "writable": true
-        },
-        {
-          "name": "computation_account",
-          "writable": true
-        },
-        {
-          "name": "comp_def_account"
-        },
-        {
-          "name": "cluster_account",
-          "writable": true
-        },
-        {
-          "name": "pool_account",
-          "writable": true,
-          "address": "G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC"
-        },
-        {
-          "name": "clock_account",
-          "writable": true,
-          "address": "7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot"
-        },
-        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
@@ -1462,23 +1398,11 @@
         {
           "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
-          "name": "arcium_program",
-          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
         }
       ],
       "args": [
         {
           "name": "market_index",
-          "type": "u64"
-        },
-        {
-          "name": "computation_offset",
-          "type": "u64"
-        },
-        {
-          "name": "max_shares",
           "type": "u64"
         },
         {
@@ -1492,10 +1416,6 @@
         {
           "name": "time_to_reveal",
           "type": "u64"
-        },
-        {
-          "name": "nonce",
-          "type": "u128"
         },
         {
           "name": "market_authority",
@@ -1698,110 +1618,6 @@
           "type": "u64"
         }
       ]
-    },
-    {
-      "name": "init_market_shares_callback",
-      "discriminator": [
-        249,
-        83,
-        52,
-        51,
-        57,
-        57,
-        87,
-        218
-      ],
-      "accounts": [
-        {
-          "name": "arcium_program",
-          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
-        },
-        {
-          "name": "comp_def_account"
-        },
-        {
-          "name": "mxe_account"
-        },
-        {
-          "name": "computation_account"
-        },
-        {
-          "name": "cluster_account"
-        },
-        {
-          "name": "instructions_sysvar",
-          "address": "Sysvar1nstructions1111111111111111111111111"
-        },
-        {
-          "name": "market",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "output",
-          "type": {
-            "defined": {
-              "name": "SignedComputationOutputs",
-              "generics": [
-                {
-                  "kind": "type",
-                  "type": {
-                    "defined": {
-                      "name": "InitMarketSharesOutput"
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "init_market_shares_comp_def",
-      "discriminator": [
-        64,
-        74,
-        81,
-        33,
-        11,
-        137,
-        110,
-        200
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "mxe_account",
-          "writable": true
-        },
-        {
-          "name": "comp_def_account",
-          "writable": true
-        },
-        {
-          "name": "address_lookup_table",
-          "writable": true
-        },
-        {
-          "name": "lut_program",
-          "address": "AddressLookupTab1e1111111111111111111111111"
-        },
-        {
-          "name": "arcium_program",
-          "address": "Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
     },
     {
       "name": "init_share_account",
@@ -4341,32 +4157,6 @@
       }
     },
     {
-      "name": "InitMarketSharesOutput",
-      "docs": [
-        "The output of the callback instruction. Provided as a struct with ordered fields",
-        "as anchor does not support tuples and tuple structs yet."
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "field_0",
-            "type": {
-              "defined": {
-                "name": "MXEEncryptedStruct",
-                "generics": [
-                  {
-                    "kind": "const",
-                    "value": "1"
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
       "name": "InitVoteTokenAccountOutput",
       "docs": [
         "The output of the callback instruction. Provided as a struct with ordered fields",
@@ -4533,10 +4323,6 @@
             "type": "pubkey"
           },
           {
-            "name": "max_shares",
-            "type": "u64"
-          },
-          {
             "name": "index",
             "type": "u64"
           }
@@ -4662,20 +4448,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "encrypted_available_shares",
-            "type": {
-              "array": [
-                {
-                  "array": [
-                    "u8",
-                    32
-                  ]
-                },
-                1
-              ]
-            }
-          },
-          {
             "name": "bump",
             "type": "u8"
           },
@@ -4714,10 +4486,6 @@
           {
             "name": "state_nonce",
             "type": "u128"
-          },
-          {
-            "name": "max_shares",
-            "type": "u64"
           },
           {
             "name": "reward_amount",

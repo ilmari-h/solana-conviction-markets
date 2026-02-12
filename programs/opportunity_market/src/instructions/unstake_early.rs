@@ -205,9 +205,8 @@ pub fn unstake_early_callback(
     ctx.accounts.user_vta.locked = false;
     ctx.accounts.share_account.locked = false;
 
-    // Update market with returned shares
+    // Update market state nonce
     ctx.accounts.market.state_nonce = new_market_shares.nonce;
-    ctx.accounts.market.encrypted_available_shares = new_market_shares.ciphertexts;
 
     emit!(SharesUnstakedEvent {
         buyer: ctx.accounts.user_vta.owner,

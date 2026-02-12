@@ -19,8 +19,6 @@ import {
   getProgramDerivedAddress,
   getStructDecoder,
   getStructEncoder,
-  getU128Decoder,
-  getU128Encoder,
   getU64Decoder,
   getU64Encoder,
   transformEncoder,
@@ -66,24 +64,11 @@ export type CreateMarketInstruction<
   TAccountCentralState extends string | AccountMeta<string> = string,
   TAccountMarket extends string | AccountMeta<string> = string,
   TAccountMarketTokenAta extends string | AccountMeta<string> = string,
-  TAccountSignPdaAccount extends string | AccountMeta<string> = string,
-  TAccountMxeAccount extends string | AccountMeta<string> = string,
-  TAccountMempoolAccount extends string | AccountMeta<string> = string,
-  TAccountExecutingPool extends string | AccountMeta<string> = string,
-  TAccountComputationAccount extends string | AccountMeta<string> = string,
-  TAccountCompDefAccount extends string | AccountMeta<string> = string,
-  TAccountClusterAccount extends string | AccountMeta<string> = string,
-  TAccountPoolAccount extends string | AccountMeta<string> =
-    'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC',
-  TAccountClockAccount extends string | AccountMeta<string> =
-    '7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot',
   TAccountSystemProgram extends string | AccountMeta<string> =
     '11111111111111111111111111111111',
   TAccountTokenProgram extends string | AccountMeta<string> = string,
   TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
     'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
-  TAccountArciumProgram extends string | AccountMeta<string> =
-    'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ',
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -105,33 +90,6 @@ export type CreateMarketInstruction<
       TAccountMarketTokenAta extends string
         ? WritableAccount<TAccountMarketTokenAta>
         : TAccountMarketTokenAta,
-      TAccountSignPdaAccount extends string
-        ? WritableAccount<TAccountSignPdaAccount>
-        : TAccountSignPdaAccount,
-      TAccountMxeAccount extends string
-        ? ReadonlyAccount<TAccountMxeAccount>
-        : TAccountMxeAccount,
-      TAccountMempoolAccount extends string
-        ? WritableAccount<TAccountMempoolAccount>
-        : TAccountMempoolAccount,
-      TAccountExecutingPool extends string
-        ? WritableAccount<TAccountExecutingPool>
-        : TAccountExecutingPool,
-      TAccountComputationAccount extends string
-        ? WritableAccount<TAccountComputationAccount>
-        : TAccountComputationAccount,
-      TAccountCompDefAccount extends string
-        ? ReadonlyAccount<TAccountCompDefAccount>
-        : TAccountCompDefAccount,
-      TAccountClusterAccount extends string
-        ? WritableAccount<TAccountClusterAccount>
-        : TAccountClusterAccount,
-      TAccountPoolAccount extends string
-        ? WritableAccount<TAccountPoolAccount>
-        : TAccountPoolAccount,
-      TAccountClockAccount extends string
-        ? WritableAccount<TAccountClockAccount>
-        : TAccountClockAccount,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -141,9 +99,6 @@ export type CreateMarketInstruction<
       TAccountAssociatedTokenProgram extends string
         ? ReadonlyAccount<TAccountAssociatedTokenProgram>
         : TAccountAssociatedTokenProgram,
-      TAccountArciumProgram extends string
-        ? ReadonlyAccount<TAccountArciumProgram>
-        : TAccountArciumProgram,
       ...TRemainingAccounts,
     ]
   >;
@@ -151,23 +106,17 @@ export type CreateMarketInstruction<
 export type CreateMarketInstructionData = {
   discriminator: ReadonlyUint8Array;
   marketIndex: bigint;
-  computationOffset: bigint;
-  maxShares: bigint;
   rewardAmount: bigint;
   timeToStake: bigint;
   timeToReveal: bigint;
-  nonce: bigint;
   marketAuthority: Option<Address>;
 };
 
 export type CreateMarketInstructionDataArgs = {
   marketIndex: number | bigint;
-  computationOffset: number | bigint;
-  maxShares: number | bigint;
   rewardAmount: number | bigint;
   timeToStake: number | bigint;
   timeToReveal: number | bigint;
-  nonce: number | bigint;
   marketAuthority: OptionOrNullable<Address>;
 };
 
@@ -176,12 +125,9 @@ export function getCreateMarketInstructionDataEncoder(): Encoder<CreateMarketIns
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['marketIndex', getU64Encoder()],
-      ['computationOffset', getU64Encoder()],
-      ['maxShares', getU64Encoder()],
       ['rewardAmount', getU64Encoder()],
       ['timeToStake', getU64Encoder()],
       ['timeToReveal', getU64Encoder()],
-      ['nonce', getU128Encoder()],
       ['marketAuthority', getOptionEncoder(getAddressEncoder())],
     ]),
     (value) => ({ ...value, discriminator: CREATE_MARKET_DISCRIMINATOR })
@@ -192,12 +138,9 @@ export function getCreateMarketInstructionDataDecoder(): Decoder<CreateMarketIns
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['marketIndex', getU64Decoder()],
-    ['computationOffset', getU64Decoder()],
-    ['maxShares', getU64Decoder()],
     ['rewardAmount', getU64Decoder()],
     ['timeToStake', getU64Decoder()],
     ['timeToReveal', getU64Decoder()],
-    ['nonce', getU128Decoder()],
     ['marketAuthority', getOptionDecoder(getAddressDecoder())],
   ]);
 }
@@ -218,19 +161,9 @@ export type CreateMarketAsyncInput<
   TAccountCentralState extends string = string,
   TAccountMarket extends string = string,
   TAccountMarketTokenAta extends string = string,
-  TAccountSignPdaAccount extends string = string,
-  TAccountMxeAccount extends string = string,
-  TAccountMempoolAccount extends string = string,
-  TAccountExecutingPool extends string = string,
-  TAccountComputationAccount extends string = string,
-  TAccountCompDefAccount extends string = string,
-  TAccountClusterAccount extends string = string,
-  TAccountPoolAccount extends string = string,
-  TAccountClockAccount extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
-  TAccountArciumProgram extends string = string,
 > = {
   creator: TransactionSigner<TAccountCreator>;
   tokenMint: Address<TAccountTokenMint>;
@@ -238,26 +171,13 @@ export type CreateMarketAsyncInput<
   market?: Address<TAccountMarket>;
   /** ATA owned by market PDA, holds reward tokens */
   marketTokenAta?: Address<TAccountMarketTokenAta>;
-  signPdaAccount?: Address<TAccountSignPdaAccount>;
-  mxeAccount: Address<TAccountMxeAccount>;
-  mempoolAccount: Address<TAccountMempoolAccount>;
-  executingPool: Address<TAccountExecutingPool>;
-  computationAccount: Address<TAccountComputationAccount>;
-  compDefAccount: Address<TAccountCompDefAccount>;
-  clusterAccount: Address<TAccountClusterAccount>;
-  poolAccount?: Address<TAccountPoolAccount>;
-  clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
-  arciumProgram?: Address<TAccountArciumProgram>;
   marketIndex: CreateMarketInstructionDataArgs['marketIndex'];
-  computationOffset: CreateMarketInstructionDataArgs['computationOffset'];
-  maxShares: CreateMarketInstructionDataArgs['maxShares'];
   rewardAmount: CreateMarketInstructionDataArgs['rewardAmount'];
   timeToStake: CreateMarketInstructionDataArgs['timeToStake'];
   timeToReveal: CreateMarketInstructionDataArgs['timeToReveal'];
-  nonce: CreateMarketInstructionDataArgs['nonce'];
   marketAuthority: CreateMarketInstructionDataArgs['marketAuthority'];
 };
 
@@ -267,19 +187,9 @@ export async function getCreateMarketInstructionAsync<
   TAccountCentralState extends string,
   TAccountMarket extends string,
   TAccountMarketTokenAta extends string,
-  TAccountSignPdaAccount extends string,
-  TAccountMxeAccount extends string,
-  TAccountMempoolAccount extends string,
-  TAccountExecutingPool extends string,
-  TAccountComputationAccount extends string,
-  TAccountCompDefAccount extends string,
-  TAccountClusterAccount extends string,
-  TAccountPoolAccount extends string,
-  TAccountClockAccount extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
-  TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: CreateMarketAsyncInput<
@@ -288,19 +198,9 @@ export async function getCreateMarketInstructionAsync<
     TAccountCentralState,
     TAccountMarket,
     TAccountMarketTokenAta,
-    TAccountSignPdaAccount,
-    TAccountMxeAccount,
-    TAccountMempoolAccount,
-    TAccountExecutingPool,
-    TAccountComputationAccount,
-    TAccountCompDefAccount,
-    TAccountClusterAccount,
-    TAccountPoolAccount,
-    TAccountClockAccount,
     TAccountSystemProgram,
     TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
-    TAccountArciumProgram
+    TAccountAssociatedTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
@@ -311,19 +211,9 @@ export async function getCreateMarketInstructionAsync<
     TAccountCentralState,
     TAccountMarket,
     TAccountMarketTokenAta,
-    TAccountSignPdaAccount,
-    TAccountMxeAccount,
-    TAccountMempoolAccount,
-    TAccountExecutingPool,
-    TAccountComputationAccount,
-    TAccountCompDefAccount,
-    TAccountClusterAccount,
-    TAccountPoolAccount,
-    TAccountClockAccount,
     TAccountSystemProgram,
     TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
-    TAccountArciumProgram
+    TAccountAssociatedTokenProgram
   >
 > {
   // Program address.
@@ -337,25 +227,12 @@ export async function getCreateMarketInstructionAsync<
     centralState: { value: input.centralState ?? null, isWritable: false },
     market: { value: input.market ?? null, isWritable: true },
     marketTokenAta: { value: input.marketTokenAta ?? null, isWritable: true },
-    signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
-    mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
-    mempoolAccount: { value: input.mempoolAccount ?? null, isWritable: true },
-    executingPool: { value: input.executingPool ?? null, isWritable: true },
-    computationAccount: {
-      value: input.computationAccount ?? null,
-      isWritable: true,
-    },
-    compDefAccount: { value: input.compDefAccount ?? null, isWritable: false },
-    clusterAccount: { value: input.clusterAccount ?? null, isWritable: true },
-    poolAccount: { value: input.poolAccount ?? null, isWritable: true },
-    clockAccount: { value: input.clockAccount ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
       value: input.associatedTokenProgram ?? null,
       isWritable: false,
     },
-    arciumProgram: { value: input.arciumProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -404,27 +281,6 @@ export async function getCreateMarketInstructionAsync<
       ],
     });
   }
-  if (!accounts.signPdaAccount.value) {
-    accounts.signPdaAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            65, 114, 99, 105, 117, 109, 83, 105, 103, 110, 101, 114, 65, 99, 99,
-            111, 117, 110, 116,
-          ])
-        ),
-      ],
-    });
-  }
-  if (!accounts.poolAccount.value) {
-    accounts.poolAccount.value =
-      'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC' as Address<'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC'>;
-  }
-  if (!accounts.clockAccount.value) {
-    accounts.clockAccount.value =
-      '7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot' as Address<'7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot'>;
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -432,10 +288,6 @@ export async function getCreateMarketInstructionAsync<
   if (!accounts.associatedTokenProgram.value) {
     accounts.associatedTokenProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
-  }
-  if (!accounts.arciumProgram.value) {
-    accounts.arciumProgram.value =
-      'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ' as Address<'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ'>;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
@@ -446,19 +298,9 @@ export async function getCreateMarketInstructionAsync<
       getAccountMeta(accounts.centralState),
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.marketTokenAta),
-      getAccountMeta(accounts.signPdaAccount),
-      getAccountMeta(accounts.mxeAccount),
-      getAccountMeta(accounts.mempoolAccount),
-      getAccountMeta(accounts.executingPool),
-      getAccountMeta(accounts.computationAccount),
-      getAccountMeta(accounts.compDefAccount),
-      getAccountMeta(accounts.clusterAccount),
-      getAccountMeta(accounts.poolAccount),
-      getAccountMeta(accounts.clockAccount),
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
-      getAccountMeta(accounts.arciumProgram),
     ],
     data: getCreateMarketInstructionDataEncoder().encode(
       args as CreateMarketInstructionDataArgs
@@ -471,19 +313,9 @@ export async function getCreateMarketInstructionAsync<
     TAccountCentralState,
     TAccountMarket,
     TAccountMarketTokenAta,
-    TAccountSignPdaAccount,
-    TAccountMxeAccount,
-    TAccountMempoolAccount,
-    TAccountExecutingPool,
-    TAccountComputationAccount,
-    TAccountCompDefAccount,
-    TAccountClusterAccount,
-    TAccountPoolAccount,
-    TAccountClockAccount,
     TAccountSystemProgram,
     TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
-    TAccountArciumProgram
+    TAccountAssociatedTokenProgram
   >);
 }
 
@@ -493,19 +325,9 @@ export type CreateMarketInput<
   TAccountCentralState extends string = string,
   TAccountMarket extends string = string,
   TAccountMarketTokenAta extends string = string,
-  TAccountSignPdaAccount extends string = string,
-  TAccountMxeAccount extends string = string,
-  TAccountMempoolAccount extends string = string,
-  TAccountExecutingPool extends string = string,
-  TAccountComputationAccount extends string = string,
-  TAccountCompDefAccount extends string = string,
-  TAccountClusterAccount extends string = string,
-  TAccountPoolAccount extends string = string,
-  TAccountClockAccount extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
-  TAccountArciumProgram extends string = string,
 > = {
   creator: TransactionSigner<TAccountCreator>;
   tokenMint: Address<TAccountTokenMint>;
@@ -513,26 +335,13 @@ export type CreateMarketInput<
   market: Address<TAccountMarket>;
   /** ATA owned by market PDA, holds reward tokens */
   marketTokenAta: Address<TAccountMarketTokenAta>;
-  signPdaAccount: Address<TAccountSignPdaAccount>;
-  mxeAccount: Address<TAccountMxeAccount>;
-  mempoolAccount: Address<TAccountMempoolAccount>;
-  executingPool: Address<TAccountExecutingPool>;
-  computationAccount: Address<TAccountComputationAccount>;
-  compDefAccount: Address<TAccountCompDefAccount>;
-  clusterAccount: Address<TAccountClusterAccount>;
-  poolAccount?: Address<TAccountPoolAccount>;
-  clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
-  arciumProgram?: Address<TAccountArciumProgram>;
   marketIndex: CreateMarketInstructionDataArgs['marketIndex'];
-  computationOffset: CreateMarketInstructionDataArgs['computationOffset'];
-  maxShares: CreateMarketInstructionDataArgs['maxShares'];
   rewardAmount: CreateMarketInstructionDataArgs['rewardAmount'];
   timeToStake: CreateMarketInstructionDataArgs['timeToStake'];
   timeToReveal: CreateMarketInstructionDataArgs['timeToReveal'];
-  nonce: CreateMarketInstructionDataArgs['nonce'];
   marketAuthority: CreateMarketInstructionDataArgs['marketAuthority'];
 };
 
@@ -542,19 +351,9 @@ export function getCreateMarketInstruction<
   TAccountCentralState extends string,
   TAccountMarket extends string,
   TAccountMarketTokenAta extends string,
-  TAccountSignPdaAccount extends string,
-  TAccountMxeAccount extends string,
-  TAccountMempoolAccount extends string,
-  TAccountExecutingPool extends string,
-  TAccountComputationAccount extends string,
-  TAccountCompDefAccount extends string,
-  TAccountClusterAccount extends string,
-  TAccountPoolAccount extends string,
-  TAccountClockAccount extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
-  TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: CreateMarketInput<
@@ -563,19 +362,9 @@ export function getCreateMarketInstruction<
     TAccountCentralState,
     TAccountMarket,
     TAccountMarketTokenAta,
-    TAccountSignPdaAccount,
-    TAccountMxeAccount,
-    TAccountMempoolAccount,
-    TAccountExecutingPool,
-    TAccountComputationAccount,
-    TAccountCompDefAccount,
-    TAccountClusterAccount,
-    TAccountPoolAccount,
-    TAccountClockAccount,
     TAccountSystemProgram,
     TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
-    TAccountArciumProgram
+    TAccountAssociatedTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): CreateMarketInstruction<
@@ -585,19 +374,9 @@ export function getCreateMarketInstruction<
   TAccountCentralState,
   TAccountMarket,
   TAccountMarketTokenAta,
-  TAccountSignPdaAccount,
-  TAccountMxeAccount,
-  TAccountMempoolAccount,
-  TAccountExecutingPool,
-  TAccountComputationAccount,
-  TAccountCompDefAccount,
-  TAccountClusterAccount,
-  TAccountPoolAccount,
-  TAccountClockAccount,
   TAccountSystemProgram,
   TAccountTokenProgram,
-  TAccountAssociatedTokenProgram,
-  TAccountArciumProgram
+  TAccountAssociatedTokenProgram
 > {
   // Program address.
   const programAddress =
@@ -610,25 +389,12 @@ export function getCreateMarketInstruction<
     centralState: { value: input.centralState ?? null, isWritable: false },
     market: { value: input.market ?? null, isWritable: true },
     marketTokenAta: { value: input.marketTokenAta ?? null, isWritable: true },
-    signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
-    mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
-    mempoolAccount: { value: input.mempoolAccount ?? null, isWritable: true },
-    executingPool: { value: input.executingPool ?? null, isWritable: true },
-    computationAccount: {
-      value: input.computationAccount ?? null,
-      isWritable: true,
-    },
-    compDefAccount: { value: input.compDefAccount ?? null, isWritable: false },
-    clusterAccount: { value: input.clusterAccount ?? null, isWritable: true },
-    poolAccount: { value: input.poolAccount ?? null, isWritable: true },
-    clockAccount: { value: input.clockAccount ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
       value: input.associatedTokenProgram ?? null,
       isWritable: false,
     },
-    arciumProgram: { value: input.arciumProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -639,14 +405,6 @@ export function getCreateMarketInstruction<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.poolAccount.value) {
-    accounts.poolAccount.value =
-      'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC' as Address<'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC'>;
-  }
-  if (!accounts.clockAccount.value) {
-    accounts.clockAccount.value =
-      '7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot' as Address<'7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot'>;
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -654,10 +412,6 @@ export function getCreateMarketInstruction<
   if (!accounts.associatedTokenProgram.value) {
     accounts.associatedTokenProgram.value =
       'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
-  }
-  if (!accounts.arciumProgram.value) {
-    accounts.arciumProgram.value =
-      'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ' as Address<'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ'>;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
@@ -668,19 +422,9 @@ export function getCreateMarketInstruction<
       getAccountMeta(accounts.centralState),
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.marketTokenAta),
-      getAccountMeta(accounts.signPdaAccount),
-      getAccountMeta(accounts.mxeAccount),
-      getAccountMeta(accounts.mempoolAccount),
-      getAccountMeta(accounts.executingPool),
-      getAccountMeta(accounts.computationAccount),
-      getAccountMeta(accounts.compDefAccount),
-      getAccountMeta(accounts.clusterAccount),
-      getAccountMeta(accounts.poolAccount),
-      getAccountMeta(accounts.clockAccount),
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
-      getAccountMeta(accounts.arciumProgram),
     ],
     data: getCreateMarketInstructionDataEncoder().encode(
       args as CreateMarketInstructionDataArgs
@@ -693,19 +437,9 @@ export function getCreateMarketInstruction<
     TAccountCentralState,
     TAccountMarket,
     TAccountMarketTokenAta,
-    TAccountSignPdaAccount,
-    TAccountMxeAccount,
-    TAccountMempoolAccount,
-    TAccountExecutingPool,
-    TAccountComputationAccount,
-    TAccountCompDefAccount,
-    TAccountClusterAccount,
-    TAccountPoolAccount,
-    TAccountClockAccount,
     TAccountSystemProgram,
     TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
-    TAccountArciumProgram
+    TAccountAssociatedTokenProgram
   >);
 }
 
@@ -721,19 +455,9 @@ export type ParsedCreateMarketInstruction<
     market: TAccountMetas[3];
     /** ATA owned by market PDA, holds reward tokens */
     marketTokenAta: TAccountMetas[4];
-    signPdaAccount: TAccountMetas[5];
-    mxeAccount: TAccountMetas[6];
-    mempoolAccount: TAccountMetas[7];
-    executingPool: TAccountMetas[8];
-    computationAccount: TAccountMetas[9];
-    compDefAccount: TAccountMetas[10];
-    clusterAccount: TAccountMetas[11];
-    poolAccount: TAccountMetas[12];
-    clockAccount: TAccountMetas[13];
-    systemProgram: TAccountMetas[14];
-    tokenProgram: TAccountMetas[15];
-    associatedTokenProgram: TAccountMetas[16];
-    arciumProgram: TAccountMetas[17];
+    systemProgram: TAccountMetas[5];
+    tokenProgram: TAccountMetas[6];
+    associatedTokenProgram: TAccountMetas[7];
   };
   data: CreateMarketInstructionData;
 };
@@ -746,7 +470,7 @@ export function parseCreateMarketInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedCreateMarketInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 18) {
+  if (instruction.accounts.length < 8) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -764,19 +488,9 @@ export function parseCreateMarketInstruction<
       centralState: getNextAccount(),
       market: getNextAccount(),
       marketTokenAta: getNextAccount(),
-      signPdaAccount: getNextAccount(),
-      mxeAccount: getNextAccount(),
-      mempoolAccount: getNextAccount(),
-      executingPool: getNextAccount(),
-      computationAccount: getNextAccount(),
-      compDefAccount: getNextAccount(),
-      clusterAccount: getNextAccount(),
-      poolAccount: getNextAccount(),
-      clockAccount: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),
-      arciumProgram: getNextAccount(),
     },
     data: getCreateMarketInstructionDataDecoder().decode(instruction.data),
   };
