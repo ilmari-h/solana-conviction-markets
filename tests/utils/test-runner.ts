@@ -697,9 +697,23 @@ export class TestRunner {
     return shareAccountId;
   }
 
+  // TODO: this is very slow due to sequential computatio nfinalization awaits.
   async revealSharesBatch(reveals: RevealRequest[]): Promise<void> {
-    const revealData = await Promise.all(
-      reveals.map(async (r) => {
+    // Group reveals by user to handle VTA locking correctly
+    // Each reveal locks the VTA until callback completes, so same-user reveals must be sequential
+    const revealsByUser = new Map<string, RevealRequest[]>();
+    for (const r of reveals) {
+      const key = r.userId.toString();
+      if (!revealsByUser.has(key)) {
+        revealsByUser.set(key, []);
+      }
+      revealsByUser.get(key)!.push(r);
+    }
+
+    // Process each user's reveals sequentially (await finalization between each)
+    // Different users can't be parallelized either since we need to await each computation
+    for (const [_userId, userReveals] of revealsByUser) {
+      for (const r of userReveals) {
         const user = this.getUser(r.userId);
         const computationOffset = randomComputationOffset();
         const [userVta] = await getVoteTokenAccountAddress(this.mint.address, r.userId);
@@ -716,22 +730,15 @@ export class TestRunner {
           this.getArciumConfig(computationOffset)
         );
 
-        return { user, ix, computationOffset };
-      })
-    );
+        await sendTransaction(this.rpc, this.sendAndConfirm, user.solanaKeypair, [ix], {
+          label: `Reveal shares`,
+        });
 
-    // Send sequentially
-    for (const data of revealData) {
-      await sendTransaction(this.rpc, this.sendAndConfirm, data.user.solanaKeypair, [data.ix], {
-        label: `Reveal shares`,
-      });
+        // Wait for this computation to finalize before next reveal
+        // This ensures the VTA is unlocked by the callback
+        await awaitComputationFinalization(this.rpc, computationOffset);
+      }
     }
-
-    // Await all computations
-    await awaitBatchComputationFinalization(
-      this.rpc,
-      revealData.map((d) => d.computationOffset)
-    );
   }
 
   async revealShares(userId: Address, shareAccountId: number): Promise<void> {

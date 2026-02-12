@@ -5,7 +5,7 @@ import { fetchToken } from "@solana-program/token";
 import { expect } from "chai";
 
 import { OpportunityMarket } from "../target/types/opportunity_market";
-import { TestRunner, ShareAccountInfo } from "./utils/test-runner";
+import { TestRunner } from "./utils/test-runner";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sleepUntilOnChainTimestamp } from "./utils/sleep";
 
@@ -54,7 +54,7 @@ describe("OpportunityMarket", () => {
       marketConfig: {
         rewardAmount: marketFundingAmount,
         timeToStake: 120n,
-        timeToReveal: 15n,
+        timeToReveal: 25n,
       },
     });
 
@@ -113,10 +113,13 @@ describe("OpportunityMarket", () => {
     );
 
     // Reveal creator's share accounts
+    console.log("REVEALING?")
     const creatorShareAccounts = runner.getUserShareAccounts(runner.creator);
     await runner.revealSharesBatch(
       creatorShareAccounts.map((sa) => ({ userId: runner.creator, shareAccountId: sa.id }))
     );
+
+    console.log("REVALED?")
 
     // Verify revealed shares for winners
     for (let i = 0; i < winners.length; i++) {
@@ -125,6 +128,7 @@ describe("OpportunityMarket", () => {
       expect(shareAccount.data.revealedAmount).to.deep.equal(some(sa.amount));
       expect(shareAccount.data.revealedOption).to.deep.equal(some(winningOptionIndex));
     }
+    console.log("Winners verified")
 
     // Verify creator's revealed shares
     for (const sa of creatorShareAccounts) {
@@ -132,6 +136,7 @@ describe("OpportunityMarket", () => {
       expect(shareAccount.data.revealedAmount).to.deep.equal(some(sa.amount));
       expect(shareAccount.data.revealedOption).to.deep.equal(some(sa.optionIndex));
     }
+    console.log("Creator verified")
 
     // Increment option tally for winners
     await runner.incrementOptionTallyBatch(
@@ -141,6 +146,7 @@ describe("OpportunityMarket", () => {
         shareAccountId: winnerShareAccounts[i].id,
       }))
     );
+    console.log("Winners incremented")
 
     // Increment tally for creator's share accounts
     await runner.incrementOptionTallyBatch(
@@ -150,11 +156,15 @@ describe("OpportunityMarket", () => {
         shareAccountId: sa.id,
       }))
     );
+    console.log("Creator incremented")
 
     // Verify option tally
     const totalWinningShares = winnerShareAccounts.reduce((sum, sa) => sum + sa.amount, 0n) + minDeposit;
     const optionAccount = await runner.fetchOptionData(winningOptionIndex);
     expect(optionAccount.data.totalShares).to.deep.equal(some(totalWinningShares));
+
+
+    console.log("Options ok")
 
     // Get timestamps for reward calculation
     const updatedMarket = await runner.fetchMarket();
@@ -192,6 +202,7 @@ describe("OpportunityMarket", () => {
       .data.amount;
     const marketBalanceBefore = (await fetchToken(rpc, marketAta)).data.amount;
 
+    console.log("Balances calculated")
     // Close share accounts for winners
     await runner.closeShareAccountBatch(
       winners.map((userId, i) => ({
@@ -200,6 +211,7 @@ describe("OpportunityMarket", () => {
         shareAccountId: winnerShareAccounts[i].id,
       }))
     );
+    console.log("Winners shares closed")
 
     // Close creator's share accounts
     await runner.closeShareAccountBatch(
@@ -209,6 +221,8 @@ describe("OpportunityMarket", () => {
         shareAccountId: sa.id,
       }))
     );
+
+    console.log("Creator shares closed")
 
     // Verify share accounts were closed
     for (let i = 0; i < winners.length; i++) {
