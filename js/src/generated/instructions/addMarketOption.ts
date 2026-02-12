@@ -108,7 +108,7 @@ export type AddMarketOptionInstruction<
         ? WritableAccount<TAccountOption>
         : TAccountOption,
       TAccountSourceVta extends string
-        ? ReadonlyAccount<TAccountSourceVta>
+        ? WritableAccount<TAccountSourceVta>
         : TAccountSourceVta,
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
@@ -342,7 +342,7 @@ export async function getAddMarketOptionInstructionAsync<
     market: { value: input.market ?? null, isWritable: true },
     centralState: { value: input.centralState ?? null, isWritable: false },
     option: { value: input.option ?? null, isWritable: true },
-    sourceVta: { value: input.sourceVta ?? null, isWritable: false },
+    sourceVta: { value: input.sourceVta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -602,7 +602,7 @@ export function getAddMarketOptionInstruction<
     market: { value: input.market ?? null, isWritable: true },
     centralState: { value: input.centralState ?? null, isWritable: false },
     option: { value: input.option ?? null, isWritable: true },
-    sourceVta: { value: input.sourceVta ?? null, isWritable: false },
+    sourceVta: { value: input.sourceVta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },

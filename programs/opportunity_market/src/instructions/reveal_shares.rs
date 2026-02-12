@@ -29,7 +29,10 @@ pub struct RevealShares<'info> {
     )]
     pub share_account: Box<Account<'info, ShareAccount>>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = !user_vta.locked @ ErrorCode::Locked,
+    )]
     pub user_vta: Box<Account<'info, VoteTokenAccount>>,
 
     // Arcium accounts
@@ -95,6 +98,11 @@ pub fn reveal_shares(
 
     let user_vta_key = ctx.accounts.user_vta.key();
     let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
+    
+    // Lock VTA if going to be modified by callback
+    if ctx.accounts.share_account.unstaked_at_timestamp.is_none() {
+        ctx.accounts.user_vta.locked = true;
+    }
 
     // Build args for encrypted computation
     let args = ArgBuilder::new()
@@ -185,6 +193,7 @@ pub fn reveal_shares_callback(
     if ctx.accounts.share_account.unstaked_at_timestamp.is_none() {
         ctx.accounts.user_vta.state_nonce = new_user_balance.nonce;
         ctx.accounts.user_vta.encrypted_state = new_user_balance.ciphertexts;
+        ctx.accounts.user_vta.locked = false;
     }
 
     emit!(SharesRevealedEvent{

@@ -63,6 +63,8 @@ pub struct VoteTokenAccount {
     pub owner: Pubkey,
     pub state_nonce: u128,
     pub token_mint: Pubkey,
+
+    pub locked: bool,
     pub pending_deposit: u64,  // tracks unconfirmed deposits for safety
 }
 

@@ -39,8 +39,10 @@ pub struct AddMarketOption<'info> {
     pub option: Box<Account<'info, OpportunityMarketOption>>,
 
     #[account(
+        mut,
         constraint = source_vta.owner == creator.key() @ ErrorCode::Unauthorized,
         constraint = source_vta.token_mint == market.mint @ ErrorCode::InvalidMint,
+        constraint = !source_vta.locked @ ErrorCode::Locked,
     )]
     pub source_vta: Box<Account<'info, VoteTokenAccount>>,
 
@@ -152,6 +154,8 @@ pub fn add_market_option(
     let market_state_nonce = market.state_nonce;
 
     let share_account_key = ctx.accounts.share_account.key();
+
+    ctx.accounts.source_vta.locked = true;
 
     // Build args for encrypted computation
     let args = ArgBuilder::new()
@@ -268,6 +272,7 @@ pub fn add_market_option_callback(
     // Update source VTA balance
     ctx.accounts.source_vta.state_nonce = new_user_balance.nonce;
     ctx.accounts.source_vta.encrypted_state = new_user_balance.ciphertexts;
+    ctx.accounts.source_vta.locked = false;
 
     // Update market available shares
     ctx.accounts.market.state_nonce = new_market_shares.nonce;

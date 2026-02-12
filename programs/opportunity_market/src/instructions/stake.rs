@@ -25,6 +25,7 @@ pub struct Stake<'info> {
 
     #[account(
         constraint = user_vta.owner == signer.key() @ ErrorCode::Unauthorized,
+        constraint = !user_vta.locked @ ErrorCode::Locked,
     )]
     pub user_vta: Box<Account<'info, VoteTokenAccount>>,
 

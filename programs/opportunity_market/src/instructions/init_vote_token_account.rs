@@ -84,12 +84,13 @@ pub fn init_vote_token_account(
     nonce: u128
 ) -> Result<()> {
     // Initialize vote token fields
-    let vote_token = &mut ctx.accounts.vote_token_account;
-    vote_token.bump = ctx.bumps.vote_token_account;
-    vote_token.owner = ctx.accounts.signer.key();
-    vote_token.token_mint = ctx.accounts.token_mint.key();
-    vote_token.state_nonce = 0;
-    vote_token.pending_deposit = 0;
+    let vta = &mut ctx.accounts.vote_token_account;
+    vta.bump = ctx.bumps.vote_token_account;
+    vta.owner = ctx.accounts.signer.key();
+    vta.token_mint = ctx.accounts.token_mint.key();
+    vta.state_nonce = 0;
+    vta.pending_deposit = 0;
+    vta.locked = true;
 
     // Build args for encrypted computation
     let args = ArgBuilder::new()
@@ -150,9 +151,10 @@ pub fn init_vote_token_account_callback(
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
 
-    let vote_token = &mut ctx.accounts.vote_token;
-    vote_token.state_nonce = o.nonce;
-    vote_token.encrypted_state = o.ciphertexts;
+    let vta = &mut ctx.accounts.vote_token;
+    vta.state_nonce = o.nonce;
+    vta.encrypted_state = o.ciphertexts;
+    vta.locked = false;
 
     Ok(())
 }

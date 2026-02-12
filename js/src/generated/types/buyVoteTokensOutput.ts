@@ -8,35 +8,73 @@
 
 import {
   combineCodec,
+  getArrayDecoder,
+  getArrayEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU128Decoder,
+  getU128Encoder,
+  getU8Decoder,
+  getU8Encoder,
   type FixedSizeCodec,
   type FixedSizeDecoder,
   type FixedSizeEncoder,
 } from '@solana/kit';
-import {
-  getBuyVoteTokensOutputStruct0Decoder,
-  getBuyVoteTokensOutputStruct0Encoder,
-  type BuyVoteTokensOutputStruct0,
-  type BuyVoteTokensOutputStruct0Args,
-} from '.';
 
 /**
  * The output of the callback instruction. Provided as a struct with ordered fields
  * as anchor does not support tuples and tuple structs yet.
  */
-export type BuyVoteTokensOutput = { field0: BuyVoteTokensOutputStruct0 };
+export type BuyVoteTokensOutput = {
+  field0: {
+    encryptionKey: Array<number>;
+    nonce: bigint;
+    ciphertexts: Array<Array<number>>;
+  };
+};
 
 export type BuyVoteTokensOutputArgs = {
-  field0: BuyVoteTokensOutputStruct0Args;
+  field0: {
+    encryptionKey: Array<number>;
+    nonce: number | bigint;
+    ciphertexts: Array<Array<number>>;
+  };
 };
 
 export function getBuyVoteTokensOutputEncoder(): FixedSizeEncoder<BuyVoteTokensOutputArgs> {
-  return getStructEncoder([['field0', getBuyVoteTokensOutputStruct0Encoder()]]);
+  return getStructEncoder([
+    [
+      'field0',
+      getStructEncoder([
+        ['encryptionKey', getArrayEncoder(getU8Encoder(), { size: 32 })],
+        ['nonce', getU128Encoder()],
+        [
+          'ciphertexts',
+          getArrayEncoder(getArrayEncoder(getU8Encoder(), { size: 32 }), {
+            size: 1,
+          }),
+        ],
+      ]),
+    ],
+  ]);
 }
 
 export function getBuyVoteTokensOutputDecoder(): FixedSizeDecoder<BuyVoteTokensOutput> {
-  return getStructDecoder([['field0', getBuyVoteTokensOutputStruct0Decoder()]]);
+  return getStructDecoder([
+    [
+      'field0',
+      getStructDecoder([
+        ['encryptionKey', getArrayDecoder(getU8Decoder(), { size: 32 })],
+        ['nonce', getU128Decoder()],
+        [
+          'ciphertexts',
+          getArrayDecoder(getArrayDecoder(getU8Decoder(), { size: 32 }), {
+            size: 1,
+          }),
+        ],
+      ]),
+    ],
+  ]);
 }
 
 export function getBuyVoteTokensOutputCodec(): FixedSizeCodec<

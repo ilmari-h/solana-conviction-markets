@@ -11,7 +11,6 @@ import { sleepUntilOnChainTimestamp } from "./utils/sleep";
 
 import * as fs from "fs";
 import * as os from "os";
-import { error } from "console";
 
 const ONCHAIN_TIMESTAMP_BUFFER_SECONDS = 6;
 

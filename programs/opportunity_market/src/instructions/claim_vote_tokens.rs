@@ -24,6 +24,7 @@ pub struct ClaimVoteTokens<'info> {
         mut,
         seeds = [VOTE_TOKEN_ACCOUNT_SEED, token_mint.key().as_ref(), signer.key().as_ref()],
         bump = vote_token_account.bump,
+        constraint = !vote_token_account.locked @ ErrorCode::Locked,
     )]
     pub vote_token_account: Box<Account<'info, VoteTokenAccount>>,
 
@@ -98,6 +99,8 @@ pub fn claim_vote_tokens(
         .build();
 
     ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
+
+    vta.locked = true;
 
     // Queue computation with callback
     // Pass VTA, user_token_account, vote_token_ata, token_mint, token_program as callback accounts
@@ -210,6 +213,7 @@ pub fn claim_vote_tokens_callback(
             &[bump],
         ]];
 
+
         transfer_checked(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -229,6 +233,7 @@ pub fn claim_vote_tokens_callback(
     // Update encrypted state
     vta.state_nonce = encrypted_balance.nonce;
     vta.encrypted_state = encrypted_balance.ciphertexts;
+    vta.locked = false;
 
     Ok(())
 }

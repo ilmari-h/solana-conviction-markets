@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{
     transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked,
 };
+use crate::error::ErrorCode;
 
 use crate::instructions::init_vote_token_account::VOTE_TOKEN_ACCOUNT_SEED;
 use crate::state::VoteTokenAccount;
@@ -18,6 +19,7 @@ pub struct ClaimPendingDeposit<'info> {
         seeds = [VOTE_TOKEN_ACCOUNT_SEED, token_mint.key().as_ref(), signer.key().as_ref()],
         bump = vote_token_account.bump,
         constraint = vote_token_account.owner == signer.key(),
+        constraint = !vote_token_account.locked @ ErrorCode::Locked
     )]
     pub vote_token_account: Account<'info, VoteTokenAccount>,
 

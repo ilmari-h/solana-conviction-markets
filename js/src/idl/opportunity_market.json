@@ -82,7 +82,8 @@
           }
         },
         {
-          "name": "source_vta"
+          "name": "source_vta",
+          "writable": true
         },
         {
           "name": "share_account",
@@ -3080,7 +3081,8 @@
           "name": "market"
         },
         {
-          "name": "user_vta"
+          "name": "user_vta",
+          "writable": true
         },
         {
           "name": "share_account",
@@ -3708,6 +3710,11 @@
       "code": 6022,
       "name": "AddOptionStakeFailed",
       "msg": "Add option stake failed: insufficient balance, shares, or below minimum deposit"
+    },
+    {
+      "code": 6023,
+      "name": "Locked",
+      "msg": "Cannot perform this operation at this time"
     }
   ],
   "types": [
@@ -3948,26 +3955,6 @@
         "fields": [
           {
             "name": "field_0",
-            "type": {
-              "defined": {
-                "name": "BuyVoteTokensOutputStruct0"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "BuyVoteTokensOutputStruct0",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "field_0",
-            "type": "u64"
-          },
-          {
-            "name": "field_1",
             "type": {
               "defined": {
                 "name": "SharedEncryptedStruct",
@@ -5379,6 +5366,10 @@
           {
             "name": "token_mint",
             "type": "pubkey"
+          },
+          {
+            "name": "locked",
+            "type": "bool"
           },
           {
             "name": "pending_deposit",

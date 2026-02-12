@@ -24,6 +24,7 @@ pub struct MintVoteTokens<'info> {
         mut,
         seeds = [VOTE_TOKEN_ACCOUNT_SEED, token_mint.key().as_ref(), signer.key().as_ref()],
         bump = vote_token_account.bump,
+        constraint = !vote_token_account.locked @ ErrorCode::Locked
     )]
     pub vote_token_account: Box<Account<'info, VoteTokenAccount>>,
 
@@ -103,13 +104,13 @@ pub fn mint_vote_tokens(
         ctx.accounts.token_mint.decimals,
     )?;
 
-    require!(vta.pending_deposit == 0, ErrorCode::Locked);
-
     // Track the pending deposit for safety (can be reclaimed if callback fails)
+    // Lock
     vta.pending_deposit = vta
         .pending_deposit
         .checked_add(amount)
         .ok_or(ErrorCode::Overflow)?;
+    vta.locked = true;
 
     // Build args for encrypted computation
     // Circuit signature: buy_vote_tokens(balance_ctx, amount)
@@ -179,6 +180,7 @@ pub fn buy_vote_tokens_callback(
 
     // Deduct from pending_deposit (tokens already in VTA ATA)
     vta.pending_deposit = 0;
+    vta.locked = false;
 
     // Update encrypted state
     vta.state_nonce = encrypted_balance.nonce;

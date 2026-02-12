@@ -92,7 +92,7 @@ export type UnstakeEarlyInstruction<
         ? ReadonlyAccount<TAccountMarket>
         : TAccountMarket,
       TAccountUserVta extends string
-        ? ReadonlyAccount<TAccountUserVta>
+        ? WritableAccount<TAccountUserVta>
         : TAccountUserVta,
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
@@ -279,7 +279,7 @@ export async function getUnstakeEarlyInstructionAsync<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: false },
-    userVta: { value: input.userVta ?? null, isWritable: false },
+    userVta: { value: input.userVta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -492,7 +492,7 @@ export function getUnstakeEarlyInstruction<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: false },
-    userVta: { value: input.userVta ?? null, isWritable: false },
+    userVta: { value: input.userVta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
