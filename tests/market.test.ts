@@ -8,6 +8,7 @@ import { OpportunityMarket } from "../target/types/opportunity_market";
 import { TestRunner } from "./utils/test-runner";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sleepUntilOnChainTimestamp } from "./utils/sleep";
+import { generateX25519Keypair } from "../js/src/x25519/keypair";
 
 import * as fs from "fs";
 import * as os from "os";
@@ -84,13 +85,30 @@ describe("OpportunityMarket", () => {
     const winningOptionIndex = optionA;
     const buySharesAmounts = [50n, 75n, 100n, 60n];
 
-    // Buy shares for all participants
+    // Create an observer keypair that can read stakes.
+    const observer = generateX25519Keypair();
+
+    // Buy shares for all participants, with observer as authorized reader
     const purchases = runner.participants.map((userId, idx) => ({
       userId,
       amount: buySharesAmounts[idx],
       optionIndex: idx < numParticipants / 2 ? optionA : optionB,
     }));
-    await runner.stakeOnOptionBatch(purchases);
+    const shareAccountIds = await runner.stakeOnOptionBatch(purchases, observer.publicKey);
+
+    // Verify user can decrypt their own stake
+    purchases.forEach((purchase, i) => {
+      const decrypted = runner.decryptStakeAmount(purchase.userId, shareAccountIds[i]);
+      expect(decrypted.amount).to.equal(purchase.amount);
+      expect(decrypted.optionIndex).to.equal(BigInt(purchase.optionIndex));
+    });
+
+    // Verify observer can decrypt disclosed stakes
+    purchases.forEach((purchase, i) => {
+      const disclosed = runner.decryptDisclosedStakeAmount(purchase.userId, shareAccountIds[i], observer);
+      expect(disclosed.amount).to.equal(purchase.amount);
+      expect(disclosed.optionIndex).to.equal(BigInt(purchase.optionIndex));
+    });
 
     // Market creator selects winning option
     await runner.selectOption(winningOptionIndex);
@@ -305,21 +323,44 @@ describe("OpportunityMarket", () => {
     // Wait for market staking period to be active
     await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
 
+    // Create an observer keypair that can read stakes
+    const observer = generateX25519Keypair();
+
     // User adds 2 options, staking 1/4 of vote tokens for each
     // This creates share accounts 0 and 1
-    const { optionIndex: optionA } = await runner.addMarketOption(user, "Option A", quarterAmount);
-    const { optionIndex: optionB } = await runner.addMarketOption(user, "Option B", quarterAmount);
+    const { optionIndex: optionA, shareAccountId: sa0 } = await runner.addMarketOption(user, "Option A", quarterAmount, observer.publicKey);
+    const { optionIndex: optionB, shareAccountId: sa1 } = await runner.addMarketOption(user, "Option B", quarterAmount, observer.publicKey);
 
     // User explicitly stakes more shares for both options (1/4 each)
     // This creates share accounts 2 and 3
-    await runner.stakeOnOptionBatch([
+    const [sa2, sa3] = await runner.stakeOnOptionBatch([
       { userId: user, amount: quarterAmount, optionIndex: optionA },
       { userId: user, amount: quarterAmount, optionIndex: optionB },
-    ]);
+    ], observer.publicKey);
 
     // User now has 4 share accounts, with all vote tokens staked
     const userShareAccounts = runner.getUserShareAccounts(user);
     expect(userShareAccounts.length).to.equal(4);
+
+    // Verify user can decrypt all share accounts
+    const expectedStakes = [
+      { id: sa0, amount: quarterAmount, optionIndex: optionA },
+      { id: sa1, amount: quarterAmount, optionIndex: optionB },
+      { id: sa2, amount: quarterAmount, optionIndex: optionA },
+      { id: sa3, amount: quarterAmount, optionIndex: optionB },
+    ];
+    expectedStakes.forEach(({ id, amount, optionIndex }) => {
+      const decrypted = runner.decryptStakeAmount(user, id);
+      expect(decrypted.amount).to.equal(amount);
+      expect(decrypted.optionIndex).to.equal(BigInt(optionIndex));
+    });
+
+    // Verify observer can decrypt all disclosed stakes
+    expectedStakes.forEach(({ id, amount, optionIndex }) => {
+      const disclosed = runner.decryptDisclosedStakeAmount(user, id, observer);
+      expect(disclosed.amount).to.equal(amount);
+      expect(disclosed.optionIndex).to.equal(BigInt(optionIndex));
+    });
 
     // Market creator selects winning option (Option A)
     const winningOptionIndex = optionA;

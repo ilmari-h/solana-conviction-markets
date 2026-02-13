@@ -53,6 +53,7 @@ import { PublicKey } from "@solana/web3.js";
 import { generateX25519Keypair, X25519Keypair, createCipher } from "../../js/src/x25519/keypair";
 import { createTokenMint, createAta, mintTokensTo } from "./spl-token";
 import { sendTransaction, type SendAndConfirmFn } from "./transaction";
+import { nonceToBytes } from "./nonce";
 
 // ============================================================================
 // Types
@@ -62,6 +63,10 @@ export interface ShareAccountInfo {
   id: number;
   amount: bigint;
   optionIndex: number;
+  encryptedState: Array<Array<number>>;
+  stateNonce: bigint;
+  encryptedStateDisclosure: Array<Array<number>>;
+  stateNonceDisclosure: bigint;
 }
 
 interface TestUser {
@@ -553,7 +558,8 @@ export class TestRunner {
   async addMarketOption(
     userId: Address,
     name: string,
-    depositAmount: bigint
+    depositAmount: bigint,
+    authorizedReaderPubkey?: Uint8Array
   ): Promise<{ optionIndex: number; shareAccountId: number }> {
     const user = this.getUser(userId);
     this.assertVtaInitialized(user);
@@ -578,6 +584,9 @@ export class TestRunner {
     const amountCiphertext = cipher.encrypt([depositAmount], inputNonce);
     const offset = randomComputationOffset();
 
+    // Use provided authorized reader or default to user's own pubkey
+    const readerPubkey = authorizedReaderPubkey ?? user.x25519Keypair.publicKey;
+
     // Add market option instruction
     const addOptionIx = await addMarketOption(
       {
@@ -591,7 +600,7 @@ export class TestRunner {
         amountCiphertext: amountCiphertext[0],
         userPubkey: user.x25519Keypair.publicKey,
         inputNonce: deserializeLE(inputNonce),
-        authorizedReaderPubkey: user.x25519Keypair.publicKey,
+        authorizedReaderPubkey: readerPubkey,
         authorizedReaderNonce: deserializeLE(randomBytes(16)),
       },
       this.getArciumConfig(offset)
@@ -605,8 +614,19 @@ export class TestRunner {
     const result = await awaitComputationFinalization(this.rpc, offset);
     this.assertComputationSucceeded(result, `addMarketOption("${name}")`);
 
-    // Store share account info
-    this.addShareAccount(user, { id: shareAccountId, amount: depositAmount, optionIndex });
+    // Fetch the share account to get the encrypted state
+    const shareAccountData = await fetchShareAccount(this.rpc, shareAccountAddress);
+
+    // Store share account info with encrypted state
+    this.addShareAccount(user, {
+      id: shareAccountId,
+      amount: depositAmount,
+      optionIndex,
+      encryptedState: shareAccountData.data.encryptedState,
+      stateNonce: shareAccountData.data.stateNonce,
+      encryptedStateDisclosure: shareAccountData.data.encryptedStateDisclosure,
+      stateNonceDisclosure: shareAccountData.data.stateNonceDisclosure,
+    });
 
     return { optionIndex, shareAccountId };
   }
@@ -615,7 +635,10 @@ export class TestRunner {
   // Share Operations - Batch First
   // ============================================================================
 
-  async stakeOnOptionBatch(purchases: SharePurchase[]): Promise<number[]> {
+  async stakeOnOptionBatch(
+    purchases: SharePurchase[],
+    authorizedReaderPubkey?: Uint8Array
+  ): Promise<number[]> {
     // Group purchases by user to handle VTA locking correctly
     // Each stake locks the VTA until callback completes, so same-user stakes must be sequential
     const purchasesByUser = new Map<string, { purchase: SharePurchase; originalIndex: number }[]>();
@@ -660,6 +683,9 @@ export class TestRunner {
 
           const [userVta] = await getVoteTokenAccountAddress(this.mint.address, p.userId);
 
+          // Use provided authorized reader or default to user's own pubkey
+          const readerPubkey = authorizedReaderPubkey ?? user.x25519Keypair.publicKey;
+
           const stakeIx = await stake(
             {
               signer: user.solanaKeypair,
@@ -670,7 +696,7 @@ export class TestRunner {
               selectedOptionCiphertext: ciphertexts[1],
               userPubkey: user.x25519Keypair.publicKey,
               inputNonce: deserializeLE(inputNonce),
-              authorizedReaderPubkey: user.x25519Keypair.publicKey,
+              authorizedReaderPubkey: readerPubkey,
               authorizedReaderNonce: deserializeLE(randomBytes(16)),
             },
             this.getArciumConfig(computationOffset)
@@ -685,11 +711,19 @@ export class TestRunner {
           const result = await awaitComputationFinalization(this.rpc, computationOffset);
           this.assertComputationSucceeded(result, "stakeOnOption");
 
-          // Store share account info
+          // Fetch the share account to get the encrypted state
+          const [shareAccountAddress] = await getShareAccountAddressPda(p.userId, this.marketAddress, shareAccountId);
+          const shareAccountData = await fetchShareAccount(this.rpc, shareAccountAddress);
+
+          // Store share account info with encrypted state
           this.addShareAccount(user, {
             id: shareAccountId,
             amount: p.amount,
             optionIndex: p.optionIndex,
+            encryptedState: shareAccountData.data.encryptedState,
+            stateNonce: shareAccountData.data.stateNonce,
+            encryptedStateDisclosure: shareAccountData.data.encryptedStateDisclosure,
+            stateNonceDisclosure: shareAccountData.data.stateNonceDisclosure,
           });
 
           results.push({ shareAccountId, originalIndex });
@@ -702,8 +736,13 @@ export class TestRunner {
     return results.map((r) => r.shareAccountId);
   }
 
-  async stakeOnOption(userId: Address, amount: bigint, optionIndex: number): Promise<number> {
-    const [shareAccountId] = await this.stakeOnOptionBatch([{ userId, amount, optionIndex }]);
+  async stakeOnOption(
+    userId: Address,
+    amount: bigint,
+    optionIndex: number,
+    authorizedReaderPubkey?: Uint8Array
+  ): Promise<number> {
+    const [shareAccountId] = await this.stakeOnOptionBatch([{ userId, amount, optionIndex }], authorizedReaderPubkey);
     return shareAccountId;
   }
 
@@ -847,6 +886,60 @@ export class TestRunner {
   /** Get share accounts for a user filtered by option index */
   getUserShareAccountsForOption(userId: Address, optionIndex: number): ShareAccountInfo[] {
     return this.getUser(userId).shareAccounts.filter((sa) => sa.optionIndex === optionIndex);
+  }
+
+  /** Get a specific share account by ID */
+  getShareAccountInfo(userId: Address, shareAccountId: number): ShareAccountInfo {
+    const user = this.getUser(userId);
+    const shareAccount = user.shareAccounts.find((sa) => sa.id === shareAccountId);
+    if (!shareAccount) {
+      throw new Error(`Share account ${shareAccountId} not found for user ${userId}`);
+    }
+    return shareAccount;
+  }
+
+  /**
+   * Decrypt the stake amount and option from a share account.
+   * Uses the user's x25519 keypair and MXE public key to derive the cipher.
+   * @returns { amount: bigint, optionIndex: bigint }
+   */
+  decryptStakeAmount(userId: Address, shareAccountId: number): { amount: bigint; optionIndex: bigint } {
+    const user = this.getUser(userId);
+    const shareAccount = this.getShareAccountInfo(userId, shareAccountId);
+
+    const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
+    const nonceBytes = nonceToBytes(shareAccount.stateNonce);
+    const decrypted = cipher.decrypt(shareAccount.encryptedState, nonceBytes);
+
+    return {
+      amount: decrypted[0],
+      optionIndex: decrypted[1],
+    };
+  }
+
+  /**
+   * Decrypt the disclosed stake amount and option from a share account.
+   * Uses the provided x25519 keypair (the authorized reader) and MXE public key to derive the cipher.
+   * @param userId - The owner of the share account
+   * @param shareAccountId - The share account ID
+   * @param readerKeypair - The x25519 keypair of the authorized reader
+   * @returns { amount: bigint, optionIndex: bigint }
+   */
+  decryptDisclosedStakeAmount(
+    userId: Address,
+    shareAccountId: number,
+    readerKeypair: X25519Keypair
+  ): { amount: bigint; optionIndex: bigint } {
+    const shareAccount = this.getShareAccountInfo(userId, shareAccountId);
+
+    const cipher = createCipher(readerKeypair.secretKey, this.mxePublicKey);
+    const nonceBytes = nonceToBytes(shareAccount.stateNonceDisclosure);
+    const decrypted = cipher.decrypt(shareAccount.encryptedStateDisclosure, nonceBytes);
+
+    return {
+      amount: decrypted[0],
+      optionIndex: decrypted[1],
+    };
   }
 
   /** Get the open timestamp (set after openMarket is called) */
