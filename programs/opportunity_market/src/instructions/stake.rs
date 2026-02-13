@@ -80,13 +80,13 @@ pub fn stake(
     amount_ciphertext: [u8; 32],
     selected_option_ciphertext: [u8; 32],
 
-    user_pubkey: [u8; 32],
     input_nonce: u128,
 
     // Optional voluntary disclosure - to opt out, pass user's own pubkey or of deleted keypair.
     authorized_reader_pubkey: [u8; 32],
     authorized_reader_nonce: u128,
 ) -> Result<()> {
+    let user_pubkey = ctx.accounts.user_vta.user_pubkey;
 
     require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_vta.token_mint), ErrorCode::InvalidMint);
 

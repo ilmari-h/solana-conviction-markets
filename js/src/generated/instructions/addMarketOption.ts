@@ -157,7 +157,6 @@ export type AddMarketOptionInstructionData = {
   shareAccountId: number;
   name: string;
   amountCiphertext: Array<number>;
-  userPubkey: Array<number>;
   inputNonce: bigint;
   authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: bigint;
@@ -169,7 +168,6 @@ export type AddMarketOptionInstructionDataArgs = {
   shareAccountId: number;
   name: string;
   amountCiphertext: Array<number>;
-  userPubkey: Array<number>;
   inputNonce: number | bigint;
   authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: number | bigint;
@@ -184,7 +182,6 @@ export function getAddMarketOptionInstructionDataEncoder(): Encoder<AddMarketOpt
       ['shareAccountId', getU32Encoder()],
       ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['amountCiphertext', getArrayEncoder(getU8Encoder(), { size: 32 })],
-      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['inputNonce', getU128Encoder()],
       ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['authorizedReaderNonce', getU128Encoder()],
@@ -201,7 +198,6 @@ export function getAddMarketOptionInstructionDataDecoder(): Decoder<AddMarketOpt
     ['shareAccountId', getU32Decoder()],
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['amountCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
-    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['inputNonce', getU128Decoder()],
     ['authorizedReaderPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['authorizedReaderNonce', getU128Decoder()],
@@ -259,7 +255,6 @@ export type AddMarketOptionAsyncInput<
   shareAccountId: AddMarketOptionInstructionDataArgs['shareAccountId'];
   name: AddMarketOptionInstructionDataArgs['name'];
   amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
-  userPubkey: AddMarketOptionInstructionDataArgs['userPubkey'];
   inputNonce: AddMarketOptionInstructionDataArgs['inputNonce'];
   authorizedReaderPubkey: AddMarketOptionInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: AddMarketOptionInstructionDataArgs['authorizedReaderNonce'];
@@ -520,7 +515,6 @@ export type AddMarketOptionInput<
   shareAccountId: AddMarketOptionInstructionDataArgs['shareAccountId'];
   name: AddMarketOptionInstructionDataArgs['name'];
   amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
-  userPubkey: AddMarketOptionInstructionDataArgs['userPubkey'];
   inputNonce: AddMarketOptionInstructionDataArgs['inputNonce'];
   authorizedReaderPubkey: AddMarketOptionInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: AddMarketOptionInstructionDataArgs['authorizedReaderNonce'];

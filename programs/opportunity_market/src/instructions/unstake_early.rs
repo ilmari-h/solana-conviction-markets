@@ -75,8 +75,9 @@ pub fn unstake_early(
     ctx: Context<UnstakeEarly>,
     computation_offset: u64,
     _share_account_id: u32,
-    user_pubkey: [u8; 32],
 ) -> Result<()> {
+    let user_pubkey = ctx.accounts.user_vta.user_pubkey;
+
     require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_vta.token_mint), ErrorCode::InvalidMint);
 
     // Enforce staking period is active

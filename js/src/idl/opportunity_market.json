@@ -223,15 +223,6 @@
           }
         },
         {
-          "name": "user_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
           "name": "input_nonce",
           "type": "u128"
         },
@@ -910,15 +901,6 @@
         {
           "name": "computation_offset",
           "type": "u64"
-        },
-        {
-          "name": "user_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
         },
         {
           "name": "amount",
@@ -2215,15 +2197,6 @@
           "type": "u64"
         },
         {
-          "name": "user_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
           "name": "amount",
           "type": "u64"
         }
@@ -2473,15 +2446,6 @@
         {
           "name": "share_account_id",
           "type": "u32"
-        },
-        {
-          "name": "user_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
         }
       ]
     },
@@ -2786,15 +2750,6 @@
           }
         },
         {
-          "name": "user_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
           "name": "input_nonce",
           "type": "u128"
         },
@@ -3008,15 +2963,6 @@
         {
           "name": "share_account_id",
           "type": "u32"
-        },
-        {
-          "name": "user_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
         }
       ]
     },
@@ -5109,6 +5055,15 @@
           {
             "name": "token_mint",
             "type": "pubkey"
+          },
+          {
+            "name": "user_pubkey",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "locked",

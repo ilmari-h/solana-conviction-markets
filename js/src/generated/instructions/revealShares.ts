@@ -11,8 +11,6 @@ import {
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
-  getArrayDecoder,
-  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
@@ -22,8 +20,6 @@ import {
   getU32Encoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -142,13 +138,11 @@ export type RevealSharesInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
   shareAccountId: number;
-  userPubkey: Array<number>;
 };
 
 export type RevealSharesInstructionDataArgs = {
   computationOffset: number | bigint;
   shareAccountId: number;
-  userPubkey: Array<number>;
 };
 
 export function getRevealSharesInstructionDataEncoder(): FixedSizeEncoder<RevealSharesInstructionDataArgs> {
@@ -157,7 +151,6 @@ export function getRevealSharesInstructionDataEncoder(): FixedSizeEncoder<Reveal
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
       ['shareAccountId', getU32Encoder()],
-      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
     ]),
     (value) => ({ ...value, discriminator: REVEAL_SHARES_DISCRIMINATOR })
   );
@@ -168,7 +161,6 @@ export function getRevealSharesInstructionDataDecoder(): FixedSizeDecoder<Reveal
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
     ['shareAccountId', getU32Decoder()],
-    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
   ]);
 }
 
@@ -218,7 +210,6 @@ export type RevealSharesAsyncInput<
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: RevealSharesInstructionDataArgs['computationOffset'];
   shareAccountId: RevealSharesInstructionDataArgs['shareAccountId'];
-  userPubkey: RevealSharesInstructionDataArgs['userPubkey'];
 };
 
 export async function getRevealSharesInstructionAsync<
@@ -441,7 +432,6 @@ export type RevealSharesInput<
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: RevealSharesInstructionDataArgs['computationOffset'];
   shareAccountId: RevealSharesInstructionDataArgs['shareAccountId'];
-  userPubkey: RevealSharesInstructionDataArgs['userPubkey'];
 };
 
 export function getRevealSharesInstruction<

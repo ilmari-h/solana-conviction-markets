@@ -82,11 +82,11 @@ pub struct MintVoteTokens<'info> {
 
 pub fn mint_vote_tokens(
     ctx: Context<MintVoteTokens>,
-    user_pubkey: [u8; 32],
     computation_offset: u64,
     amount: u64,
 ) -> Result<()> {
     let vta = &mut ctx.accounts.vote_token_account;
+    let user_pubkey = vta.user_pubkey;
     let vta_pubkey = vta.key();
 
     // Transfer SPL tokens from signer's token account to VTA's ATA

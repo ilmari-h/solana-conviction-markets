@@ -62,6 +62,7 @@ export type VoteTokenAccount = {
   owner: Address;
   stateNonce: bigint;
   tokenMint: Address;
+  userPubkey: Array<number>;
   locked: boolean;
   pendingDeposit: bigint;
 };
@@ -72,6 +73,7 @@ export type VoteTokenAccountArgs = {
   owner: Address;
   stateNonce: number | bigint;
   tokenMint: Address;
+  userPubkey: Array<number>;
   locked: boolean;
   pendingDeposit: number | bigint;
 };
@@ -90,6 +92,7 @@ export function getVoteTokenAccountEncoder(): FixedSizeEncoder<VoteTokenAccountA
       ['owner', getAddressEncoder()],
       ['stateNonce', getU128Encoder()],
       ['tokenMint', getAddressEncoder()],
+      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['locked', getBooleanEncoder()],
       ['pendingDeposit', getU64Encoder()],
     ]),
@@ -110,6 +113,7 @@ export function getVoteTokenAccountDecoder(): FixedSizeDecoder<VoteTokenAccount>
     ['owner', getAddressDecoder()],
     ['stateNonce', getU128Decoder()],
     ['tokenMint', getAddressDecoder()],
+    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['locked', getBooleanDecoder()],
     ['pendingDeposit', getU64Decoder()],
   ]);

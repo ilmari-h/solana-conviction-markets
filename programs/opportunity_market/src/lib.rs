@@ -99,7 +99,6 @@ pub mod opportunity_market {
         share_account_id: u32,
         name: String,
         amount_ciphertext: [u8; 32],
-        user_pubkey: [u8; 32],
         input_nonce: u128,
         authorized_reader_pubkey: [u8; 32],
         authorized_reader_nonce: u128,
@@ -111,7 +110,6 @@ pub mod opportunity_market {
             share_account_id,
             name,
             amount_ciphertext,
-            user_pubkey,
             input_nonce,
             authorized_reader_pubkey,
             authorized_reader_nonce,
@@ -178,10 +176,9 @@ pub mod opportunity_market {
     pub fn mint_vote_tokens(
         ctx: Context<MintVoteTokens>,
         computation_offset: u64,
-        user_pubkey: [u8; 32],
         amount: u64,
     ) -> Result<()> {
-        instructions::mint_vote_tokens(ctx, user_pubkey, computation_offset, amount)
+        instructions::mint_vote_tokens(ctx, computation_offset, amount)
     }
 
     #[arcium_callback(encrypted_ix = "buy_vote_tokens")]
@@ -195,10 +192,9 @@ pub mod opportunity_market {
     pub fn claim_vote_tokens(
         ctx: Context<ClaimVoteTokens>,
         computation_offset: u64,
-        user_pubkey: [u8; 32],
         amount: u64,
     ) -> Result<()> {
-        instructions::claim_vote_tokens(ctx, computation_offset, user_pubkey, amount)
+        instructions::claim_vote_tokens(ctx, computation_offset, amount)
     }
 
     #[arcium_callback(encrypted_ix = "claim_vote_tokens")]
@@ -219,7 +215,6 @@ pub mod opportunity_market {
         share_account_id: u32,
         amount_ciphertext: [u8; 32],
         selected_option_ciphertext: [u8; 32],
-        user_pubkey: [u8; 32],
         input_nonce: u128,
 
         authorized_reader_pubkey: [u8; 32],
@@ -231,7 +226,6 @@ pub mod opportunity_market {
             share_account_id,
             amount_ciphertext,
             selected_option_ciphertext,
-            user_pubkey,
             input_nonce,
             authorized_reader_pubkey,
             authorized_reader_nonce,
@@ -249,9 +243,8 @@ pub mod opportunity_market {
         ctx: Context<RevealShares>,
         computation_offset: u64,
         share_account_id: u32,
-        user_pubkey: [u8; 32],
     ) -> Result<()> {
-        instructions::reveal_shares(ctx, computation_offset, share_account_id, user_pubkey)
+        instructions::reveal_shares(ctx, computation_offset, share_account_id)
     }
 
     #[arcium_callback(encrypted_ix = "reveal_shares")]
@@ -266,9 +259,8 @@ pub mod opportunity_market {
         ctx: Context<UnstakeEarly>,
         computation_offset: u64,
         share_account_id: u32,
-        user_pubkey: [u8; 32],
     ) -> Result<()> {
-        instructions::unstake_early(ctx, computation_offset, share_account_id, user_pubkey)
+        instructions::unstake_early(ctx, computation_offset, share_account_id)
     }
 
     #[arcium_callback(encrypted_ix = "unstake_early")]

@@ -140,7 +140,6 @@ export type StakeInstructionData = {
   shareAccountId: number;
   amountCiphertext: Array<number>;
   selectedOptionCiphertext: Array<number>;
-  userPubkey: Array<number>;
   inputNonce: bigint;
   authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: bigint;
@@ -151,7 +150,6 @@ export type StakeInstructionDataArgs = {
   shareAccountId: number;
   amountCiphertext: Array<number>;
   selectedOptionCiphertext: Array<number>;
-  userPubkey: Array<number>;
   inputNonce: number | bigint;
   authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: number | bigint;
@@ -168,7 +166,6 @@ export function getStakeInstructionDataEncoder(): FixedSizeEncoder<StakeInstruct
         'selectedOptionCiphertext',
         getArrayEncoder(getU8Encoder(), { size: 32 }),
       ],
-      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['inputNonce', getU128Encoder()],
       ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['authorizedReaderNonce', getU128Encoder()],
@@ -184,7 +181,6 @@ export function getStakeInstructionDataDecoder(): FixedSizeDecoder<StakeInstruct
     ['shareAccountId', getU32Decoder()],
     ['amountCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['selectedOptionCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
-    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['inputNonce', getU128Decoder()],
     ['authorizedReaderPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['authorizedReaderNonce', getU128Decoder()],
@@ -237,7 +233,6 @@ export type StakeAsyncInput<
   shareAccountId: StakeInstructionDataArgs['shareAccountId'];
   amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
   selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
-  userPubkey: StakeInstructionDataArgs['userPubkey'];
   inputNonce: StakeInstructionDataArgs['inputNonce'];
   authorizedReaderPubkey: StakeInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: StakeInstructionDataArgs['authorizedReaderNonce'];
@@ -457,7 +452,6 @@ export type StakeInput<
   shareAccountId: StakeInstructionDataArgs['shareAccountId'];
   amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
   selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
-  userPubkey: StakeInstructionDataArgs['userPubkey'];
   inputNonce: StakeInstructionDataArgs['inputNonce'];
   authorizedReaderPubkey: StakeInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: StakeInstructionDataArgs['authorizedReaderNonce'];

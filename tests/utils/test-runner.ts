@@ -537,7 +537,6 @@ export class TestRunner {
         tokenMint: this.mint.address,
         signerTokenAccount: user.tokenAccount,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        userPubkey: user.x25519Keypair.publicKey,
         amount,
       },
       this.getArciumConfig(offset)
@@ -598,7 +597,6 @@ export class TestRunner {
         shareAccountId,
         name,
         amountCiphertext: amountCiphertext[0],
-        userPubkey: user.x25519Keypair.publicKey,
         inputNonce: deserializeLE(inputNonce),
         authorizedReaderPubkey: readerPubkey,
         authorizedReaderNonce: deserializeLE(randomBytes(16)),
@@ -694,7 +692,6 @@ export class TestRunner {
               shareAccountId,
               amountCiphertext: ciphertexts[0],
               selectedOptionCiphertext: ciphertexts[1],
-              userPubkey: user.x25519Keypair.publicKey,
               inputNonce: deserializeLE(inputNonce),
               authorizedReaderPubkey: readerPubkey,
               authorizedReaderNonce: deserializeLE(randomBytes(16)),
@@ -772,7 +769,6 @@ export class TestRunner {
               owner: user.solanaKeypair.address,
               market: this.marketAddress,
               userVta,
-              userPubkey: user.x25519Keypair.publicKey,
               shareAccountId: r.shareAccountId,
             },
             this.getArciumConfig(computationOffset)

@@ -134,7 +134,6 @@ describe("Vote Token Account (SPL)", () => {
         tokenMint: mint.address,
         signerTokenAccount: userAta,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        userPubkey: keypair.publicKey,
         amount: voteTokenAmount,
       },
       {
@@ -162,7 +161,6 @@ describe("Vote Token Account (SPL)", () => {
         tokenMint: mint.address,
         userTokenAccount: userAta,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        userPubkey: keypair.publicKey,
         amount: claimAmount,
       },
       {

@@ -4,14 +4,12 @@ import {
   type MintVoteTokensInstruction,
 } from "../generated";
 import { type ArciumConfig, getComputeAccounts } from "../arcium/computeAccounts";
-import { type ByteArray, toNumberArray } from "../utils";
 
 export interface MintVoteTokensParams {
   signer: TransactionSigner;
   tokenMint: Address;
   signerTokenAccount: Address;
   tokenProgram: Address;
-  userPubkey: ByteArray;
   amount: bigint;
 }
 
@@ -19,7 +17,7 @@ export async function mintVoteTokens(
   input: MintVoteTokensParams,
   config: ArciumConfig
 ): Promise<MintVoteTokensInstruction> {
-  const { signer, tokenMint, signerTokenAccount, tokenProgram, userPubkey, amount } = input;
+  const { signer, tokenMint, signerTokenAccount, tokenProgram, amount } = input;
 
   return getMintVoteTokensInstructionAsync({
     ...getComputeAccounts("buy_vote_tokens", config),
@@ -27,7 +25,6 @@ export async function mintVoteTokens(
     tokenMint,
     signerTokenAccount,
     tokenProgram,
-    userPubkey: toNumberArray(userPubkey),
     amount,
   });
 }

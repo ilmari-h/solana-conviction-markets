@@ -34,7 +34,7 @@ pub fn init_share_account(
     share_account.owner = ctx.accounts.signer.key();
     share_account.market = ctx.accounts.market.key();
     share_account.state_nonce = state_nonce;
-    share_account.state_nonce_disclosure = 0; // initialized later
+    share_account.state_nonce_disclosure = 0; // initialized later TODO: why?
     share_account.encrypted_state = [[0u8; 32]; 2];
     share_account.encrypted_state_disclosure = [[0u8; 32]; 2];
     share_account.revealed_amount = None;

@@ -13,7 +13,6 @@ export interface StakeParams {
   shareAccountId: number;
   amountCiphertext: ByteArray;
   selectedOptionCiphertext: ByteArray;
-  userPubkey: ByteArray;
   inputNonce: bigint;
   authorizedReaderPubkey: ByteArray;
   authorizedReaderNonce: bigint;
@@ -30,7 +29,6 @@ export async function stake(
     shareAccountId,
     amountCiphertext,
     selectedOptionCiphertext,
-    userPubkey,
     inputNonce,
     authorizedReaderPubkey,
     authorizedReaderNonce,
@@ -44,7 +42,6 @@ export async function stake(
     shareAccountId,
     amountCiphertext: toNumberArray(amountCiphertext),
     selectedOptionCiphertext: toNumberArray(selectedOptionCiphertext),
-    userPubkey: toNumberArray(userPubkey),
     inputNonce,
     authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
     authorizedReaderNonce,

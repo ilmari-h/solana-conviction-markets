@@ -57,6 +57,7 @@ pub struct VoteTokenAccount {
     pub owner: Pubkey,
     pub state_nonce: u128,
     pub token_mint: Pubkey,
+    pub user_pubkey: [u8; 32],
 
     // Locked while waiting for Arcium MPC callback
     pub locked: bool,

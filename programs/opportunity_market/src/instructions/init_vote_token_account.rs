@@ -77,6 +77,12 @@ pub struct InitVoteTokenAccount<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
+// TODO: get rid of encrypted circuit similar to share account
+// just initialize empty
+// Can we actually do this?
+
+// then ephemeral version that is permissionless but we copy the pubkey from this one, which needs to be initialized
+
 pub fn init_vote_token_account(
     ctx: Context<InitVoteTokenAccount>,
     computation_offset: u64,
@@ -91,6 +97,7 @@ pub fn init_vote_token_account(
     vta.state_nonce = 0;
     vta.pending_deposit = 0;
     vta.locked = true;
+    vta.user_pubkey = user_pubkey;
 
     // Build args for encrypted computation
     let args = ArgBuilder::new()

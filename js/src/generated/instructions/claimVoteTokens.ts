@@ -11,8 +11,6 @@ import {
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
-  getArrayDecoder,
-  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
@@ -20,8 +18,6 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -142,13 +138,11 @@ export type ClaimVoteTokensInstruction<
 export type ClaimVoteTokensInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
-  userPubkey: Array<number>;
   amount: bigint;
 };
 
 export type ClaimVoteTokensInstructionDataArgs = {
   computationOffset: number | bigint;
-  userPubkey: Array<number>;
   amount: number | bigint;
 };
 
@@ -157,7 +151,6 @@ export function getClaimVoteTokensInstructionDataEncoder(): FixedSizeEncoder<Cla
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
-      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['amount', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: CLAIM_VOTE_TOKENS_DISCRIMINATOR })
@@ -168,7 +161,6 @@ export function getClaimVoteTokensInstructionDataDecoder(): FixedSizeDecoder<Cla
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
-    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['amount', getU64Decoder()],
   ]);
 }
@@ -222,7 +214,6 @@ export type ClaimVoteTokensAsyncInput<
   tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: ClaimVoteTokensInstructionDataArgs['computationOffset'];
-  userPubkey: ClaimVoteTokensInstructionDataArgs['userPubkey'];
   amount: ClaimVoteTokensInstructionDataArgs['amount'];
 };
 
@@ -474,7 +465,6 @@ export type ClaimVoteTokensInput<
   tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: ClaimVoteTokensInstructionDataArgs['computationOffset'];
-  userPubkey: ClaimVoteTokensInstructionDataArgs['userPubkey'];
   amount: ClaimVoteTokensInstructionDataArgs['amount'];
 };
 

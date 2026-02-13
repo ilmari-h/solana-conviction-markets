@@ -11,8 +11,6 @@ import {
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
-  getArrayDecoder,
-  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
@@ -22,8 +20,6 @@ import {
   getU32Encoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -138,13 +134,11 @@ export type UnstakeEarlyInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
   shareAccountId: number;
-  userPubkey: Array<number>;
 };
 
 export type UnstakeEarlyInstructionDataArgs = {
   computationOffset: number | bigint;
   shareAccountId: number;
-  userPubkey: Array<number>;
 };
 
 export function getUnstakeEarlyInstructionDataEncoder(): FixedSizeEncoder<UnstakeEarlyInstructionDataArgs> {
@@ -153,7 +147,6 @@ export function getUnstakeEarlyInstructionDataEncoder(): FixedSizeEncoder<Unstak
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
       ['shareAccountId', getU32Encoder()],
-      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
     ]),
     (value) => ({ ...value, discriminator: UNSTAKE_EARLY_DISCRIMINATOR })
   );
@@ -164,7 +157,6 @@ export function getUnstakeEarlyInstructionDataDecoder(): FixedSizeDecoder<Unstak
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
     ['shareAccountId', getU32Decoder()],
-    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
   ]);
 }
 
@@ -212,7 +204,6 @@ export type UnstakeEarlyAsyncInput<
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: UnstakeEarlyInstructionDataArgs['computationOffset'];
   shareAccountId: UnstakeEarlyInstructionDataArgs['shareAccountId'];
-  userPubkey: UnstakeEarlyInstructionDataArgs['userPubkey'];
 };
 
 export async function getUnstakeEarlyInstructionAsync<
@@ -427,7 +418,6 @@ export type UnstakeEarlyInput<
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: UnstakeEarlyInstructionDataArgs['computationOffset'];
   shareAccountId: UnstakeEarlyInstructionDataArgs['shareAccountId'];
-  userPubkey: UnstakeEarlyInstructionDataArgs['userPubkey'];
 };
 
 export function getUnstakeEarlyInstruction<

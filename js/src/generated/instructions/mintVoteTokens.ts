@@ -11,8 +11,6 @@ import {
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
-  getArrayDecoder,
-  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
@@ -20,8 +18,6 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -142,13 +138,11 @@ export type MintVoteTokensInstruction<
 export type MintVoteTokensInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
-  userPubkey: Array<number>;
   amount: bigint;
 };
 
 export type MintVoteTokensInstructionDataArgs = {
   computationOffset: number | bigint;
-  userPubkey: Array<number>;
   amount: number | bigint;
 };
 
@@ -157,7 +151,6 @@ export function getMintVoteTokensInstructionDataEncoder(): FixedSizeEncoder<Mint
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
-      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['amount', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: MINT_VOTE_TOKENS_DISCRIMINATOR })
@@ -168,7 +161,6 @@ export function getMintVoteTokensInstructionDataDecoder(): FixedSizeDecoder<Mint
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
-    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['amount', getU64Decoder()],
   ]);
 }
@@ -222,7 +214,6 @@ export type MintVoteTokensAsyncInput<
   tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: MintVoteTokensInstructionDataArgs['computationOffset'];
-  userPubkey: MintVoteTokensInstructionDataArgs['userPubkey'];
   amount: MintVoteTokensInstructionDataArgs['amount'];
 };
 
@@ -474,7 +465,6 @@ export type MintVoteTokensInput<
   tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: MintVoteTokensInstructionDataArgs['computationOffset'];
-  userPubkey: MintVoteTokensInstructionDataArgs['userPubkey'];
   amount: MintVoteTokensInstructionDataArgs['amount'];
 };
 

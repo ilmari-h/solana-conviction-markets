@@ -76,8 +76,8 @@ pub fn reveal_shares(
     ctx: Context<RevealShares>,
     computation_offset: u64,
     _share_account_id: u32,
-    user_pubkey: [u8; 32],
 ) -> Result<()> {
+    let user_pubkey = ctx.accounts.user_vta.user_pubkey;
 
     require!(ctx.accounts.user_vta.owner.key().eq(&ctx.accounts.owner.key()), ErrorCode::Unauthorized);
     require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_vta.token_mint.key()), ErrorCode::InvalidMint);

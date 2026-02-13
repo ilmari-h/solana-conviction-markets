@@ -84,10 +84,10 @@ pub struct ClaimVoteTokens<'info> {
 pub fn claim_vote_tokens(
     ctx: Context<ClaimVoteTokens>,
     computation_offset: u64,
-    user_pubkey: [u8; 32],
     amount: u64,
 ) -> Result<()> {
     let vta = &mut ctx.accounts.vote_token_account;
+    let user_pubkey = vta.user_pubkey;
     let vta_pubkey = vta.key();
 
     // Build args for encrypted computation
