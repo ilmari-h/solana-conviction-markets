@@ -18,6 +18,8 @@ import {
   getStructEncoder,
   getU16Decoder,
   getU16Encoder,
+  getU32Decoder,
+  getU32Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -92,15 +94,20 @@ export type IncrementOptionTallyInstruction<
 export type IncrementOptionTallyInstructionData = {
   discriminator: ReadonlyUint8Array;
   optionIndex: number;
+  shareAccountId: number;
 };
 
-export type IncrementOptionTallyInstructionDataArgs = { optionIndex: number };
+export type IncrementOptionTallyInstructionDataArgs = {
+  optionIndex: number;
+  shareAccountId: number;
+};
 
 export function getIncrementOptionTallyInstructionDataEncoder(): FixedSizeEncoder<IncrementOptionTallyInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['optionIndex', getU16Encoder()],
+      ['shareAccountId', getU32Encoder()],
     ]),
     (value) => ({
       ...value,
@@ -113,6 +120,7 @@ export function getIncrementOptionTallyInstructionDataDecoder(): FixedSizeDecode
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['optionIndex', getU16Decoder()],
+    ['shareAccountId', getU32Decoder()],
   ]);
 }
 
@@ -141,6 +149,7 @@ export type IncrementOptionTallyAsyncInput<
   option?: Address<TAccountOption>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: IncrementOptionTallyInstructionDataArgs['optionIndex'];
+  shareAccountId: IncrementOptionTallyInstructionDataArgs['shareAccountId'];
 };
 
 export async function getIncrementOptionTallyInstructionAsync<
@@ -205,6 +214,7 @@ export async function getIncrementOptionTallyInstructionAsync<
         ),
         getAddressEncoder().encode(expectAddress(accounts.owner.value)),
         getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
       ],
     });
   }
@@ -265,6 +275,7 @@ export type IncrementOptionTallyInput<
   option: Address<TAccountOption>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: IncrementOptionTallyInstructionDataArgs['optionIndex'];
+  shareAccountId: IncrementOptionTallyInstructionDataArgs['shareAccountId'];
 };
 
 export function getIncrementOptionTallyInstruction<

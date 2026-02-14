@@ -67,7 +67,7 @@ export type RevealSharesCallbackInstruction<
   TAccountInstructionsSysvar extends string | AccountMeta<string> =
     'Sysvar1nstructions1111111111111111111111111',
   TAccountShareAccount extends string | AccountMeta<string> = string,
-  TAccountUserVta extends string | AccountMeta<string> = string,
+  TAccountUserEta extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -94,9 +94,9 @@ export type RevealSharesCallbackInstruction<
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
         : TAccountShareAccount,
-      TAccountUserVta extends string
-        ? WritableAccount<TAccountUserVta>
-        : TAccountUserVta,
+      TAccountUserEta extends string
+        ? WritableAccount<TAccountUserEta>
+        : TAccountUserEta,
       ...TRemainingAccounts,
     ]
   >;
@@ -212,7 +212,7 @@ export type RevealSharesCallbackInput<
   TAccountClusterAccount extends string = string,
   TAccountInstructionsSysvar extends string = string,
   TAccountShareAccount extends string = string,
-  TAccountUserVta extends string = string,
+  TAccountUserEta extends string = string,
 > = {
   arciumProgram?: Address<TAccountArciumProgram>;
   compDefAccount: Address<TAccountCompDefAccount>;
@@ -221,7 +221,7 @@ export type RevealSharesCallbackInput<
   clusterAccount: Address<TAccountClusterAccount>;
   instructionsSysvar?: Address<TAccountInstructionsSysvar>;
   shareAccount: Address<TAccountShareAccount>;
-  userVta: Address<TAccountUserVta>;
+  userEta: Address<TAccountUserEta>;
   output: RevealSharesCallbackInstructionDataArgs['output'];
 };
 
@@ -233,7 +233,7 @@ export function getRevealSharesCallbackInstruction<
   TAccountClusterAccount extends string,
   TAccountInstructionsSysvar extends string,
   TAccountShareAccount extends string,
-  TAccountUserVta extends string,
+  TAccountUserEta extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: RevealSharesCallbackInput<
@@ -244,7 +244,7 @@ export function getRevealSharesCallbackInstruction<
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
     TAccountShareAccount,
-    TAccountUserVta
+    TAccountUserEta
   >,
   config?: { programAddress?: TProgramAddress }
 ): RevealSharesCallbackInstruction<
@@ -256,7 +256,7 @@ export function getRevealSharesCallbackInstruction<
   TAccountClusterAccount,
   TAccountInstructionsSysvar,
   TAccountShareAccount,
-  TAccountUserVta
+  TAccountUserEta
 > {
   // Program address.
   const programAddress =
@@ -277,7 +277,7 @@ export function getRevealSharesCallbackInstruction<
       isWritable: false,
     },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
-    userVta: { value: input.userVta ?? null, isWritable: true },
+    userEta: { value: input.userEta ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -307,7 +307,7 @@ export function getRevealSharesCallbackInstruction<
       getAccountMeta(accounts.clusterAccount),
       getAccountMeta(accounts.instructionsSysvar),
       getAccountMeta(accounts.shareAccount),
-      getAccountMeta(accounts.userVta),
+      getAccountMeta(accounts.userEta),
     ],
     data: getRevealSharesCallbackInstructionDataEncoder().encode(
       args as RevealSharesCallbackInstructionDataArgs
@@ -322,7 +322,7 @@ export function getRevealSharesCallbackInstruction<
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
     TAccountShareAccount,
-    TAccountUserVta
+    TAccountUserEta
   >);
 }
 
@@ -339,7 +339,7 @@ export type ParsedRevealSharesCallbackInstruction<
     clusterAccount: TAccountMetas[4];
     instructionsSysvar: TAccountMetas[5];
     shareAccount: TAccountMetas[6];
-    userVta: TAccountMetas[7];
+    userEta: TAccountMetas[7];
   };
   data: RevealSharesCallbackInstructionData;
 };
@@ -372,7 +372,7 @@ export function parseRevealSharesCallbackInstruction<
       clusterAccount: getNextAccount(),
       instructionsSysvar: getNextAccount(),
       shareAccount: getNextAccount(),
-      userVta: getNextAccount(),
+      userEta: getNextAccount(),
     },
     data: getRevealSharesCallbackInstructionDataDecoder().decode(
       instruction.data

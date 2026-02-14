@@ -3,15 +3,15 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::SharesUnstakedEvent;
+use crate::events::{SharesUnstakedError, SharesUnstakedEvent};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
-use crate::state::{OpportunityMarket, ShareAccount, VoteTokenAccount};
+use crate::state::{OpportunityMarket, ShareAccount, EncryptedTokenAccount};
 use crate::COMP_DEF_OFFSET_UNSTAKE_EARLY;
 use crate::{ArciumSignerAccount, ID, ID_CONST};
 
 #[queue_computation_accounts("unstake_early", signer)]
 #[derive(Accounts)]
-#[instruction(computation_offset: u64)]
+#[instruction(computation_offset: u64, share_account_id: u32)]
 pub struct UnstakeEarly<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -23,15 +23,18 @@ pub struct UnstakeEarly<'info> {
     pub market: Box<Account<'info, OpportunityMarket>>,
 
     #[account(
-        constraint = user_vta.owner == signer.key() @ ErrorCode::Unauthorized,
+        mut,
+        constraint = user_eta.owner == signer.key() @ ErrorCode::Unauthorized,
+        constraint = !user_eta.locked @ ErrorCode::Locked,
     )]
-    pub user_vta: Box<Account<'info, VoteTokenAccount>>,
+    pub user_eta: Box<Account<'info, EncryptedTokenAccount>>,
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump = share_account.bump,
         constraint = share_account.unstaked_at_timestamp.is_none() @ ErrorCode::AlreadyUnstaked,
+        constraint = !share_account.locked @ ErrorCode::Locked,
     )]
     pub share_account: Box<Account<'info, ShareAccount>>,
 
@@ -71,9 +74,11 @@ pub struct UnstakeEarly<'info> {
 pub fn unstake_early(
     ctx: Context<UnstakeEarly>,
     computation_offset: u64,
-    user_pubkey: [u8; 32],
+    _share_account_id: u32,
 ) -> Result<()> {
-    require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_vta.token_mint), ErrorCode::InvalidMint);
+    let user_pubkey = ctx.accounts.user_eta.user_pubkey;
+
+    require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_eta.token_mint), ErrorCode::InvalidMint);
 
     // Enforce staking period is active
     let market = &ctx.accounts.market;
@@ -90,32 +95,33 @@ pub fn unstake_early(
     let share_account_key = ctx.accounts.share_account.key();
     let share_account_nonce = ctx.accounts.share_account.state_nonce;
 
-    let user_vta_key = ctx.accounts.user_vta.key();
-    let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
+    let user_eta_key = ctx.accounts.user_eta.key();
+    let user_eta_nonce = ctx.accounts.user_eta.state_nonce;
 
-    let market_key = ctx.accounts.market.key();
-    let market_state_nonce = ctx.accounts.market.state_nonce;
+    // Lock both accounts while MPC computation is pending
+    ctx.accounts.user_eta.locked = true;
+    ctx.accounts.share_account.locked = true;
+
 
     // Build args for encrypted computation
+    let is_eta_initialized = user_eta_nonce != 0;
     let args = ArgBuilder::new()
         // Share account encrypted state (Enc<Shared, SharePurchase>)
         .x25519_pubkey(user_pubkey)
         .plaintext_u128(share_account_nonce)
         .account(share_account_key, 8, 32 * 2)
 
-        // User VTA encrypted state (Enc<Shared, VoteTokenBalance>)
+        // User ETA encrypted state (Enc<Shared, EncryptedTokenBalance>)
         .x25519_pubkey(user_pubkey)
-        .plaintext_u128(user_vta_nonce)
-        .account(user_vta_key, 8, 32 * 1)
+        .plaintext_u128(user_eta_nonce)
+        .account(user_eta_key, 8, 32 * 1)
 
-        // Available market shares (Enc<Mxe, MarketShareState>)
-        .plaintext_u128(market_state_nonce)
-        .account(market_key, 8, 32 * 1)
+        // Is ETA initialized flag
+        .plaintext_bool(is_eta_initialized)
         .build();
 
-    ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
-
     // Queue computation with callback
+    ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
     queue_computation(
         ctx.accounts,
         computation_offset,
@@ -125,11 +131,7 @@ pub fn unstake_early(
             &ctx.accounts.mxe_account,
             &[
                 CallbackAccount {
-                    pubkey: user_vta_key,
-                    is_writable: true,
-                },
-                CallbackAccount {
-                    pubkey: market_key,
+                    pubkey: user_eta_key,
                     is_writable: true,
                 },
                 CallbackAccount {
@@ -163,9 +165,7 @@ pub struct UnstakeEarlyCallback<'info> {
 
     // Callback accounts
     #[account(mut)]
-    pub user_vta: Account<'info, VoteTokenAccount>,
-    #[account(mut)]
-    pub market: Account<'info, OpportunityMarket>,
+    pub user_eta: Account<'info, EncryptedTokenAccount>,
     #[account(mut)]
     pub share_account: Account<'info, ShareAccount>,
 }
@@ -174,32 +174,35 @@ pub fn unstake_early_callback(
     ctx: Context<UnstakeEarlyCallback>,
     output: SignedComputationOutputs<UnstakeEarlyOutput>,
 ) -> Result<()> {
-    let res = match output.verify_output(
+    // Unlock accounts
+    ctx.accounts.user_eta.locked = false;
+    ctx.accounts.share_account.locked = false;
+
+    // Verify output - on error, emit event and return Ok so unlocks persist
+    let new_user_balance = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
         Ok(UnstakeEarlyOutput { field_0 }) => field_0,
-        Err(_) => return Err(ErrorCode::AbortedComputation.into()),
+        Err(_) => {
+            emit!(SharesUnstakedError {
+                user: ctx.accounts.user_eta.owner,
+            });
+            return Ok(());
+        }
     };
-
-    let new_user_balance = res.field_0;
-    let new_market_shares = res.field_1;
 
     // Mark share account as unstaked
     let clock = Clock::get()?;
     ctx.accounts.share_account.unstaked_at_timestamp = Some(clock.unix_timestamp as u64);
 
-    // Update user VTA with refunded balance
-    ctx.accounts.user_vta.state_nonce = new_user_balance.nonce;
-    ctx.accounts.user_vta.encrypted_state = new_user_balance.ciphertexts;
-
-    // Update market with returned shares
-    ctx.accounts.market.state_nonce = new_market_shares.nonce;
-    ctx.accounts.market.encrypted_available_shares = new_market_shares.ciphertexts;
+    // Update user ETA with refunded balance
+    ctx.accounts.user_eta.state_nonce = new_user_balance.nonce;
+    ctx.accounts.user_eta.encrypted_state = new_user_balance.ciphertexts;
 
     emit!(SharesUnstakedEvent {
-        buyer: ctx.accounts.user_vta.owner,
-        market: ctx.accounts.market.key(),
+        buyer: ctx.accounts.user_eta.owner,
+        market: ctx.accounts.share_account.market,
     });
 
     Ok(())

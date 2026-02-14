@@ -11,6 +11,7 @@ export interface CloseShareAccountParams {
   ownerTokenAccount: Address;
   tokenProgram: Address;
   optionIndex: number;
+  shareAccountId: number;
 }
 
 export async function closeShareAccount(

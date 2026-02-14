@@ -5,18 +5,19 @@ use anchor_lang::prelude::*;
 pub struct CentralState {
     pub bump: u8,
 
-    // Score component configuration - points at which returns are negligible
-    pub earliness_saturation: u64,
-    pub time_in_market_saturation: u64,
-    
+    // Point at which `earliness` becomes negligible
+    pub earliness_cutoff_seconds: u64,
+
     // Allowed to update
-    pub authority: Pubkey
+    pub authority: Pubkey,
+
+    // Minimum deposit required when creating a market option
+    pub min_option_deposit: u64,
 }
 
 #[account]
 #[derive(InitSpace)]
 pub struct OpportunityMarket {
-    pub encrypted_available_shares: [[u8; 32]; 1],
     pub bump: u8,
     pub creator: Pubkey,      // part of PDA seed
     pub index: u64,           // part of PDA seed
@@ -35,11 +36,6 @@ pub struct OpportunityMarket {
 
     pub selected_option: Option<u16>,
 
-    pub state_nonce: u128,
-
-    // Max available shares. 1 shares = 1 vote token
-    pub max_shares: u64,
-
     // Reward to be shared with stakers (in SPL token base units)
     pub reward_amount: u64,
 
@@ -50,19 +46,28 @@ pub struct OpportunityMarket {
     pub mint: Pubkey,
 
     // Score component configuration
-    pub earliness_saturation: u64,
-    pub time_in_market_saturation: u64
+    pub earliness_cutoff_seconds: u64,
 }
 
 #[account]
 #[derive(InitSpace)]
-pub struct VoteTokenAccount {
+pub struct EncryptedTokenAccount {
     pub encrypted_state: [[u8; 32]; 1],  // encrypted token amount
     pub bump: u8,
+    pub index: u64,  // PDA seed index (0 for regular ETAs, arbitrary for ephemeral ETAs)
     pub owner: Pubkey,
     pub state_nonce: u128,
     pub token_mint: Pubkey,
-    pub pending_deposit: u64,  // tracks unconfirmed deposits for safety
+    pub user_pubkey: [u8; 32],
+
+    // Locked while waiting for Arcium MPC callback
+    pub locked: bool,
+
+    // Tracks unconfirmed deposits for safety
+    pub pending_deposit: u64,
+
+    // Who paid rent for this account (None for regular ETAs, Some for ephemeral ETAs)
+    pub rent_payer: Option<Pubkey>,
 }
 
 #[account]
@@ -85,7 +90,10 @@ pub struct ShareAccount {
     // Amount that scales by time-in-market.
     pub revealed_score: Option<u64>,
 
-    pub total_incremented: bool
+    pub total_incremented: bool,
+
+    // Locked while waiting for Arcium MPC callback
+    pub locked: bool,
 }
 
 #[account]

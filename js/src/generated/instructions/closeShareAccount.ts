@@ -18,6 +18,8 @@ import {
   getStructEncoder,
   getU16Decoder,
   getU16Encoder,
+  getU32Decoder,
+  getU32Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -104,15 +106,20 @@ export type CloseShareAccountInstruction<
 export type CloseShareAccountInstructionData = {
   discriminator: ReadonlyUint8Array;
   optionIndex: number;
+  shareAccountId: number;
 };
 
-export type CloseShareAccountInstructionDataArgs = { optionIndex: number };
+export type CloseShareAccountInstructionDataArgs = {
+  optionIndex: number;
+  shareAccountId: number;
+};
 
 export function getCloseShareAccountInstructionDataEncoder(): FixedSizeEncoder<CloseShareAccountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['optionIndex', getU16Encoder()],
+      ['shareAccountId', getU32Encoder()],
     ]),
     (value) => ({ ...value, discriminator: CLOSE_SHARE_ACCOUNT_DISCRIMINATOR })
   );
@@ -122,6 +129,7 @@ export function getCloseShareAccountInstructionDataDecoder(): FixedSizeDecoder<C
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['optionIndex', getU16Decoder()],
+    ['shareAccountId', getU32Decoder()],
   ]);
 }
 
@@ -158,6 +166,7 @@ export type CloseShareAccountAsyncInput<
   tokenProgram: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: CloseShareAccountInstructionDataArgs['optionIndex'];
+  shareAccountId: CloseShareAccountInstructionDataArgs['shareAccountId'];
 };
 
 export async function getCloseShareAccountInstructionAsync<
@@ -237,6 +246,7 @@ export async function getCloseShareAccountInstructionAsync<
         ),
         getAddressEncoder().encode(expectAddress(accounts.owner.value)),
         getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
       ],
     });
   }
@@ -322,6 +332,7 @@ export type CloseShareAccountInput<
   tokenProgram: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   optionIndex: CloseShareAccountInstructionDataArgs['optionIndex'];
+  shareAccountId: CloseShareAccountInstructionDataArgs['shareAccountId'];
 };
 
 export function getCloseShareAccountInstruction<

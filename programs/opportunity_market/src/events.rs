@@ -4,13 +4,12 @@ use anchor_lang::prelude::*;
 pub struct MarketCreatedEvent {
     pub market: Pubkey,
     pub creator: Pubkey,
-    pub max_shares: u64,
     pub index: u64,
 }
 
 #[event]
-pub struct VoteTokenPurchasedEvent {
-    pub vote_token: Pubkey,
+pub struct EncryptedTokenWrappedEvent {
+    pub encrypted_token_account: Pubkey,
     pub buyer: Pubkey,
     pub lamports_spent: u64,
 }
@@ -33,4 +32,24 @@ pub struct SharesRevealedEvent {
 pub struct SharesUnstakedEvent {
     pub buyer: Pubkey,
     pub market: Pubkey,
+}
+
+#[event]
+pub struct SharesRevealedError {
+    pub user: Pubkey,
+}
+
+#[event]
+pub struct SharesPurchasedError {
+    pub user: Pubkey,
+}
+
+#[event]
+pub struct SharesUnstakedError {
+    pub user: Pubkey,
+}
+
+#[event]
+pub struct EncryptedTokensUnwrappedError {
+    pub user: Pubkey,
 }

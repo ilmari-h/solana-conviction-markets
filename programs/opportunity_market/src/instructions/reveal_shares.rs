@@ -3,15 +3,15 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::SharesRevealedEvent;
+use crate::events::{SharesRevealedError, SharesRevealedEvent};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
-use crate::state::{OpportunityMarket, ShareAccount, VoteTokenAccount};
+use crate::state::{OpportunityMarket, ShareAccount, EncryptedTokenAccount};
 use crate::COMP_DEF_OFFSET_REVEAL_SHARES;
 use crate::{ArciumSignerAccount, ID, ID_CONST};
 
 #[queue_computation_accounts("reveal_shares", signer)]
 #[derive(Accounts)]
-#[instruction(computation_offset: u64)]
+#[instruction(computation_offset: u64, share_account_id: u32)]
 pub struct RevealShares<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -23,14 +23,18 @@ pub struct RevealShares<'info> {
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump = share_account.bump,
         constraint = share_account.revealed_amount.is_none() @ ErrorCode::AlreadyRevealed,
+        constraint = !share_account.locked @ ErrorCode::Locked,
     )]
     pub share_account: Box<Account<'info, ShareAccount>>,
 
-    #[account(mut)]
-    pub user_vta: Box<Account<'info, VoteTokenAccount>>,
+    #[account(
+        mut,
+        constraint = !user_eta.locked @ ErrorCode::Locked,
+    )]
+    pub user_eta: Box<Account<'info, EncryptedTokenAccount>>,
 
     // Arcium accounts
     #[account(
@@ -71,11 +75,12 @@ pub struct RevealShares<'info> {
 pub fn reveal_shares(
     ctx: Context<RevealShares>,
     computation_offset: u64,
-    user_pubkey: [u8; 32],
+    _share_account_id: u32,
 ) -> Result<()> {
+    let user_pubkey = ctx.accounts.user_eta.user_pubkey;
 
-    require!(ctx.accounts.user_vta.owner.key().eq(&ctx.accounts.owner.key()), ErrorCode::Unauthorized);
-    require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_vta.token_mint.key()), ErrorCode::InvalidMint);
+    require!(ctx.accounts.user_eta.owner.key().eq(&ctx.accounts.owner.key()), ErrorCode::Unauthorized);
+    require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_eta.token_mint.key()), ErrorCode::InvalidMint);
 
     let market = &ctx.accounts.market;
     let clock = Clock::get()?;
@@ -92,10 +97,19 @@ pub fn reveal_shares(
     let share_account_key = ctx.accounts.share_account.key();
     let share_account_nonce = ctx.accounts.share_account.state_nonce;
 
-    let user_vta_key = ctx.accounts.user_vta.key();
-    let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
+    let user_eta_key = ctx.accounts.user_eta.key();
+    let user_eta_nonce = ctx.accounts.user_eta.state_nonce;
+
+    // Lock ShareAccount while MPC computation is pending
+    ctx.accounts.share_account.locked = true;
+
+    // Lock ETA if going to be modified by callback
+    if ctx.accounts.share_account.unstaked_at_timestamp.is_none() {
+        ctx.accounts.user_eta.locked = true;
+    }
 
     // Build args for encrypted computation
+    let is_eta_initialized = user_eta_nonce != 0;
     let args = ArgBuilder::new()
 
         // Share account encrypted state (Enc<Shared, SharePurchase>)
@@ -103,15 +117,17 @@ pub fn reveal_shares(
         .plaintext_u128(share_account_nonce)
         .account(share_account_key, 8, 32 * 2)
 
-        // User VTA encrypted state (Enc<Shared, VoteTokenBalance>)
+        // User ETA encrypted state (Enc<Shared, EncryptedTokenBalance>)
         .x25519_pubkey(user_pubkey)
-        .plaintext_u128(user_vta_nonce)
-        .account(user_vta_key, 8, 32 * 1)
+        .plaintext_u128(user_eta_nonce)
+        .account(user_eta_key, 8, 32 * 1)
+
+        // Is ETA initialized flag
+        .plaintext_bool(is_eta_initialized)
         .build();
 
-    ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
-
     // Queue computation with callback
+    ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
     queue_computation(
         ctx.accounts,
         computation_offset,
@@ -125,7 +141,7 @@ pub fn reveal_shares(
                     is_writable: true,
                 },
                 CallbackAccount {
-                    pubkey: user_vta_key,
+                    pubkey: user_eta_key,
                     is_writable: true,
                 },
             ],
@@ -157,19 +173,31 @@ pub struct RevealSharesCallback<'info> {
     #[account(mut)]
     pub share_account: Account<'info, ShareAccount>,
     #[account(mut)]
-    pub user_vta: Account<'info, VoteTokenAccount>,
+    pub user_eta: Account<'info, EncryptedTokenAccount>,
 }
 
 pub fn reveal_shares_callback(
     ctx: Context<RevealSharesCallback>,
     output: SignedComputationOutputs<RevealSharesOutput>,
 ) -> Result<()> {
+    // Unlock accounts
+    ctx.accounts.share_account.locked = false;
+    if ctx.accounts.share_account.unstaked_at_timestamp.is_none() {
+        ctx.accounts.user_eta.locked = false;
+    }
+
+    // Verify output - on error, emit event and return Ok so unlocks persist
     let res = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
         Ok(RevealSharesOutput { field_0 }) => field_0,
-        Err(_) => return Err(ErrorCode::AbortedComputation.into()),
+        Err(_) => {
+            emit!(SharesRevealedError {
+                user: ctx.accounts.user_eta.owner,
+            });
+            return Ok(());
+        }
     };
 
     let revealed_amount = res.field_0;
@@ -180,16 +208,16 @@ pub fn reveal_shares_callback(
     ctx.accounts.share_account.revealed_amount = Some(revealed_amount);
     ctx.accounts.share_account.revealed_option = Some(revealed_option);
 
-    // Only credit VTA if shares were not already unstaked
+    // Only credit ETA if shares were not already unstaked
     if ctx.accounts.share_account.unstaked_at_timestamp.is_none() {
-        ctx.accounts.user_vta.state_nonce = new_user_balance.nonce;
-        ctx.accounts.user_vta.encrypted_state = new_user_balance.ciphertexts;
+        ctx.accounts.user_eta.state_nonce = new_user_balance.nonce;
+        ctx.accounts.user_eta.encrypted_state = new_user_balance.ciphertexts;
     }
 
-    emit!(SharesRevealedEvent{
-        buyer: ctx.accounts.user_vta.owner,
+    emit!(SharesRevealedEvent {
+        buyer: ctx.accounts.user_eta.owner,
         shares_amount: revealed_amount,
-        selected_option: revealed_option
+        selected_option: revealed_option,
     });
 
     Ok(())

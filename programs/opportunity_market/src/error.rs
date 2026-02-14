@@ -20,8 +20,6 @@ pub enum ErrorCode {
     InvalidOptionIndex,
     #[msg("Market is not open")]
     MarketNotOpen,
-    #[msg("Invalid option or not enough balance")]
-    SharePurchaseFailed,
     #[msg("Staking period is not active")]
     StakingNotActive,
     #[msg("Market winner already selected")]
@@ -44,4 +42,12 @@ pub enum ErrorCode {
     AlreadyUnstaked,
     #[msg("Shares already purchased for this share account")]
     AlreadyPurchased,
+    #[msg("Deposit amount below minimum required for option creation")]
+    DepositBelowMinimum,
+    #[msg("Add option stake failed: insufficient balance, shares, or below minimum deposit")]
+    AddOptionStakeFailed,
+    #[msg("Account is locked")]
+    Locked,
+    #[msg("Invalid account state")]
+    InvalidAccountState,
 }

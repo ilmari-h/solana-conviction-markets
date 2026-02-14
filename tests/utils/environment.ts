@@ -1,7 +1,5 @@
 import {
-  getArciumEnv,
   getMXEPublicKey,
-  deserializeLE,
 } from "@arcium-hq/client";
 import {
   KeyPairSigner,
@@ -26,10 +24,8 @@ import {
   OpportunityMarketOption,
   createMarket,
   fetchOpportunityMarket,
-  randomComputationOffset,
   getInitCentralStateInstructionAsync,
 } from "../../js/src";
-import { randomBytes } from "crypto";
 import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { generateX25519Keypair, X25519Keypair } from "../../js/src/x25519/keypair";
@@ -42,8 +38,8 @@ export interface Account {
   tokenAccount: Address;
 }
 
-export interface AccountWithVTA extends Account {
-  voteTokenAccount: Address;
+export interface AccountWithETA extends Account {
+  encryptedTokenAccount: Address;
 }
 
 export type WithAddress<T> = T & {
@@ -71,7 +67,6 @@ export interface CreateTestEnvironmentConfig {
   airdropLamports?: bigint;
   initialTokenAmount?: bigint;
   marketConfig?: {
-    maxShares?: bigint;
     rewardAmount?: bigint;
     timeToStake?: bigint;
     timeToReveal?: bigint;
@@ -85,7 +80,6 @@ const DEFAULT_CONFIG: Required<CreateTestEnvironmentConfig> = {
   airdropLamports: 2_000_000_000n, // 2 SOL
   initialTokenAmount: 1_000_000_000n, // 1 billion tokens per account
   marketConfig: {
-    maxShares: 1000n,
     rewardAmount: 1_000_000_000n, // 1 billion tokens
     timeToStake: 120n, // 2 minutes
     timeToReveal: 60n, // 1 minute
@@ -141,7 +135,7 @@ async function createAccount(): Promise<Omit<Account, "initialAirdroppedLamports
  * 3. Airdrops SOL to all accounts in parallel
  * 4. Creates a market using the createMarket instruction
  *
- * Note: This does NOT initialize vote token accounts or open the market.
+ * Note: This does NOT initialize encrypted token accounts or open the market.
  * Those operations require MPC computation and should be done separately.
  */
 export async function createTestEnvironment(
@@ -245,12 +239,10 @@ export async function createTestEnvironment(
   };
 
   // Initialize central state
-  const arciumEnv = getArciumEnv();
-
   const initCentralStateIx = await getInitCentralStateInstructionAsync({
     payer: creatorAccount.keypair,
-    earlinessSaturation: 0n,
-    timeInMarketSaturation: 0n,
+    earlinessCutoffSeconds: 0n,
+    minOptionDeposit: 1n,
   });
 
   const { value: csBlockhash } = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send();
@@ -266,28 +258,17 @@ export async function createTestEnvironment(
 
   // Create the market
   const marketIndex = BigInt(Math.floor(Math.random() * 1000000));
-  const nonce = deserializeLE(randomBytes(16));
-  const computationOffset = randomComputationOffset();
 
-  const createMarketIx = await createMarket(
-    {
-      creator: creatorAccount.keypair,
-      tokenMint: mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
-      marketIndex,
-      maxShares: marketConfig.maxShares,
-      rewardAmount: marketConfig.rewardAmount,
-      timeToStake: marketConfig.timeToStake,
-      timeToReveal: marketConfig.timeToReveal,
-      marketAuthority: null,
-      nonce,
-    },
-    {
-      clusterOffset: arciumEnv.arciumClusterOffset,
-      computationOffset,
-      programId,
-    }
-  );
+  const createMarketIx = await createMarket({
+    creator: creatorAccount.keypair,
+    tokenMint: mint.address,
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    marketIndex,
+    rewardAmount: marketConfig.rewardAmount,
+    timeToStake: marketConfig.timeToStake,
+    timeToReveal: marketConfig.timeToReveal,
+    marketAuthority: null,
+  });
 
   // Get latest blockhash
   const { value: latestBlockhash } = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send();

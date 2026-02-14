@@ -18,6 +18,8 @@ import {
   getStructEncoder,
   getU128Decoder,
   getU128Encoder,
+  getU32Decoder,
+  getU32Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -37,6 +39,7 @@ import {
 import { OPPORTUNITY_MARKET_PROGRAM_ADDRESS } from '../programs';
 import {
   expectAddress,
+  expectSome,
   getAccountMetaFactory,
   type ResolvedAccount,
 } from '../shared';
@@ -83,10 +86,12 @@ export type InitShareAccountInstruction<
 export type InitShareAccountInstructionData = {
   discriminator: ReadonlyUint8Array;
   stateNonce: bigint;
+  shareAccountId: number;
 };
 
 export type InitShareAccountInstructionDataArgs = {
   stateNonce: number | bigint;
+  shareAccountId: number;
 };
 
 export function getInitShareAccountInstructionDataEncoder(): FixedSizeEncoder<InitShareAccountInstructionDataArgs> {
@@ -94,6 +99,7 @@ export function getInitShareAccountInstructionDataEncoder(): FixedSizeEncoder<In
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['stateNonce', getU128Encoder()],
+      ['shareAccountId', getU32Encoder()],
     ]),
     (value) => ({ ...value, discriminator: INIT_SHARE_ACCOUNT_DISCRIMINATOR })
   );
@@ -103,6 +109,7 @@ export function getInitShareAccountInstructionDataDecoder(): FixedSizeDecoder<In
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['stateNonce', getU128Decoder()],
+    ['shareAccountId', getU32Decoder()],
   ]);
 }
 
@@ -127,6 +134,7 @@ export type InitShareAccountAsyncInput<
   shareAccount?: Address<TAccountShareAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
   stateNonce: InitShareAccountInstructionDataArgs['stateNonce'];
+  shareAccountId: InitShareAccountInstructionDataArgs['shareAccountId'];
 };
 
 export async function getInitShareAccountInstructionAsync<
@@ -183,6 +191,7 @@ export async function getInitShareAccountInstructionAsync<
         ),
         getAddressEncoder().encode(expectAddress(accounts.signer.value)),
         getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
       ],
     });
   }
@@ -223,6 +232,7 @@ export type InitShareAccountInput<
   shareAccount: Address<TAccountShareAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
   stateNonce: InitShareAccountInstructionDataArgs['stateNonce'];
+  shareAccountId: InitShareAccountInstructionDataArgs['shareAccountId'];
 };
 
 export function getInitShareAccountInstruction<

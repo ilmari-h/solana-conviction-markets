@@ -9,10 +9,10 @@ import { type ByteArray, toNumberArray } from "../utils";
 export interface StakeParams {
   signer: TransactionSigner;
   market: Address;
-  userVta: Address;
+  userEta: Address;
+  shareAccountId: number;
   amountCiphertext: ByteArray;
   selectedOptionCiphertext: ByteArray;
-  userPubkey: ByteArray;
   inputNonce: bigint;
   authorizedReaderPubkey: ByteArray;
   authorizedReaderNonce: bigint;
@@ -25,10 +25,10 @@ export async function stake(
   const {
     signer,
     market,
-    userVta,
+    userEta,
+    shareAccountId,
     amountCiphertext,
     selectedOptionCiphertext,
-    userPubkey,
     inputNonce,
     authorizedReaderPubkey,
     authorizedReaderNonce,
@@ -38,10 +38,10 @@ export async function stake(
     ...getComputeAccounts("buy_opportunity_market_shares", config),
     signer,
     market,
-    userVta,
+    userEta,
+    shareAccountId,
     amountCiphertext: toNumberArray(amountCiphertext),
     selectedOptionCiphertext: toNumberArray(selectedOptionCiphertext),
-    userPubkey: toNumberArray(userPubkey),
     inputNonce,
     authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
     authorizedReaderNonce,

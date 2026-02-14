@@ -3,8 +3,8 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::SharesPurchasedEvent;
-use crate::state::{OpportunityMarket, ShareAccount, VoteTokenAccount};
+use crate::events::{SharesPurchasedError, SharesPurchasedEvent};
+use crate::state::{OpportunityMarket, ShareAccount, EncryptedTokenAccount};
 use crate::COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
 
@@ -12,7 +12,7 @@ pub const SHARE_ACCOUNT_SEED: &[u8] = b"share_account";
 
 #[queue_computation_accounts("buy_opportunity_market_shares", signer)]
 #[derive(Accounts)]
-#[instruction(computation_offset: u64)]
+#[instruction(computation_offset: u64, share_account_id: u32)]
 pub struct Stake<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -24,17 +24,19 @@ pub struct Stake<'info> {
     pub market: Box<Account<'info, OpportunityMarket>>,
 
     #[account(
-        constraint = user_vta.owner == signer.key() @ ErrorCode::Unauthorized,
+        mut,
+        constraint = user_eta.owner == signer.key() @ ErrorCode::Unauthorized,
+        constraint = !user_eta.locked @ ErrorCode::Locked,
     )]
-    pub user_vta: Box<Account<'info, VoteTokenAccount>>,
+    pub user_eta: Box<Account<'info, EncryptedTokenAccount>>,
 
-    // Boxed due to heap overflow
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, signer.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump,
         constraint = share_account.staked_at_timestamp.is_none() @ ErrorCode::AlreadyPurchased,
         constraint = share_account.unstaked_at_timestamp.is_none() @ ErrorCode::AlreadyUnstaked,
+        constraint = !share_account.locked @ ErrorCode::Locked,
     )]
     pub share_account: Box<Account<'info, ShareAccount>>,
 
@@ -74,18 +76,19 @@ pub struct Stake<'info> {
 pub fn stake(
     ctx: Context<Stake>,
     computation_offset: u64,
+    _share_account_id: u32,
     amount_ciphertext: [u8; 32],
     selected_option_ciphertext: [u8; 32],
 
-    user_pubkey: [u8; 32],
     input_nonce: u128,
 
     // Optional voluntary disclosure - to opt out, pass user's own pubkey or of deleted keypair.
     authorized_reader_pubkey: [u8; 32],
     authorized_reader_nonce: u128,
 ) -> Result<()> {
+    let user_pubkey = ctx.accounts.user_eta.user_pubkey;
 
-    require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_vta.token_mint), ErrorCode::InvalidMint);
+    require!(ctx.accounts.market.mint.eq(&ctx.accounts.user_eta.token_mint), ErrorCode::InvalidMint);
 
     // Enforce staking period is active
     let market = &ctx.accounts.market;
@@ -102,11 +105,12 @@ pub fn stake(
     // Capture timestamp when the buy is queued, not when callback runs
     ctx.accounts.share_account.staked_at_timestamp = Some(current_timestamp);
 
-    let user_vta_key = ctx.accounts.user_vta.key();
-    let user_vta_nonce = ctx.accounts.user_vta.state_nonce;
+    // Lock both accounts while MPC computation is pending
+    ctx.accounts.user_eta.locked = true;
+    ctx.accounts.share_account.locked = true;
 
-    let market_key = ctx.accounts.market.key();
-    let market_state_nonce = ctx.accounts.market.state_nonce;
+    let user_eta_key = ctx.accounts.user_eta.key();
+    let user_eta_nonce = ctx.accounts.user_eta.state_nonce;
 
     // Build args for encrypted computation
     let args = ArgBuilder::new()
@@ -120,23 +124,18 @@ pub fn stake(
         .x25519_pubkey(authorized_reader_pubkey)
         .plaintext_u128(authorized_reader_nonce)
 
-        // User's VTA (Enc<Shared, VoteTokenBalance>)
+        // User's ETA (Enc<Shared, EncryptedTokenBalance>)
         .x25519_pubkey(user_pubkey)
-        .plaintext_u128(user_vta_nonce)
-        .account(user_vta_key, 8, 32 * 1)
-
-        // Available market shares (Enc<Mxe, MarketShareState>)
-        .plaintext_u128(market_state_nonce)
-        .account(market_key, 8, 32 * 1)
+        .plaintext_u128(user_eta_nonce)
+        .account(user_eta_key, 8, 32 * 1)
 
         // Share account context (Mxe for output encryption)
         .x25519_pubkey(user_pubkey)
         .plaintext_u128(ctx.accounts.share_account.state_nonce)
         .build();
 
-    ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
-
     // Queue computation with callback
+    ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
     queue_computation(
         ctx.accounts,
         computation_offset,
@@ -146,11 +145,7 @@ pub fn stake(
             &ctx.accounts.mxe_account,
             &[
                 CallbackAccount {
-                    pubkey: user_vta_key,
-                    is_writable: true,
-                },
-                CallbackAccount {
-                    pubkey: market_key,
+                    pubkey: user_eta_key,
                     is_writable: true,
                 },
                 CallbackAccount {
@@ -184,10 +179,7 @@ pub struct BuyOpportunityMarketSharesCallback<'info> {
 
     // Callback accounts
     #[account(mut)]
-    pub user_vote_token_account: Account<'info, VoteTokenAccount>,
-
-    #[account(mut)]
-    pub market: Account<'info, OpportunityMarket>,
+    pub user_encrypted_token_account: Account<'info, EncryptedTokenAccount>,
 
     #[account(mut)]
     pub share_account: Account<'info, ShareAccount>,
@@ -197,42 +189,53 @@ pub fn buy_opportunity_market_shares_callback(
     ctx: Context<BuyOpportunityMarketSharesCallback>,
     output: SignedComputationOutputs<BuyOpportunityMarketSharesOutput>,
 ) -> Result<()> {
+    // Unlock accounts
+    ctx.accounts.user_encrypted_token_account.locked = false;
+    ctx.accounts.share_account.locked = false;
 
+    // Verify output - on error, rollback and return Ok so mutations persist
     let res = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
         Ok(BuyOpportunityMarketSharesOutput { field_0 }) => field_0,
-        Err(_) => return Err(ErrorCode::AbortedComputation.into()),
+        Err(_) => {
+            // Rollback
+            ctx.accounts.share_account.staked_at_timestamp = None;
+            emit!(SharesPurchasedError {
+                user: ctx.accounts.user_encrypted_token_account.owner,
+            });
+            return Ok(());
+        }
     };
-    let has_error = res.field_0;
-    let new_user_balance = res.field_1;
-    let new_market_shares = res.field_2;
-    let bought_shares_mxe = res.field_3;
-    let bought_shares_shared = res.field_4;
 
-    if has_error {
-        return Err(ErrorCode::SharePurchaseFailed.into());
+    if res.field_0 {
+        // Rollback
+        ctx.accounts.share_account.staked_at_timestamp = None;
+        emit!(SharesPurchasedError {
+            user: ctx.accounts.user_encrypted_token_account.owner,
+        });
+        return Ok(());
     }
 
+    let new_user_balance = res.field_1;
+    let bought_shares_mxe = res.field_2;
+    let bought_shares_shared = res.field_3;
+
     // Update user balance to <previous balance> - <bought shares>
-    ctx.accounts.user_vote_token_account.state_nonce = new_user_balance.nonce;
-    ctx.accounts.user_vote_token_account.encrypted_state = new_user_balance.ciphertexts;
+    ctx.accounts.user_encrypted_token_account.state_nonce = new_user_balance.nonce;
+    ctx.accounts.user_encrypted_token_account.encrypted_state = new_user_balance.ciphertexts;
 
-    // Update market shares, decrement user shares.
-    ctx.accounts.market.state_nonce = new_market_shares.nonce;
-    ctx.accounts.market.encrypted_available_shares = new_market_shares.ciphertexts;
-
-    // Update share account to the value of bought shares.
+    // Update share account to the value of bought shares
     ctx.accounts.share_account.state_nonce = bought_shares_mxe.nonce;
     ctx.accounts.share_account.encrypted_state = bought_shares_mxe.ciphertexts;
     ctx.accounts.share_account.state_nonce_disclosure = bought_shares_shared.nonce;
     ctx.accounts.share_account.encrypted_state_disclosure = bought_shares_shared.ciphertexts;
 
-    emit!(SharesPurchasedEvent{
-        buyer: ctx.accounts.user_vote_token_account.owner,
+    emit!(SharesPurchasedEvent {
+        buyer: ctx.accounts.user_encrypted_token_account.owner,
         encrypted_disclosed_amount: bought_shares_shared.ciphertexts[0],
-        nonce: bought_shares_shared.nonce
+        nonce: bought_shares_shared.nonce,
     });
 
     Ok(())

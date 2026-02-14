@@ -1,11 +1,12 @@
 use anchor_lang::prelude::*;
 
+use crate::score::calculate_user_score;
 use crate::error::ErrorCode;
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::state::{OpportunityMarket, OpportunityMarketOption, ShareAccount};
 
 #[derive(Accounts)]
-#[instruction(option_index: u16)]
+#[instruction(option_index: u16, share_account_id: u32)]
 pub struct IncrementOptionTally<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -17,7 +18,7 @@ pub struct IncrementOptionTally<'info> {
 
     #[account(
         mut,
-        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref()],
+        seeds = [SHARE_ACCOUNT_SEED, owner.key().as_ref(), market.key().as_ref(), &share_account_id.to_le_bytes()],
         bump = share_account.bump,
 
         constraint = !share_account.total_incremented @ ErrorCode::TallyAlreadyIncremented,
@@ -34,7 +35,7 @@ pub struct IncrementOptionTally<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, _option_index: u16) -> Result<()> {
+pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, _option_index: u16, _share_account_id: u32) -> Result<()> {
     // Check that we are within the reveal window
     let market = &ctx.accounts.market;
     let open_timestamp = market.open_timestamp.ok_or(ErrorCode::MarketNotOpen)?;
@@ -63,20 +64,19 @@ pub fn increment_option_tally(ctx: Context<IncrementOptionTally>, _option_index:
             .ok_or(ErrorCode::Overflow)?
     );
 
-    // Initialize total_score to 0 if None, then add user's amount
-    let staked_at_timestamp = ctx.accounts.share_account.staked_at_timestamp
-        .ok_or(ErrorCode::StakingNotActive)?;
-    let market_end = ctx.accounts.share_account.unstaked_at_timestamp
-        .unwrap_or(reveal_start);
-    let user_time_in_market = market_end
-        .checked_sub(staked_at_timestamp)
-        .ok_or(ErrorCode::Overflow)?
-        .max(1); // Ensure minimum of 1 to avoid zero scores
+    let share_account = &ctx.accounts.share_account;
 
-    // TODO: we can adjust this formula, now weight of time in market is same as stake amount
-    let user_score = revealed_amount
-        .checked_mul(user_time_in_market)
-        .ok_or(ErrorCode::Overflow)?;
+    let staked_at_timestamp = share_account.staked_at_timestamp
+        .ok_or(ErrorCode::StakingNotActive)?;
+    let stake_end = share_account.unstaked_at_timestamp
+        .unwrap_or(reveal_start);
+
+    let user_score = calculate_user_score(
+        open_timestamp,
+        stake_end,
+        staked_at_timestamp,
+        revealed_amount,
+    )?;
 
     let current_total_score = ctx.accounts.option.total_score.unwrap_or(0);
 

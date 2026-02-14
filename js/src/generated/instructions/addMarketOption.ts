@@ -13,15 +13,23 @@ import {
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
+  getArrayDecoder,
+  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
   getStructDecoder,
   getStructEncoder,
+  getU128Decoder,
+  getU128Encoder,
   getU16Decoder,
   getU16Encoder,
   getU32Decoder,
   getU32Encoder,
+  getU64Decoder,
+  getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
   getUtf8Decoder,
   getUtf8Encoder,
   transformEncoder,
@@ -62,9 +70,25 @@ export type AddMarketOptionInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountCreator extends string | AccountMeta<string> = string,
   TAccountMarket extends string | AccountMeta<string> = string,
+  TAccountCentralState extends string | AccountMeta<string> = string,
   TAccountOption extends string | AccountMeta<string> = string,
+  TAccountSourceEta extends string | AccountMeta<string> = string,
+  TAccountShareAccount extends string | AccountMeta<string> = string,
+  TAccountSignPdaAccount extends string | AccountMeta<string> = string,
+  TAccountMxeAccount extends string | AccountMeta<string> = string,
+  TAccountMempoolAccount extends string | AccountMeta<string> = string,
+  TAccountExecutingPool extends string | AccountMeta<string> = string,
+  TAccountComputationAccount extends string | AccountMeta<string> = string,
+  TAccountCompDefAccount extends string | AccountMeta<string> = string,
+  TAccountClusterAccount extends string | AccountMeta<string> = string,
+  TAccountPoolAccount extends string | AccountMeta<string> =
+    'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC',
+  TAccountClockAccount extends string | AccountMeta<string> =
+    '7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot',
   TAccountSystemProgram extends string | AccountMeta<string> =
     '11111111111111111111111111111111',
+  TAccountArciumProgram extends string | AccountMeta<string> =
+    'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ',
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -77,33 +101,90 @@ export type AddMarketOptionInstruction<
       TAccountMarket extends string
         ? WritableAccount<TAccountMarket>
         : TAccountMarket,
+      TAccountCentralState extends string
+        ? ReadonlyAccount<TAccountCentralState>
+        : TAccountCentralState,
       TAccountOption extends string
         ? WritableAccount<TAccountOption>
         : TAccountOption,
+      TAccountSourceEta extends string
+        ? WritableAccount<TAccountSourceEta>
+        : TAccountSourceEta,
+      TAccountShareAccount extends string
+        ? WritableAccount<TAccountShareAccount>
+        : TAccountShareAccount,
+      TAccountSignPdaAccount extends string
+        ? WritableAccount<TAccountSignPdaAccount>
+        : TAccountSignPdaAccount,
+      TAccountMxeAccount extends string
+        ? ReadonlyAccount<TAccountMxeAccount>
+        : TAccountMxeAccount,
+      TAccountMempoolAccount extends string
+        ? WritableAccount<TAccountMempoolAccount>
+        : TAccountMempoolAccount,
+      TAccountExecutingPool extends string
+        ? WritableAccount<TAccountExecutingPool>
+        : TAccountExecutingPool,
+      TAccountComputationAccount extends string
+        ? WritableAccount<TAccountComputationAccount>
+        : TAccountComputationAccount,
+      TAccountCompDefAccount extends string
+        ? ReadonlyAccount<TAccountCompDefAccount>
+        : TAccountCompDefAccount,
+      TAccountClusterAccount extends string
+        ? WritableAccount<TAccountClusterAccount>
+        : TAccountClusterAccount,
+      TAccountPoolAccount extends string
+        ? WritableAccount<TAccountPoolAccount>
+        : TAccountPoolAccount,
+      TAccountClockAccount extends string
+        ? WritableAccount<TAccountClockAccount>
+        : TAccountClockAccount,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
+      TAccountArciumProgram extends string
+        ? ReadonlyAccount<TAccountArciumProgram>
+        : TAccountArciumProgram,
       ...TRemainingAccounts,
     ]
   >;
 
 export type AddMarketOptionInstructionData = {
   discriminator: ReadonlyUint8Array;
+  computationOffset: bigint;
   optionIndex: number;
+  shareAccountId: number;
   name: string;
+  amountCiphertext: Array<number>;
+  inputNonce: bigint;
+  authorizedReaderPubkey: Array<number>;
+  authorizedReaderNonce: bigint;
 };
 
 export type AddMarketOptionInstructionDataArgs = {
+  computationOffset: number | bigint;
   optionIndex: number;
+  shareAccountId: number;
   name: string;
+  amountCiphertext: Array<number>;
+  inputNonce: number | bigint;
+  authorizedReaderPubkey: Array<number>;
+  authorizedReaderNonce: number | bigint;
 };
 
 export function getAddMarketOptionInstructionDataEncoder(): Encoder<AddMarketOptionInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['computationOffset', getU64Encoder()],
       ['optionIndex', getU16Encoder()],
+      ['shareAccountId', getU32Encoder()],
       ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['amountCiphertext', getArrayEncoder(getU8Encoder(), { size: 32 })],
+      ['inputNonce', getU128Encoder()],
+      ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
+      ['authorizedReaderNonce', getU128Encoder()],
     ]),
     (value) => ({ ...value, discriminator: ADD_MARKET_OPTION_DISCRIMINATOR })
   );
@@ -112,8 +193,14 @@ export function getAddMarketOptionInstructionDataEncoder(): Encoder<AddMarketOpt
 export function getAddMarketOptionInstructionDataDecoder(): Decoder<AddMarketOptionInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['computationOffset', getU64Decoder()],
     ['optionIndex', getU16Decoder()],
+    ['shareAccountId', getU32Decoder()],
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['amountCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
+    ['inputNonce', getU128Decoder()],
+    ['authorizedReaderPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
+    ['authorizedReaderNonce', getU128Decoder()],
   ]);
 }
 
@@ -130,29 +217,87 @@ export function getAddMarketOptionInstructionDataCodec(): Codec<
 export type AddMarketOptionAsyncInput<
   TAccountCreator extends string = string,
   TAccountMarket extends string = string,
+  TAccountCentralState extends string = string,
   TAccountOption extends string = string,
+  TAccountSourceEta extends string = string,
+  TAccountShareAccount extends string = string,
+  TAccountSignPdaAccount extends string = string,
+  TAccountMxeAccount extends string = string,
+  TAccountMempoolAccount extends string = string,
+  TAccountExecutingPool extends string = string,
+  TAccountComputationAccount extends string = string,
+  TAccountCompDefAccount extends string = string,
+  TAccountClusterAccount extends string = string,
+  TAccountPoolAccount extends string = string,
+  TAccountClockAccount extends string = string,
   TAccountSystemProgram extends string = string,
+  TAccountArciumProgram extends string = string,
 > = {
   creator: TransactionSigner<TAccountCreator>;
   market: Address<TAccountMarket>;
+  centralState?: Address<TAccountCentralState>;
   option?: Address<TAccountOption>;
+  sourceEta: Address<TAccountSourceEta>;
+  shareAccount?: Address<TAccountShareAccount>;
+  signPdaAccount?: Address<TAccountSignPdaAccount>;
+  mxeAccount: Address<TAccountMxeAccount>;
+  mempoolAccount: Address<TAccountMempoolAccount>;
+  executingPool: Address<TAccountExecutingPool>;
+  computationAccount: Address<TAccountComputationAccount>;
+  compDefAccount: Address<TAccountCompDefAccount>;
+  clusterAccount: Address<TAccountClusterAccount>;
+  poolAccount?: Address<TAccountPoolAccount>;
+  clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
+  arciumProgram?: Address<TAccountArciumProgram>;
+  computationOffset: AddMarketOptionInstructionDataArgs['computationOffset'];
   optionIndex: AddMarketOptionInstructionDataArgs['optionIndex'];
+  shareAccountId: AddMarketOptionInstructionDataArgs['shareAccountId'];
   name: AddMarketOptionInstructionDataArgs['name'];
+  amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
+  inputNonce: AddMarketOptionInstructionDataArgs['inputNonce'];
+  authorizedReaderPubkey: AddMarketOptionInstructionDataArgs['authorizedReaderPubkey'];
+  authorizedReaderNonce: AddMarketOptionInstructionDataArgs['authorizedReaderNonce'];
 };
 
 export async function getAddMarketOptionInstructionAsync<
   TAccountCreator extends string,
   TAccountMarket extends string,
+  TAccountCentralState extends string,
   TAccountOption extends string,
+  TAccountSourceEta extends string,
+  TAccountShareAccount extends string,
+  TAccountSignPdaAccount extends string,
+  TAccountMxeAccount extends string,
+  TAccountMempoolAccount extends string,
+  TAccountExecutingPool extends string,
+  TAccountComputationAccount extends string,
+  TAccountCompDefAccount extends string,
+  TAccountClusterAccount extends string,
+  TAccountPoolAccount extends string,
+  TAccountClockAccount extends string,
   TAccountSystemProgram extends string,
+  TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: AddMarketOptionAsyncInput<
     TAccountCreator,
     TAccountMarket,
+    TAccountCentralState,
     TAccountOption,
-    TAccountSystemProgram
+    TAccountSourceEta,
+    TAccountShareAccount,
+    TAccountSignPdaAccount,
+    TAccountMxeAccount,
+    TAccountMempoolAccount,
+    TAccountExecutingPool,
+    TAccountComputationAccount,
+    TAccountCompDefAccount,
+    TAccountClusterAccount,
+    TAccountPoolAccount,
+    TAccountClockAccount,
+    TAccountSystemProgram,
+    TAccountArciumProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
@@ -160,8 +305,21 @@ export async function getAddMarketOptionInstructionAsync<
     TProgramAddress,
     TAccountCreator,
     TAccountMarket,
+    TAccountCentralState,
     TAccountOption,
-    TAccountSystemProgram
+    TAccountSourceEta,
+    TAccountShareAccount,
+    TAccountSignPdaAccount,
+    TAccountMxeAccount,
+    TAccountMempoolAccount,
+    TAccountExecutingPool,
+    TAccountComputationAccount,
+    TAccountCompDefAccount,
+    TAccountClusterAccount,
+    TAccountPoolAccount,
+    TAccountClockAccount,
+    TAccountSystemProgram,
+    TAccountArciumProgram
   >
 > {
   // Program address.
@@ -172,8 +330,24 @@ export async function getAddMarketOptionInstructionAsync<
   const originalAccounts = {
     creator: { value: input.creator ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: true },
+    centralState: { value: input.centralState ?? null, isWritable: false },
     option: { value: input.option ?? null, isWritable: true },
+    sourceEta: { value: input.sourceEta ?? null, isWritable: true },
+    shareAccount: { value: input.shareAccount ?? null, isWritable: true },
+    signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
+    mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
+    mempoolAccount: { value: input.mempoolAccount ?? null, isWritable: true },
+    executingPool: { value: input.executingPool ?? null, isWritable: true },
+    computationAccount: {
+      value: input.computationAccount ?? null,
+      isWritable: true,
+    },
+    compDefAccount: { value: input.compDefAccount ?? null, isWritable: false },
+    clusterAccount: { value: input.clusterAccount ?? null, isWritable: true },
+    poolAccount: { value: input.poolAccount ?? null, isWritable: true },
+    clockAccount: { value: input.clockAccount ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    arciumProgram: { value: input.arciumProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -184,6 +358,18 @@ export async function getAddMarketOptionInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
+  if (!accounts.centralState.value) {
+    accounts.centralState.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([
+            99, 101, 110, 116, 114, 97, 108, 95, 115, 116, 97, 116, 101,
+          ])
+        ),
+      ],
+    });
+  }
   if (!accounts.option.value) {
     accounts.option.value = await getProgramDerivedAddress({
       programAddress,
@@ -196,9 +382,49 @@ export async function getAddMarketOptionInstructionAsync<
       ],
     });
   }
+  if (!accounts.shareAccount.value) {
+    accounts.shareAccount.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([
+            115, 104, 97, 114, 101, 95, 97, 99, 99, 111, 117, 110, 116,
+          ])
+        ),
+        getAddressEncoder().encode(expectAddress(accounts.creator.value)),
+        getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
+      ],
+    });
+  }
+  if (!accounts.signPdaAccount.value) {
+    accounts.signPdaAccount.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([
+            65, 114, 99, 105, 117, 109, 83, 105, 103, 110, 101, 114, 65, 99, 99,
+            111, 117, 110, 116,
+          ])
+        ),
+      ],
+    });
+  }
+  if (!accounts.poolAccount.value) {
+    accounts.poolAccount.value =
+      'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC' as Address<'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC'>;
+  }
+  if (!accounts.clockAccount.value) {
+    accounts.clockAccount.value =
+      '7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot' as Address<'7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot'>;
+  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
+  }
+  if (!accounts.arciumProgram.value) {
+    accounts.arciumProgram.value =
+      'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ' as Address<'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ'>;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
@@ -206,8 +432,21 @@ export async function getAddMarketOptionInstructionAsync<
     accounts: [
       getAccountMeta(accounts.creator),
       getAccountMeta(accounts.market),
+      getAccountMeta(accounts.centralState),
       getAccountMeta(accounts.option),
+      getAccountMeta(accounts.sourceEta),
+      getAccountMeta(accounts.shareAccount),
+      getAccountMeta(accounts.signPdaAccount),
+      getAccountMeta(accounts.mxeAccount),
+      getAccountMeta(accounts.mempoolAccount),
+      getAccountMeta(accounts.executingPool),
+      getAccountMeta(accounts.computationAccount),
+      getAccountMeta(accounts.compDefAccount),
+      getAccountMeta(accounts.clusterAccount),
+      getAccountMeta(accounts.poolAccount),
+      getAccountMeta(accounts.clockAccount),
       getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.arciumProgram),
     ],
     data: getAddMarketOptionInstructionDataEncoder().encode(
       args as AddMarketOptionInstructionDataArgs
@@ -217,45 +456,129 @@ export async function getAddMarketOptionInstructionAsync<
     TProgramAddress,
     TAccountCreator,
     TAccountMarket,
+    TAccountCentralState,
     TAccountOption,
-    TAccountSystemProgram
+    TAccountSourceEta,
+    TAccountShareAccount,
+    TAccountSignPdaAccount,
+    TAccountMxeAccount,
+    TAccountMempoolAccount,
+    TAccountExecutingPool,
+    TAccountComputationAccount,
+    TAccountCompDefAccount,
+    TAccountClusterAccount,
+    TAccountPoolAccount,
+    TAccountClockAccount,
+    TAccountSystemProgram,
+    TAccountArciumProgram
   >);
 }
 
 export type AddMarketOptionInput<
   TAccountCreator extends string = string,
   TAccountMarket extends string = string,
+  TAccountCentralState extends string = string,
   TAccountOption extends string = string,
+  TAccountSourceEta extends string = string,
+  TAccountShareAccount extends string = string,
+  TAccountSignPdaAccount extends string = string,
+  TAccountMxeAccount extends string = string,
+  TAccountMempoolAccount extends string = string,
+  TAccountExecutingPool extends string = string,
+  TAccountComputationAccount extends string = string,
+  TAccountCompDefAccount extends string = string,
+  TAccountClusterAccount extends string = string,
+  TAccountPoolAccount extends string = string,
+  TAccountClockAccount extends string = string,
   TAccountSystemProgram extends string = string,
+  TAccountArciumProgram extends string = string,
 > = {
   creator: TransactionSigner<TAccountCreator>;
   market: Address<TAccountMarket>;
+  centralState: Address<TAccountCentralState>;
   option: Address<TAccountOption>;
+  sourceEta: Address<TAccountSourceEta>;
+  shareAccount: Address<TAccountShareAccount>;
+  signPdaAccount: Address<TAccountSignPdaAccount>;
+  mxeAccount: Address<TAccountMxeAccount>;
+  mempoolAccount: Address<TAccountMempoolAccount>;
+  executingPool: Address<TAccountExecutingPool>;
+  computationAccount: Address<TAccountComputationAccount>;
+  compDefAccount: Address<TAccountCompDefAccount>;
+  clusterAccount: Address<TAccountClusterAccount>;
+  poolAccount?: Address<TAccountPoolAccount>;
+  clockAccount?: Address<TAccountClockAccount>;
   systemProgram?: Address<TAccountSystemProgram>;
+  arciumProgram?: Address<TAccountArciumProgram>;
+  computationOffset: AddMarketOptionInstructionDataArgs['computationOffset'];
   optionIndex: AddMarketOptionInstructionDataArgs['optionIndex'];
+  shareAccountId: AddMarketOptionInstructionDataArgs['shareAccountId'];
   name: AddMarketOptionInstructionDataArgs['name'];
+  amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
+  inputNonce: AddMarketOptionInstructionDataArgs['inputNonce'];
+  authorizedReaderPubkey: AddMarketOptionInstructionDataArgs['authorizedReaderPubkey'];
+  authorizedReaderNonce: AddMarketOptionInstructionDataArgs['authorizedReaderNonce'];
 };
 
 export function getAddMarketOptionInstruction<
   TAccountCreator extends string,
   TAccountMarket extends string,
+  TAccountCentralState extends string,
   TAccountOption extends string,
+  TAccountSourceEta extends string,
+  TAccountShareAccount extends string,
+  TAccountSignPdaAccount extends string,
+  TAccountMxeAccount extends string,
+  TAccountMempoolAccount extends string,
+  TAccountExecutingPool extends string,
+  TAccountComputationAccount extends string,
+  TAccountCompDefAccount extends string,
+  TAccountClusterAccount extends string,
+  TAccountPoolAccount extends string,
+  TAccountClockAccount extends string,
   TAccountSystemProgram extends string,
+  TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: AddMarketOptionInput<
     TAccountCreator,
     TAccountMarket,
+    TAccountCentralState,
     TAccountOption,
-    TAccountSystemProgram
+    TAccountSourceEta,
+    TAccountShareAccount,
+    TAccountSignPdaAccount,
+    TAccountMxeAccount,
+    TAccountMempoolAccount,
+    TAccountExecutingPool,
+    TAccountComputationAccount,
+    TAccountCompDefAccount,
+    TAccountClusterAccount,
+    TAccountPoolAccount,
+    TAccountClockAccount,
+    TAccountSystemProgram,
+    TAccountArciumProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): AddMarketOptionInstruction<
   TProgramAddress,
   TAccountCreator,
   TAccountMarket,
+  TAccountCentralState,
   TAccountOption,
-  TAccountSystemProgram
+  TAccountSourceEta,
+  TAccountShareAccount,
+  TAccountSignPdaAccount,
+  TAccountMxeAccount,
+  TAccountMempoolAccount,
+  TAccountExecutingPool,
+  TAccountComputationAccount,
+  TAccountCompDefAccount,
+  TAccountClusterAccount,
+  TAccountPoolAccount,
+  TAccountClockAccount,
+  TAccountSystemProgram,
+  TAccountArciumProgram
 > {
   // Program address.
   const programAddress =
@@ -265,8 +588,24 @@ export function getAddMarketOptionInstruction<
   const originalAccounts = {
     creator: { value: input.creator ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: true },
+    centralState: { value: input.centralState ?? null, isWritable: false },
     option: { value: input.option ?? null, isWritable: true },
+    sourceEta: { value: input.sourceEta ?? null, isWritable: true },
+    shareAccount: { value: input.shareAccount ?? null, isWritable: true },
+    signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
+    mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
+    mempoolAccount: { value: input.mempoolAccount ?? null, isWritable: true },
+    executingPool: { value: input.executingPool ?? null, isWritable: true },
+    computationAccount: {
+      value: input.computationAccount ?? null,
+      isWritable: true,
+    },
+    compDefAccount: { value: input.compDefAccount ?? null, isWritable: false },
+    clusterAccount: { value: input.clusterAccount ?? null, isWritable: true },
+    poolAccount: { value: input.poolAccount ?? null, isWritable: true },
+    clockAccount: { value: input.clockAccount ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    arciumProgram: { value: input.arciumProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -277,9 +616,21 @@ export function getAddMarketOptionInstruction<
   const args = { ...input };
 
   // Resolve default values.
+  if (!accounts.poolAccount.value) {
+    accounts.poolAccount.value =
+      'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC' as Address<'G2sRWJvi3xoyh5k2gY49eG9L8YhAEWQPtNb1zb1GXTtC'>;
+  }
+  if (!accounts.clockAccount.value) {
+    accounts.clockAccount.value =
+      '7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot' as Address<'7EbMUTLo5DjdzbN7s8BXeZwXzEwNQb1hScfRvWg8a6ot'>;
+  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
+  }
+  if (!accounts.arciumProgram.value) {
+    accounts.arciumProgram.value =
+      'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ' as Address<'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ'>;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
@@ -287,8 +638,21 @@ export function getAddMarketOptionInstruction<
     accounts: [
       getAccountMeta(accounts.creator),
       getAccountMeta(accounts.market),
+      getAccountMeta(accounts.centralState),
       getAccountMeta(accounts.option),
+      getAccountMeta(accounts.sourceEta),
+      getAccountMeta(accounts.shareAccount),
+      getAccountMeta(accounts.signPdaAccount),
+      getAccountMeta(accounts.mxeAccount),
+      getAccountMeta(accounts.mempoolAccount),
+      getAccountMeta(accounts.executingPool),
+      getAccountMeta(accounts.computationAccount),
+      getAccountMeta(accounts.compDefAccount),
+      getAccountMeta(accounts.clusterAccount),
+      getAccountMeta(accounts.poolAccount),
+      getAccountMeta(accounts.clockAccount),
       getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.arciumProgram),
     ],
     data: getAddMarketOptionInstructionDataEncoder().encode(
       args as AddMarketOptionInstructionDataArgs
@@ -298,8 +662,21 @@ export function getAddMarketOptionInstruction<
     TProgramAddress,
     TAccountCreator,
     TAccountMarket,
+    TAccountCentralState,
     TAccountOption,
-    TAccountSystemProgram
+    TAccountSourceEta,
+    TAccountShareAccount,
+    TAccountSignPdaAccount,
+    TAccountMxeAccount,
+    TAccountMempoolAccount,
+    TAccountExecutingPool,
+    TAccountComputationAccount,
+    TAccountCompDefAccount,
+    TAccountClusterAccount,
+    TAccountPoolAccount,
+    TAccountClockAccount,
+    TAccountSystemProgram,
+    TAccountArciumProgram
   >);
 }
 
@@ -311,8 +688,21 @@ export type ParsedAddMarketOptionInstruction<
   accounts: {
     creator: TAccountMetas[0];
     market: TAccountMetas[1];
-    option: TAccountMetas[2];
-    systemProgram: TAccountMetas[3];
+    centralState: TAccountMetas[2];
+    option: TAccountMetas[3];
+    sourceEta: TAccountMetas[4];
+    shareAccount: TAccountMetas[5];
+    signPdaAccount: TAccountMetas[6];
+    mxeAccount: TAccountMetas[7];
+    mempoolAccount: TAccountMetas[8];
+    executingPool: TAccountMetas[9];
+    computationAccount: TAccountMetas[10];
+    compDefAccount: TAccountMetas[11];
+    clusterAccount: TAccountMetas[12];
+    poolAccount: TAccountMetas[13];
+    clockAccount: TAccountMetas[14];
+    systemProgram: TAccountMetas[15];
+    arciumProgram: TAccountMetas[16];
   };
   data: AddMarketOptionInstructionData;
 };
@@ -325,7 +715,7 @@ export function parseAddMarketOptionInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedAddMarketOptionInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 4) {
+  if (instruction.accounts.length < 17) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -340,8 +730,21 @@ export function parseAddMarketOptionInstruction<
     accounts: {
       creator: getNextAccount(),
       market: getNextAccount(),
+      centralState: getNextAccount(),
       option: getNextAccount(),
+      sourceEta: getNextAccount(),
+      shareAccount: getNextAccount(),
+      signPdaAccount: getNextAccount(),
+      mxeAccount: getNextAccount(),
+      mempoolAccount: getNextAccount(),
+      executingPool: getNextAccount(),
+      computationAccount: getNextAccount(),
+      compDefAccount: getNextAccount(),
+      clusterAccount: getNextAccount(),
+      poolAccount: getNextAccount(),
+      clockAccount: getNextAccount(),
       systemProgram: getNextAccount(),
+      arciumProgram: getNextAccount(),
     },
     data: getAddMarketOptionInstructionDataDecoder().decode(instruction.data),
   };

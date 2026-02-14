@@ -40,7 +40,7 @@ async function initCompDef(
   const compDefAddress = getCompDefAccount(circuitName, programId);
   const accountInfo = await rpc.getAccountInfo(compDefAddress, { encoding: "base64" }).send();
   if (accountInfo.value !== null) {
-    console.log(`   Comp def ${circuitName} already initialized, skipping...`);
+    // Already initialized so skip
     return;
   }
 
@@ -62,9 +62,7 @@ async function initCompDef(
   const signedTransaction = await signTransactionMessageWithSigners(transactionMessage);
   try {
     await sendAndConfirm(signedTransaction, { commitment: "confirmed" });
-    console.log(`   Comp def ${circuitName} init tx sent`);
   } catch (err: any) {
-    console.error(`   Comp def ${circuitName} init tx failed:`);
     if (err?.context?.logs) {
       console.error("   Transaction logs:");
       err.context.logs.forEach((log: string) => console.error(`     ${log}`));
@@ -115,8 +113,6 @@ export async function initializeAllCompDefs(
   secretKey: Uint8Array,
   programId: Address
 ): Promise<void> {
-  console.log("\n=== Initializing Computation Definitions ===\n");
-
   // Create Kit keypair from secret key
   const payer = await createKeyPairSignerFromBytes(secretKey);
 
@@ -130,6 +126,4 @@ export async function initializeAllCompDefs(
   for (const circuitName of ALL_COMP_DEF_CIRCUITS) {
     await initCompDef(rpc, sendAndConfirm, provider, payer, payerLegacy, programId, circuitName);
   }
-
-  console.log("\n=== All Computation Definitions Initialized ===\n");
 }

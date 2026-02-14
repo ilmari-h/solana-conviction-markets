@@ -5,15 +5,10 @@ mod circuits {
     use arcis::*;
 
 
-    // Vote token state - tracks encrypted token amount
+    // Encrypted token state - tracks encrypted token amount
     #[derive(Clone,Copy)]
-    pub struct VoteTokenBalance {
+    pub struct EncryptedTokenBalance {
         pub amount: u64,
-    }
-
-    // Vote token state - tracks encrypted token amount
-    pub struct MarketShareState {
-        pub shares: u64,
     }
 
     // User input for buying market shares (encrypted)
@@ -29,49 +24,31 @@ mod circuits {
         pub selected_option: u16
     }
 
-    // Market available shares state
-    pub struct MarketAvailableShares {
-        pub available_shares: u64,
-    }
-
-    // Initialize market available shares with total_shares
+    // Wrap encrypted tokens: add to balance
+    // If is_initialized is false (state_nonce == 0), creates fresh state instead of decrypting
+    // Returns new_encrypted_balance
     #[instruction]
-    pub fn init_market_shares(
-        mxe: Mxe,
-        total_shares: u64,
-    ) -> Enc<Mxe, MarketAvailableShares> {
-        let state = MarketAvailableShares { available_shares: total_shares };
-        mxe.from_arcis(state)
-    }
-
-    // Initialize empty vote token balance for user
-    #[instruction]
-    pub fn init_vote_token_account(
-        mxe: Shared
-    ) -> Enc<Shared, VoteTokenBalance> {
-        let state = VoteTokenBalance { amount: 0 };
-        mxe.from_arcis(state)
-    }
-
-    // Buy vote tokens: add to balance
-    // Returns (amount_bought, new_encrypted_balance) where amount_bought is plaintext for token transfer
-    #[instruction]
-    pub fn buy_vote_tokens(
-        balance_ctx: Enc<Shared, VoteTokenBalance>,
+    pub fn wrap_encrypted_tokens(
+        balance_ctx: Enc<Shared, EncryptedTokenBalance>,
+        is_initialized: bool,
         amount: u64,
-    ) -> (u64, Enc<Shared, VoteTokenBalance>) {
-        let mut balance = balance_ctx.to_arcis();
+    ) -> Enc<Shared, EncryptedTokenBalance> {
+        let mut balance = if is_initialized {
+            balance_ctx.to_arcis()
+        } else {
+            EncryptedTokenBalance { amount: 0 }
+        };
         balance.amount = balance.amount + amount;
-        (amount.reveal(), balance_ctx.owner.from_arcis(balance))
+        balance_ctx.owner.from_arcis(balance)
     }
 
-    // Claim vote tokens (sell): subtract from balance
+    // Unwrap encrypted tokens (sell): subtract from balance
     // Returns (error, amount_sold, new_balance) where error=true means insufficient balance
     #[instruction]
-    pub fn claim_vote_tokens(
-        balance_ctx: Enc<Shared, VoteTokenBalance>,
+    pub fn unwrap_encrypted_tokens(
+        balance_ctx: Enc<Shared, EncryptedTokenBalance>,
         amount: u64,
-    ) -> (bool, u64, Enc<Shared, VoteTokenBalance>) {
+    ) -> (bool, u64, Enc<Shared, EncryptedTokenBalance>) {
         let mut balance = balance_ctx.to_arcis();
 
         // Check for insufficient balance
@@ -90,37 +67,83 @@ mod circuits {
         (insufficient_balance.reveal(), sold.reveal(), balance_ctx.owner.from_arcis(balance))
     }
 
-    // Buy shares: deduct from user's vote token balance and market's available shares
-    // TODO: enforce that selected option > 0 <= max_options
-    // Returns: (error, new_user_balance, new_market_shares, bought_shares_mxe, bought_shares_shared)
+    // Input for add_option_stake circuit (encrypted amount)
+    pub struct AddOptionStakeInput {
+        pub amount: u64,
+    }
+
+    // Add option + stake: deduct from user's ETA, create share purchase
+    // selected_option passed as plaintext u64 (no plaintext_u16 in ArgBuilder)
     #[instruction]
-    pub fn buy_opportunity_market_shares(
-        input_ctx: Enc<Shared, BuySharesInput>,
+    pub fn add_option_stake(
+        input_ctx: Enc<Shared, AddOptionStakeInput>,
         shares_recipient_ctx: Shared,
-        user_vta_ctx: Enc<Shared, VoteTokenBalance>,
-        market_shares_ctx: Enc<Mxe, MarketShareState>,
+        user_eta_ctx: Enc<Shared, EncryptedTokenBalance>,
         share_account_ctx: Shared,
+        min_deposit: u64,
+        selected_option: u64,
     ) -> (
         bool,
-        Enc<Shared, VoteTokenBalance>,
-        Enc<Mxe, MarketShareState>,
+        Enc<Shared, EncryptedTokenBalance>,
         Enc<Shared, SharePurchase>,
         Enc<Shared, SharePurchase>
     ) {
         let input = input_ctx.to_arcis();
-        let mut user_balance = user_vta_ctx.to_arcis();
-        let mut market_shares = market_shares_ctx.to_arcis();
+        let mut user_balance = user_eta_ctx.to_arcis();
 
         let amount = input.amount;
 
-        // Check if user has sufficient vote token balance
+        // Check minimum deposit
+        let below_min = amount < min_deposit;
+
+        // Check if user has sufficient encrypted token balance
         let insufficient_user_balance = amount > user_balance.amount;
 
-        // Check if market has sufficient shares available
-        let insufficient_market_shares = amount > market_shares.shares;
+        let error = below_min || insufficient_user_balance;
 
-        // Error if either check fails
-        let error = insufficient_user_balance || insufficient_market_shares;
+        let bought_amount = if error { 0 } else { amount };
+        let bought_shares = SharePurchase {
+            amount: bought_amount,
+            selected_option: selected_option as u16,
+        };
+
+        user_balance.amount = if error {
+            user_balance.amount
+        } else {
+            user_balance.amount - amount
+        };
+
+        (
+            error.reveal(),
+            user_eta_ctx.owner.from_arcis(user_balance),
+            share_account_ctx.from_arcis(bought_shares),
+            shares_recipient_ctx.from_arcis(bought_shares),
+        )
+    }
+
+    // Buy shares: deduct from user's encrypted token balance
+    // Returns: (error, new_user_balance, bought_shares_mxe, bought_shares_shared)
+    #[instruction]
+    pub fn buy_opportunity_market_shares(
+        input_ctx: Enc<Shared, BuySharesInput>,
+        shares_recipient_ctx: Shared,
+        user_eta_ctx: Enc<Shared, EncryptedTokenBalance>,
+        share_account_ctx: Shared,
+    ) -> (
+        bool,
+        Enc<Shared, EncryptedTokenBalance>,
+        Enc<Shared, SharePurchase>,
+        Enc<Shared, SharePurchase>
+    ) {
+        let input = input_ctx.to_arcis();
+        let mut user_balance = user_eta_ctx.to_arcis();
+
+        let amount = input.amount;
+
+        // Check if user has sufficient encrypted token balance
+        let insufficient_user_balance = amount > user_balance.amount;
+
+        let error = insufficient_user_balance;
 
         // Calculate bought shares (0 on error)
         let bought_amount = if error { 0 } else { amount };
@@ -136,66 +159,82 @@ mod circuits {
             user_balance.amount - amount
         };
 
-        // Deduct from market shares (keep unchanged on error)
-        market_shares.shares = if error {
-            market_shares.shares
-        } else {
-            market_shares.shares - amount
-        };
-
         (
             error.reveal(),
-            user_vta_ctx.owner.from_arcis(user_balance),
-            market_shares_ctx.owner.from_arcis(market_shares),
+            user_eta_ctx.owner.from_arcis(user_balance),
             share_account_ctx.from_arcis(bought_shares),
             shares_recipient_ctx.from_arcis(bought_shares)
         )
     }
 
-    // Reveal shares: decrypt share account
+    // Reveal shares: decrypt share account and credit ETA
+    // If is_eta_initialized is false (state_nonce == 0), treat existing balance as 0
     #[instruction]
     pub fn reveal_shares(
         share_account_ctx: Enc<Shared, SharePurchase>,
-        user_vta_ctx: Enc<Shared, VoteTokenBalance>,
+        user_eta_ctx: Enc<Shared, EncryptedTokenBalance>,
+        is_eta_initialized: bool,
     ) -> (
         u64,                               // revealed_amount
         u16,                               // revealed_option
-        Enc<Shared, VoteTokenBalance>,     // updated VTA balance
+        Enc<Shared, EncryptedTokenBalance>,     // updated ETA balance
     ) {
         let share_data = share_account_ctx.to_arcis();
-        let mut user_balance = user_vta_ctx.to_arcis();
+        let mut user_balance = if is_eta_initialized {
+            user_eta_ctx.to_arcis()
+        } else {
+            EncryptedTokenBalance { amount: 0 }
+        };
 
-
-        // Only credit balance if option matches
+        // Credit share amount to ETA balance
         user_balance.amount = user_balance.amount + share_data.amount;
 
         (
             share_data.amount.reveal(),
             share_data.selected_option.reveal(),
-            user_vta_ctx.owner.from_arcis(user_balance),
+            user_eta_ctx.owner.from_arcis(user_balance),
         )
     }
 
-    // Unstake early: refund VTA and return shares to market
+    // Unstake early: refund ETA
+    // If is_eta_initialized is false (state_nonce == 0), treat existing balance as 0
     #[instruction]
     pub fn unstake_early(
         share_account_ctx: Enc<Shared, SharePurchase>,
-        user_vta_ctx: Enc<Shared, VoteTokenBalance>,
-        market_shares_ctx: Enc<Mxe, MarketShareState>,
-    ) -> (
-        Enc<Shared, VoteTokenBalance>,     // refunded VTA balance
-        Enc<Mxe, MarketShareState>,        // updated market available shares
-    ) {
+        user_eta_ctx: Enc<Shared, EncryptedTokenBalance>,
+        is_eta_initialized: bool,
+    ) -> Enc<Shared, EncryptedTokenBalance> {
         let share_data = share_account_ctx.to_arcis();
-        let mut user_balance = user_vta_ctx.to_arcis();
-        let mut market_shares = market_shares_ctx.to_arcis();
+        let mut user_balance = if is_eta_initialized {
+            user_eta_ctx.to_arcis()
+        } else {
+            EncryptedTokenBalance { amount: 0 }
+        };
 
         user_balance.amount = user_balance.amount + share_data.amount;
-        market_shares.shares = market_shares.shares + share_data.amount;
 
-        (
-            user_vta_ctx.owner.from_arcis(user_balance),
-            market_shares_ctx.owner.from_arcis(market_shares),
-        )
+        user_eta_ctx.owner.from_arcis(user_balance)
+    }
+
+    // Close ephemeral ETA: transfer balance to regular ETA
+    // If is_regular_eta_initialized is false (state_nonce == 0), treat existing balance as 0
+    // Returns new regular ETA balance
+    #[instruction]
+    pub fn close_ephemeral_encrypted_token_account(
+        ephemeral_eta_ctx: Enc<Shared, EncryptedTokenBalance>,
+        regular_eta_ctx: Enc<Shared, EncryptedTokenBalance>,
+        is_regular_eta_initialized: bool,
+    ) -> Enc<Shared, EncryptedTokenBalance> {
+        let ephemeral_balance = ephemeral_eta_ctx.to_arcis();
+        let mut regular_balance = if is_regular_eta_initialized {
+            regular_eta_ctx.to_arcis()
+        } else {
+            EncryptedTokenBalance { amount: 0 }
+        };
+
+        // Transfer entire balance from ephemeral to regular
+        regular_balance.amount = regular_balance.amount + ephemeral_balance.amount;
+
+        regular_eta_ctx.owner.from_arcis(regular_balance)
     }
 }

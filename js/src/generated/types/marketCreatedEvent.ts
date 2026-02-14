@@ -23,14 +23,12 @@ import {
 export type MarketCreatedEvent = {
   market: Address;
   creator: Address;
-  maxShares: bigint;
   index: bigint;
 };
 
 export type MarketCreatedEventArgs = {
   market: Address;
   creator: Address;
-  maxShares: number | bigint;
   index: number | bigint;
 };
 
@@ -38,7 +36,6 @@ export function getMarketCreatedEventEncoder(): FixedSizeEncoder<MarketCreatedEv
   return getStructEncoder([
     ['market', getAddressEncoder()],
     ['creator', getAddressEncoder()],
-    ['maxShares', getU64Encoder()],
     ['index', getU64Encoder()],
   ]);
 }
@@ -47,7 +44,6 @@ export function getMarketCreatedEventDecoder(): FixedSizeDecoder<MarketCreatedEv
   return getStructDecoder([
     ['market', getAddressDecoder()],
     ['creator', getAddressDecoder()],
-    ['maxShares', getU64Decoder()],
     ['index', getU64Decoder()],
   ]);
 }

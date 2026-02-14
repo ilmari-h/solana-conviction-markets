@@ -65,8 +65,8 @@ export type BuyOpportunityMarketSharesCallbackInstruction<
   TAccountClusterAccount extends string | AccountMeta<string> = string,
   TAccountInstructionsSysvar extends string | AccountMeta<string> =
     'Sysvar1nstructions1111111111111111111111111',
-  TAccountUserVoteTokenAccount extends string | AccountMeta<string> = string,
-  TAccountMarket extends string | AccountMeta<string> = string,
+  TAccountUserEncryptedTokenAccount extends string | AccountMeta<string> =
+    string,
   TAccountShareAccount extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
@@ -91,12 +91,9 @@ export type BuyOpportunityMarketSharesCallbackInstruction<
       TAccountInstructionsSysvar extends string
         ? ReadonlyAccount<TAccountInstructionsSysvar>
         : TAccountInstructionsSysvar,
-      TAccountUserVoteTokenAccount extends string
-        ? WritableAccount<TAccountUserVoteTokenAccount>
-        : TAccountUserVoteTokenAccount,
-      TAccountMarket extends string
-        ? WritableAccount<TAccountMarket>
-        : TAccountMarket,
+      TAccountUserEncryptedTokenAccount extends string
+        ? WritableAccount<TAccountUserEncryptedTokenAccount>
+        : TAccountUserEncryptedTokenAccount,
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
         : TAccountShareAccount,
@@ -220,8 +217,7 @@ export type BuyOpportunityMarketSharesCallbackInput<
   TAccountComputationAccount extends string = string,
   TAccountClusterAccount extends string = string,
   TAccountInstructionsSysvar extends string = string,
-  TAccountUserVoteTokenAccount extends string = string,
-  TAccountMarket extends string = string,
+  TAccountUserEncryptedTokenAccount extends string = string,
   TAccountShareAccount extends string = string,
 > = {
   arciumProgram?: Address<TAccountArciumProgram>;
@@ -230,8 +226,7 @@ export type BuyOpportunityMarketSharesCallbackInput<
   computationAccount: Address<TAccountComputationAccount>;
   clusterAccount: Address<TAccountClusterAccount>;
   instructionsSysvar?: Address<TAccountInstructionsSysvar>;
-  userVoteTokenAccount: Address<TAccountUserVoteTokenAccount>;
-  market: Address<TAccountMarket>;
+  userEncryptedTokenAccount: Address<TAccountUserEncryptedTokenAccount>;
   shareAccount: Address<TAccountShareAccount>;
   output: BuyOpportunityMarketSharesCallbackInstructionDataArgs['output'];
 };
@@ -243,8 +238,7 @@ export function getBuyOpportunityMarketSharesCallbackInstruction<
   TAccountComputationAccount extends string,
   TAccountClusterAccount extends string,
   TAccountInstructionsSysvar extends string,
-  TAccountUserVoteTokenAccount extends string,
-  TAccountMarket extends string,
+  TAccountUserEncryptedTokenAccount extends string,
   TAccountShareAccount extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
@@ -255,8 +249,7 @@ export function getBuyOpportunityMarketSharesCallbackInstruction<
     TAccountComputationAccount,
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
-    TAccountUserVoteTokenAccount,
-    TAccountMarket,
+    TAccountUserEncryptedTokenAccount,
     TAccountShareAccount
   >,
   config?: { programAddress?: TProgramAddress }
@@ -268,8 +261,7 @@ export function getBuyOpportunityMarketSharesCallbackInstruction<
   TAccountComputationAccount,
   TAccountClusterAccount,
   TAccountInstructionsSysvar,
-  TAccountUserVoteTokenAccount,
-  TAccountMarket,
+  TAccountUserEncryptedTokenAccount,
   TAccountShareAccount
 > {
   // Program address.
@@ -290,11 +282,10 @@ export function getBuyOpportunityMarketSharesCallbackInstruction<
       value: input.instructionsSysvar ?? null,
       isWritable: false,
     },
-    userVoteTokenAccount: {
-      value: input.userVoteTokenAccount ?? null,
+    userEncryptedTokenAccount: {
+      value: input.userEncryptedTokenAccount ?? null,
       isWritable: true,
     },
-    market: { value: input.market ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
@@ -324,8 +315,7 @@ export function getBuyOpportunityMarketSharesCallbackInstruction<
       getAccountMeta(accounts.computationAccount),
       getAccountMeta(accounts.clusterAccount),
       getAccountMeta(accounts.instructionsSysvar),
-      getAccountMeta(accounts.userVoteTokenAccount),
-      getAccountMeta(accounts.market),
+      getAccountMeta(accounts.userEncryptedTokenAccount),
       getAccountMeta(accounts.shareAccount),
     ],
     data: getBuyOpportunityMarketSharesCallbackInstructionDataEncoder().encode(
@@ -340,8 +330,7 @@ export function getBuyOpportunityMarketSharesCallbackInstruction<
     TAccountComputationAccount,
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
-    TAccountUserVoteTokenAccount,
-    TAccountMarket,
+    TAccountUserEncryptedTokenAccount,
     TAccountShareAccount
   >);
 }
@@ -358,9 +347,8 @@ export type ParsedBuyOpportunityMarketSharesCallbackInstruction<
     computationAccount: TAccountMetas[3];
     clusterAccount: TAccountMetas[4];
     instructionsSysvar: TAccountMetas[5];
-    userVoteTokenAccount: TAccountMetas[6];
-    market: TAccountMetas[7];
-    shareAccount: TAccountMetas[8];
+    userEncryptedTokenAccount: TAccountMetas[6];
+    shareAccount: TAccountMetas[7];
   };
   data: BuyOpportunityMarketSharesCallbackInstructionData;
 };
@@ -376,7 +364,7 @@ export function parseBuyOpportunityMarketSharesCallbackInstruction<
   TProgram,
   TAccountMetas
 > {
-  if (instruction.accounts.length < 9) {
+  if (instruction.accounts.length < 8) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -395,8 +383,7 @@ export function parseBuyOpportunityMarketSharesCallbackInstruction<
       computationAccount: getNextAccount(),
       clusterAccount: getNextAccount(),
       instructionsSysvar: getNextAccount(),
-      userVoteTokenAccount: getNextAccount(),
-      market: getNextAccount(),
+      userEncryptedTokenAccount: getNextAccount(),
       shareAccount: getNextAccount(),
     },
     data: getBuyOpportunityMarketSharesCallbackInstructionDataDecoder().decode(

@@ -11,17 +11,15 @@ import {
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
-  getArrayDecoder,
-  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
   getStructDecoder,
   getStructEncoder,
+  getU32Decoder,
+  getU32Encoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -41,6 +39,7 @@ import {
 import { OPPORTUNITY_MARKET_PROGRAM_ADDRESS } from '../programs';
 import {
   expectAddress,
+  expectSome,
   getAccountMetaFactory,
   type ResolvedAccount,
 } from '../shared';
@@ -59,7 +58,7 @@ export type UnstakeEarlyInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountMarket extends string | AccountMeta<string> = string,
-  TAccountUserVta extends string | AccountMeta<string> = string,
+  TAccountUserEta extends string | AccountMeta<string> = string,
   TAccountShareAccount extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
@@ -88,9 +87,9 @@ export type UnstakeEarlyInstruction<
       TAccountMarket extends string
         ? ReadonlyAccount<TAccountMarket>
         : TAccountMarket,
-      TAccountUserVta extends string
-        ? ReadonlyAccount<TAccountUserVta>
-        : TAccountUserVta,
+      TAccountUserEta extends string
+        ? WritableAccount<TAccountUserEta>
+        : TAccountUserEta,
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
         : TAccountShareAccount,
@@ -134,12 +133,12 @@ export type UnstakeEarlyInstruction<
 export type UnstakeEarlyInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
-  userPubkey: Array<number>;
+  shareAccountId: number;
 };
 
 export type UnstakeEarlyInstructionDataArgs = {
   computationOffset: number | bigint;
-  userPubkey: Array<number>;
+  shareAccountId: number;
 };
 
 export function getUnstakeEarlyInstructionDataEncoder(): FixedSizeEncoder<UnstakeEarlyInstructionDataArgs> {
@@ -147,7 +146,7 @@ export function getUnstakeEarlyInstructionDataEncoder(): FixedSizeEncoder<Unstak
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
-      ['userPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
+      ['shareAccountId', getU32Encoder()],
     ]),
     (value) => ({ ...value, discriminator: UNSTAKE_EARLY_DISCRIMINATOR })
   );
@@ -157,7 +156,7 @@ export function getUnstakeEarlyInstructionDataDecoder(): FixedSizeDecoder<Unstak
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
-    ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
+    ['shareAccountId', getU32Decoder()],
   ]);
 }
 
@@ -174,7 +173,7 @@ export function getUnstakeEarlyInstructionDataCodec(): FixedSizeCodec<
 export type UnstakeEarlyAsyncInput<
   TAccountSigner extends string = string,
   TAccountMarket extends string = string,
-  TAccountUserVta extends string = string,
+  TAccountUserEta extends string = string,
   TAccountShareAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -190,7 +189,7 @@ export type UnstakeEarlyAsyncInput<
 > = {
   signer: TransactionSigner<TAccountSigner>;
   market: Address<TAccountMarket>;
-  userVta: Address<TAccountUserVta>;
+  userEta: Address<TAccountUserEta>;
   shareAccount?: Address<TAccountShareAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -204,13 +203,13 @@ export type UnstakeEarlyAsyncInput<
   systemProgram?: Address<TAccountSystemProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: UnstakeEarlyInstructionDataArgs['computationOffset'];
-  userPubkey: UnstakeEarlyInstructionDataArgs['userPubkey'];
+  shareAccountId: UnstakeEarlyInstructionDataArgs['shareAccountId'];
 };
 
 export async function getUnstakeEarlyInstructionAsync<
   TAccountSigner extends string,
   TAccountMarket extends string,
-  TAccountUserVta extends string,
+  TAccountUserEta extends string,
   TAccountShareAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -228,7 +227,7 @@ export async function getUnstakeEarlyInstructionAsync<
   input: UnstakeEarlyAsyncInput<
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -248,7 +247,7 @@ export async function getUnstakeEarlyInstructionAsync<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -271,7 +270,7 @@ export async function getUnstakeEarlyInstructionAsync<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: false },
-    userVta: { value: input.userVta ?? null, isWritable: false },
+    userEta: { value: input.userEta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -308,6 +307,7 @@ export async function getUnstakeEarlyInstructionAsync<
         ),
         getAddressEncoder().encode(expectAddress(accounts.signer.value)),
         getAddressEncoder().encode(expectAddress(accounts.market.value)),
+        getU32Encoder().encode(expectSome(args.shareAccountId)),
       ],
     });
   }
@@ -346,7 +346,7 @@ export async function getUnstakeEarlyInstructionAsync<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.market),
-      getAccountMeta(accounts.userVta),
+      getAccountMeta(accounts.userEta),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -368,7 +368,7 @@ export async function getUnstakeEarlyInstructionAsync<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -387,7 +387,7 @@ export async function getUnstakeEarlyInstructionAsync<
 export type UnstakeEarlyInput<
   TAccountSigner extends string = string,
   TAccountMarket extends string = string,
-  TAccountUserVta extends string = string,
+  TAccountUserEta extends string = string,
   TAccountShareAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -403,7 +403,7 @@ export type UnstakeEarlyInput<
 > = {
   signer: TransactionSigner<TAccountSigner>;
   market: Address<TAccountMarket>;
-  userVta: Address<TAccountUserVta>;
+  userEta: Address<TAccountUserEta>;
   shareAccount: Address<TAccountShareAccount>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -417,13 +417,13 @@ export type UnstakeEarlyInput<
   systemProgram?: Address<TAccountSystemProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
   computationOffset: UnstakeEarlyInstructionDataArgs['computationOffset'];
-  userPubkey: UnstakeEarlyInstructionDataArgs['userPubkey'];
+  shareAccountId: UnstakeEarlyInstructionDataArgs['shareAccountId'];
 };
 
 export function getUnstakeEarlyInstruction<
   TAccountSigner extends string,
   TAccountMarket extends string,
-  TAccountUserVta extends string,
+  TAccountUserEta extends string,
   TAccountShareAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -441,7 +441,7 @@ export function getUnstakeEarlyInstruction<
   input: UnstakeEarlyInput<
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -460,7 +460,7 @@ export function getUnstakeEarlyInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountMarket,
-  TAccountUserVta,
+  TAccountUserEta,
   TAccountShareAccount,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
@@ -482,7 +482,7 @@ export function getUnstakeEarlyInstruction<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: false },
-    userVta: { value: input.userVta ?? null, isWritable: false },
+    userEta: { value: input.userEta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -530,7 +530,7 @@ export function getUnstakeEarlyInstruction<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.market),
-      getAccountMeta(accounts.userVta),
+      getAccountMeta(accounts.userEta),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -552,7 +552,7 @@ export function getUnstakeEarlyInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -576,7 +576,7 @@ export type ParsedUnstakeEarlyInstruction<
   accounts: {
     signer: TAccountMetas[0];
     market: TAccountMetas[1];
-    userVta: TAccountMetas[2];
+    userEta: TAccountMetas[2];
     shareAccount: TAccountMetas[3];
     signPdaAccount: TAccountMetas[4];
     mxeAccount: TAccountMetas[5];
@@ -616,7 +616,7 @@ export function parseUnstakeEarlyInstruction<
     accounts: {
       signer: getNextAccount(),
       market: getNextAccount(),
-      userVta: getNextAccount(),
+      userEta: getNextAccount(),
       shareAccount: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),

@@ -28,7 +28,7 @@ In `programs/opportunity_market/Cargo.toml` make sure it's not in the defaults a
 
 
 ```bash
-yarn install
+bun install
 arcium build
 arcium test
 ```

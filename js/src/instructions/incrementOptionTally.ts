@@ -9,6 +9,7 @@ export interface IncrementOptionTallyParams {
   owner: Address;
   market: Address;
   optionIndex: number;
+  shareAccountId: number;
 }
 
 export async function incrementOptionTally(

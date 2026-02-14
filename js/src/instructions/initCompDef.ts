@@ -14,35 +14,35 @@ import {
 } from "@arcium-hq/client";
 import { PublicKey } from "@solana/web3.js";
 import {
-  getInitVoteTokenAccountCompDefInstruction,
-  getBuyVoteTokensCompDefInstruction,
-  getClaimVoteTokensCompDefInstruction,
+  getWrapEncryptedTokensCompDefInstruction,
+  getUnwrapEncryptedTokensCompDefInstruction,
   getBuyOpportunityMarketSharesCompDefInstruction,
-  getInitMarketSharesCompDefInstruction,
   getRevealSharesCompDefInstruction,
   getUnstakeEarlyCompDefInstruction,
+  getAddOptionStakeCompDefInstruction,
+  getCloseEphemeralEncryptedTokenAccountCompDefInstruction,
   OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   fetchMXEAccount,
 } from "../generated";
 import { BN } from "bn.js";
 
 export type CompDefCircuitName =
-  | "init_vote_token_account"
-  | "buy_vote_tokens"
-  | "claim_vote_tokens"
+  | "wrap_encrypted_tokens"
+  | "unwrap_encrypted_tokens"
   | "buy_opportunity_market_shares"
-  | "init_market_shares"
   | "reveal_shares"
-  | "unstake_early";
+  | "unstake_early"
+  | "add_option_stake"
+  | "close_ephemeral_encrypted_token_account";
 
 export const ALL_COMP_DEF_CIRCUITS: CompDefCircuitName[] = [
-  "init_vote_token_account",
-  "buy_vote_tokens",
-  "claim_vote_tokens",
+  "wrap_encrypted_tokens",
+  "unwrap_encrypted_tokens",
   "buy_opportunity_market_shares",
-  "init_market_shares",
   "reveal_shares",
   "unstake_early",
+  "add_option_stake",
+  "close_ephemeral_encrypted_token_account",
 ];
 
 
@@ -101,26 +101,26 @@ export async function getInitCompDefInstruction(
   };
 
   switch (circuitName) {
-    case "init_vote_token_account":
-      return getInitVoteTokenAccountCompDefInstruction(baseInput, { programAddress: programId });
+    case "wrap_encrypted_tokens":
+      return getWrapEncryptedTokensCompDefInstruction(baseInput, { programAddress: programId });
 
-    case "buy_vote_tokens":
-      return getBuyVoteTokensCompDefInstruction(baseInput, { programAddress: programId });
-
-    case "claim_vote_tokens":
-      return getClaimVoteTokensCompDefInstruction(baseInput, { programAddress: programId });
+    case "unwrap_encrypted_tokens":
+      return getUnwrapEncryptedTokensCompDefInstruction(baseInput, { programAddress: programId });
 
     case "buy_opportunity_market_shares":
       return getBuyOpportunityMarketSharesCompDefInstruction(baseInput, { programAddress: programId });
-
-    case "init_market_shares":
-      return getInitMarketSharesCompDefInstruction(baseInput, { programAddress: programId });
 
     case "reveal_shares":
       return getRevealSharesCompDefInstruction(baseInput, { programAddress: programId });
 
     case "unstake_early":
       return getUnstakeEarlyCompDefInstruction(baseInput, { programAddress: programId });
+
+    case "add_option_stake":
+      return getAddOptionStakeCompDefInstruction(baseInput, { programAddress: programId });
+
+    case "close_ephemeral_encrypted_token_account":
+      return getCloseEphemeralEncryptedTokenAccountCompDefInstruction(baseInput, { programAddress: programId });
 
     default:
       throw new Error(`Unknown circuit: ${circuitName}`);

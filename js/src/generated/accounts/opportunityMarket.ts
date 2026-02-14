@@ -17,16 +17,12 @@ import {
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
-  getArrayDecoder,
-  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getOptionDecoder,
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU128Decoder,
-  getU128Encoder,
   getU16Decoder,
   getU16Encoder,
   getU64Decoder,
@@ -61,7 +57,6 @@ export function getOpportunityMarketDiscriminatorBytes() {
 
 export type OpportunityMarket = {
   discriminator: ReadonlyUint8Array;
-  encryptedAvailableShares: Array<Array<number>>;
   bump: number;
   creator: Address;
   index: bigint;
@@ -70,17 +65,13 @@ export type OpportunityMarket = {
   timeToStake: bigint;
   timeToReveal: bigint;
   selectedOption: Option<number>;
-  stateNonce: bigint;
-  maxShares: bigint;
   rewardAmount: bigint;
   marketAuthority: Option<Address>;
   mint: Address;
-  earlinessSaturation: bigint;
-  timeInMarketSaturation: bigint;
+  earlinessCutoffSeconds: bigint;
 };
 
 export type OpportunityMarketArgs = {
-  encryptedAvailableShares: Array<Array<number>>;
   bump: number;
   creator: Address;
   index: number | bigint;
@@ -89,25 +80,16 @@ export type OpportunityMarketArgs = {
   timeToStake: number | bigint;
   timeToReveal: number | bigint;
   selectedOption: OptionOrNullable<number>;
-  stateNonce: number | bigint;
-  maxShares: number | bigint;
   rewardAmount: number | bigint;
   marketAuthority: OptionOrNullable<Address>;
   mint: Address;
-  earlinessSaturation: number | bigint;
-  timeInMarketSaturation: number | bigint;
+  earlinessCutoffSeconds: number | bigint;
 };
 
 export function getOpportunityMarketEncoder(): Encoder<OpportunityMarketArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
-      [
-        'encryptedAvailableShares',
-        getArrayEncoder(getArrayEncoder(getU8Encoder(), { size: 32 }), {
-          size: 1,
-        }),
-      ],
       ['bump', getU8Encoder()],
       ['creator', getAddressEncoder()],
       ['index', getU64Encoder()],
@@ -116,13 +98,10 @@ export function getOpportunityMarketEncoder(): Encoder<OpportunityMarketArgs> {
       ['timeToStake', getU64Encoder()],
       ['timeToReveal', getU64Encoder()],
       ['selectedOption', getOptionEncoder(getU16Encoder())],
-      ['stateNonce', getU128Encoder()],
-      ['maxShares', getU64Encoder()],
       ['rewardAmount', getU64Encoder()],
       ['marketAuthority', getOptionEncoder(getAddressEncoder())],
       ['mint', getAddressEncoder()],
-      ['earlinessSaturation', getU64Encoder()],
-      ['timeInMarketSaturation', getU64Encoder()],
+      ['earlinessCutoffSeconds', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: OPPORTUNITY_MARKET_DISCRIMINATOR })
   );
@@ -131,12 +110,6 @@ export function getOpportunityMarketEncoder(): Encoder<OpportunityMarketArgs> {
 export function getOpportunityMarketDecoder(): Decoder<OpportunityMarket> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
-    [
-      'encryptedAvailableShares',
-      getArrayDecoder(getArrayDecoder(getU8Decoder(), { size: 32 }), {
-        size: 1,
-      }),
-    ],
     ['bump', getU8Decoder()],
     ['creator', getAddressDecoder()],
     ['index', getU64Decoder()],
@@ -145,13 +118,10 @@ export function getOpportunityMarketDecoder(): Decoder<OpportunityMarket> {
     ['timeToStake', getU64Decoder()],
     ['timeToReveal', getU64Decoder()],
     ['selectedOption', getOptionDecoder(getU16Decoder())],
-    ['stateNonce', getU128Decoder()],
-    ['maxShares', getU64Decoder()],
     ['rewardAmount', getU64Decoder()],
     ['marketAuthority', getOptionDecoder(getAddressDecoder())],
     ['mint', getAddressDecoder()],
-    ['earlinessSaturation', getU64Decoder()],
-    ['timeInMarketSaturation', getU64Decoder()],
+    ['earlinessCutoffSeconds', getU64Decoder()],
   ]);
 }
 
