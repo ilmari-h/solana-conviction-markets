@@ -25,7 +25,7 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type ClaimVoteTokensOutputStruct0 = {
+export type UnwrapEncryptedTokensOutputStruct0 = {
   field0: boolean;
   field1: bigint;
   field2: {
@@ -35,7 +35,7 @@ export type ClaimVoteTokensOutputStruct0 = {
   };
 };
 
-export type ClaimVoteTokensOutputStruct0Args = {
+export type UnwrapEncryptedTokensOutputStruct0Args = {
   field0: boolean;
   field1: number | bigint;
   field2: {
@@ -45,7 +45,7 @@ export type ClaimVoteTokensOutputStruct0Args = {
   };
 };
 
-export function getClaimVoteTokensOutputStruct0Encoder(): FixedSizeEncoder<ClaimVoteTokensOutputStruct0Args> {
+export function getUnwrapEncryptedTokensOutputStruct0Encoder(): FixedSizeEncoder<UnwrapEncryptedTokensOutputStruct0Args> {
   return getStructEncoder([
     ['field0', getBooleanEncoder()],
     ['field1', getU64Encoder()],
@@ -65,7 +65,7 @@ export function getClaimVoteTokensOutputStruct0Encoder(): FixedSizeEncoder<Claim
   ]);
 }
 
-export function getClaimVoteTokensOutputStruct0Decoder(): FixedSizeDecoder<ClaimVoteTokensOutputStruct0> {
+export function getUnwrapEncryptedTokensOutputStruct0Decoder(): FixedSizeDecoder<UnwrapEncryptedTokensOutputStruct0> {
   return getStructDecoder([
     ['field0', getBooleanDecoder()],
     ['field1', getU64Decoder()],
@@ -85,12 +85,12 @@ export function getClaimVoteTokensOutputStruct0Decoder(): FixedSizeDecoder<Claim
   ]);
 }
 
-export function getClaimVoteTokensOutputStruct0Codec(): FixedSizeCodec<
-  ClaimVoteTokensOutputStruct0Args,
-  ClaimVoteTokensOutputStruct0
+export function getUnwrapEncryptedTokensOutputStruct0Codec(): FixedSizeCodec<
+  UnwrapEncryptedTokensOutputStruct0Args,
+  UnwrapEncryptedTokensOutputStruct0
 > {
   return combineCodec(
-    getClaimVoteTokensOutputStruct0Encoder(),
-    getClaimVoteTokensOutputStruct0Decoder()
+    getUnwrapEncryptedTokensOutputStruct0Encoder(),
+    getUnwrapEncryptedTokensOutputStruct0Decoder()
   );
 }

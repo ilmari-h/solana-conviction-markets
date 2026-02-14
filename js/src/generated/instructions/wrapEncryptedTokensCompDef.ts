@@ -33,17 +33,17 @@ import {
 import { OPPORTUNITY_MARKET_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
-export const BUY_VOTE_TOKENS_COMP_DEF_DISCRIMINATOR = new Uint8Array([
-  164, 174, 146, 68, 20, 202, 223, 78,
+export const WRAP_ENCRYPTED_TOKENS_COMP_DEF_DISCRIMINATOR = new Uint8Array([
+  197, 168, 125, 251, 47, 209, 49, 126,
 ]);
 
-export function getBuyVoteTokensCompDefDiscriminatorBytes() {
+export function getWrapEncryptedTokensCompDefDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    BUY_VOTE_TOKENS_COMP_DEF_DISCRIMINATOR
+    WRAP_ENCRYPTED_TOKENS_COMP_DEF_DISCRIMINATOR
   );
 }
 
-export type BuyVoteTokensCompDefInstruction<
+export type WrapEncryptedTokensCompDefInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountPayer extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
@@ -86,39 +86,39 @@ export type BuyVoteTokensCompDefInstruction<
     ]
   >;
 
-export type BuyVoteTokensCompDefInstructionData = {
+export type WrapEncryptedTokensCompDefInstructionData = {
   discriminator: ReadonlyUint8Array;
 };
 
-export type BuyVoteTokensCompDefInstructionDataArgs = {};
+export type WrapEncryptedTokensCompDefInstructionDataArgs = {};
 
-export function getBuyVoteTokensCompDefInstructionDataEncoder(): FixedSizeEncoder<BuyVoteTokensCompDefInstructionDataArgs> {
+export function getWrapEncryptedTokensCompDefInstructionDataEncoder(): FixedSizeEncoder<WrapEncryptedTokensCompDefInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
     (value) => ({
       ...value,
-      discriminator: BUY_VOTE_TOKENS_COMP_DEF_DISCRIMINATOR,
+      discriminator: WRAP_ENCRYPTED_TOKENS_COMP_DEF_DISCRIMINATOR,
     })
   );
 }
 
-export function getBuyVoteTokensCompDefInstructionDataDecoder(): FixedSizeDecoder<BuyVoteTokensCompDefInstructionData> {
+export function getWrapEncryptedTokensCompDefInstructionDataDecoder(): FixedSizeDecoder<WrapEncryptedTokensCompDefInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
   ]);
 }
 
-export function getBuyVoteTokensCompDefInstructionDataCodec(): FixedSizeCodec<
-  BuyVoteTokensCompDefInstructionDataArgs,
-  BuyVoteTokensCompDefInstructionData
+export function getWrapEncryptedTokensCompDefInstructionDataCodec(): FixedSizeCodec<
+  WrapEncryptedTokensCompDefInstructionDataArgs,
+  WrapEncryptedTokensCompDefInstructionData
 > {
   return combineCodec(
-    getBuyVoteTokensCompDefInstructionDataEncoder(),
-    getBuyVoteTokensCompDefInstructionDataDecoder()
+    getWrapEncryptedTokensCompDefInstructionDataEncoder(),
+    getWrapEncryptedTokensCompDefInstructionDataDecoder()
   );
 }
 
-export type BuyVoteTokensCompDefInput<
+export type WrapEncryptedTokensCompDefInput<
   TAccountPayer extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountCompDefAccount extends string = string,
@@ -136,7 +136,7 @@ export type BuyVoteTokensCompDefInput<
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
-export function getBuyVoteTokensCompDefInstruction<
+export function getWrapEncryptedTokensCompDefInstruction<
   TAccountPayer extends string,
   TAccountMxeAccount extends string,
   TAccountCompDefAccount extends string,
@@ -146,7 +146,7 @@ export function getBuyVoteTokensCompDefInstruction<
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: BuyVoteTokensCompDefInput<
+  input: WrapEncryptedTokensCompDefInput<
     TAccountPayer,
     TAccountMxeAccount,
     TAccountCompDefAccount,
@@ -156,7 +156,7 @@ export function getBuyVoteTokensCompDefInstruction<
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): BuyVoteTokensCompDefInstruction<
+): WrapEncryptedTokensCompDefInstruction<
   TProgramAddress,
   TAccountPayer,
   TAccountMxeAccount,
@@ -213,9 +213,9 @@ export function getBuyVoteTokensCompDefInstruction<
       getAccountMeta(accounts.arciumProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getBuyVoteTokensCompDefInstructionDataEncoder().encode({}),
+    data: getWrapEncryptedTokensCompDefInstructionDataEncoder().encode({}),
     programAddress,
-  } as BuyVoteTokensCompDefInstruction<
+  } as WrapEncryptedTokensCompDefInstruction<
     TProgramAddress,
     TAccountPayer,
     TAccountMxeAccount,
@@ -227,7 +227,7 @@ export function getBuyVoteTokensCompDefInstruction<
   >);
 }
 
-export type ParsedBuyVoteTokensCompDefInstruction<
+export type ParsedWrapEncryptedTokensCompDefInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -241,17 +241,17 @@ export type ParsedBuyVoteTokensCompDefInstruction<
     arciumProgram: TAccountMetas[5];
     systemProgram: TAccountMetas[6];
   };
-  data: BuyVoteTokensCompDefInstructionData;
+  data: WrapEncryptedTokensCompDefInstructionData;
 };
 
-export function parseBuyVoteTokensCompDefInstruction<
+export function parseWrapEncryptedTokensCompDefInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedBuyVoteTokensCompDefInstruction<TProgram, TAccountMetas> {
+): ParsedWrapEncryptedTokensCompDefInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -273,7 +273,7 @@ export function parseBuyVoteTokensCompDefInstruction<
       arciumProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getBuyVoteTokensCompDefInstructionDataDecoder().decode(
+    data: getWrapEncryptedTokensCompDefInstructionDataDecoder().decode(
       instruction.data
     ),
   };

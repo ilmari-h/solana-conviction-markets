@@ -43,22 +43,22 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
-export const INIT_VOTE_TOKEN_ACCOUNT_DISCRIMINATOR = new Uint8Array([
-  101, 189, 10, 58, 87, 35, 49, 163,
+export const INIT_ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR = new Uint8Array([
+  50, 44, 236, 188, 218, 183, 120, 61,
 ]);
 
-export function getInitVoteTokenAccountDiscriminatorBytes() {
+export function getInitEncryptedTokenAccountDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    INIT_VOTE_TOKEN_ACCOUNT_DISCRIMINATOR
+    INIT_ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR
   );
 }
 
-export type InitVoteTokenAccountInstruction<
+export type InitEncryptedTokenAccountInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountTokenMint extends string | AccountMeta<string> = string,
-  TAccountVoteTokenAccount extends string | AccountMeta<string> = string,
-  TAccountVoteTokenAta extends string | AccountMeta<string> = string,
+  TAccountEncryptedTokenAccount extends string | AccountMeta<string> = string,
+  TAccountEncryptedTokenAta extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> = string,
   TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
     'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
@@ -76,12 +76,12 @@ export type InitVoteTokenAccountInstruction<
       TAccountTokenMint extends string
         ? ReadonlyAccount<TAccountTokenMint>
         : TAccountTokenMint,
-      TAccountVoteTokenAccount extends string
-        ? WritableAccount<TAccountVoteTokenAccount>
-        : TAccountVoteTokenAccount,
-      TAccountVoteTokenAta extends string
-        ? WritableAccount<TAccountVoteTokenAta>
-        : TAccountVoteTokenAta,
+      TAccountEncryptedTokenAccount extends string
+        ? WritableAccount<TAccountEncryptedTokenAccount>
+        : TAccountEncryptedTokenAccount,
+      TAccountEncryptedTokenAta extends string
+        ? WritableAccount<TAccountEncryptedTokenAta>
+        : TAccountEncryptedTokenAta,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -95,16 +95,16 @@ export type InitVoteTokenAccountInstruction<
     ]
   >;
 
-export type InitVoteTokenAccountInstructionData = {
+export type InitEncryptedTokenAccountInstructionData = {
   discriminator: ReadonlyUint8Array;
   userPubkey: Array<number>;
 };
 
-export type InitVoteTokenAccountInstructionDataArgs = {
+export type InitEncryptedTokenAccountInstructionDataArgs = {
   userPubkey: Array<number>;
 };
 
-export function getInitVoteTokenAccountInstructionDataEncoder(): FixedSizeEncoder<InitVoteTokenAccountInstructionDataArgs> {
+export function getInitEncryptedTokenAccountInstructionDataEncoder(): FixedSizeEncoder<InitEncryptedTokenAccountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
@@ -112,75 +112,75 @@ export function getInitVoteTokenAccountInstructionDataEncoder(): FixedSizeEncode
     ]),
     (value) => ({
       ...value,
-      discriminator: INIT_VOTE_TOKEN_ACCOUNT_DISCRIMINATOR,
+      discriminator: INIT_ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR,
     })
   );
 }
 
-export function getInitVoteTokenAccountInstructionDataDecoder(): FixedSizeDecoder<InitVoteTokenAccountInstructionData> {
+export function getInitEncryptedTokenAccountInstructionDataDecoder(): FixedSizeDecoder<InitEncryptedTokenAccountInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['userPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
   ]);
 }
 
-export function getInitVoteTokenAccountInstructionDataCodec(): FixedSizeCodec<
-  InitVoteTokenAccountInstructionDataArgs,
-  InitVoteTokenAccountInstructionData
+export function getInitEncryptedTokenAccountInstructionDataCodec(): FixedSizeCodec<
+  InitEncryptedTokenAccountInstructionDataArgs,
+  InitEncryptedTokenAccountInstructionData
 > {
   return combineCodec(
-    getInitVoteTokenAccountInstructionDataEncoder(),
-    getInitVoteTokenAccountInstructionDataDecoder()
+    getInitEncryptedTokenAccountInstructionDataEncoder(),
+    getInitEncryptedTokenAccountInstructionDataDecoder()
   );
 }
 
-export type InitVoteTokenAccountAsyncInput<
+export type InitEncryptedTokenAccountAsyncInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountVoteTokenAccount extends string = string,
-  TAccountVoteTokenAta extends string = string,
+  TAccountEncryptedTokenAccount extends string = string,
+  TAccountEncryptedTokenAta extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
-  voteTokenAccount?: Address<TAccountVoteTokenAccount>;
-  /** ATA owned by the VTA PDA, holding the actual SPL tokens */
-  voteTokenAta?: Address<TAccountVoteTokenAta>;
+  encryptedTokenAccount?: Address<TAccountEncryptedTokenAccount>;
+  /** ATA owned by the ETA PDA, holding the actual SPL tokens */
+  encryptedTokenAta?: Address<TAccountEncryptedTokenAta>;
   tokenProgram: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
-  userPubkey: InitVoteTokenAccountInstructionDataArgs['userPubkey'];
+  userPubkey: InitEncryptedTokenAccountInstructionDataArgs['userPubkey'];
 };
 
-export async function getInitVoteTokenAccountInstructionAsync<
+export async function getInitEncryptedTokenAccountInstructionAsync<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
-  TAccountVoteTokenAccount extends string,
-  TAccountVoteTokenAta extends string,
+  TAccountEncryptedTokenAccount extends string,
+  TAccountEncryptedTokenAta extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: InitVoteTokenAccountAsyncInput<
+  input: InitEncryptedTokenAccountAsyncInput<
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
-  InitVoteTokenAccountInstruction<
+  InitEncryptedTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
@@ -194,11 +194,14 @@ export async function getInitVoteTokenAccountInstructionAsync<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    voteTokenAccount: {
-      value: input.voteTokenAccount ?? null,
+    encryptedTokenAccount: {
+      value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    encryptedTokenAta: {
+      value: input.encryptedTokenAta ?? null,
+      isWritable: true,
+    },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
       value: input.associatedTokenProgram ?? null,
@@ -215,14 +218,14 @@ export async function getInitVoteTokenAccountInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.voteTokenAccount.value) {
-    accounts.voteTokenAccount.value = await getProgramDerivedAddress({
+  if (!accounts.encryptedTokenAccount.value) {
+    accounts.encryptedTokenAccount.value = await getProgramDerivedAddress({
       programAddress,
       seeds: [
         getBytesEncoder().encode(
           new Uint8Array([
-            118, 111, 116, 101, 95, 116, 111, 107, 101, 110, 95, 97, 99, 99,
-            111, 117, 110, 116,
+            101, 110, 99, 114, 121, 112, 116, 101, 100, 95, 116, 111, 107, 101,
+            110, 95, 97, 99, 99, 111, 117, 110, 116,
           ])
         ),
         getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
@@ -231,13 +234,13 @@ export async function getInitVoteTokenAccountInstructionAsync<
       ],
     });
   }
-  if (!accounts.voteTokenAta.value) {
-    accounts.voteTokenAta.value = await getProgramDerivedAddress({
+  if (!accounts.encryptedTokenAta.value) {
+    accounts.encryptedTokenAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
         getAddressEncoder().encode(
-          expectAddress(accounts.voteTokenAccount.value)
+          expectAddress(accounts.encryptedTokenAccount.value)
         ),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
@@ -258,74 +261,74 @@ export async function getInitVoteTokenAccountInstructionAsync<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.encryptedTokenAccount),
+      getAccountMeta(accounts.encryptedTokenAta),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getInitVoteTokenAccountInstructionDataEncoder().encode(
-      args as InitVoteTokenAccountInstructionDataArgs
+    data: getInitEncryptedTokenAccountInstructionDataEncoder().encode(
+      args as InitEncryptedTokenAccountInstructionDataArgs
     ),
     programAddress,
-  } as InitVoteTokenAccountInstruction<
+  } as InitEncryptedTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
 
-export type InitVoteTokenAccountInput<
+export type InitEncryptedTokenAccountInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountVoteTokenAccount extends string = string,
-  TAccountVoteTokenAta extends string = string,
+  TAccountEncryptedTokenAccount extends string = string,
+  TAccountEncryptedTokenAta extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
-  voteTokenAccount: Address<TAccountVoteTokenAccount>;
-  /** ATA owned by the VTA PDA, holding the actual SPL tokens */
-  voteTokenAta: Address<TAccountVoteTokenAta>;
+  encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
+  /** ATA owned by the ETA PDA, holding the actual SPL tokens */
+  encryptedTokenAta: Address<TAccountEncryptedTokenAta>;
   tokenProgram: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
-  userPubkey: InitVoteTokenAccountInstructionDataArgs['userPubkey'];
+  userPubkey: InitEncryptedTokenAccountInstructionDataArgs['userPubkey'];
 };
 
-export function getInitVoteTokenAccountInstruction<
+export function getInitEncryptedTokenAccountInstruction<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
-  TAccountVoteTokenAccount extends string,
-  TAccountVoteTokenAta extends string,
+  TAccountEncryptedTokenAccount extends string,
+  TAccountEncryptedTokenAta extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: InitVoteTokenAccountInput<
+  input: InitEncryptedTokenAccountInput<
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): InitVoteTokenAccountInstruction<
+): InitEncryptedTokenAccountInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountTokenMint,
-  TAccountVoteTokenAccount,
-  TAccountVoteTokenAta,
+  TAccountEncryptedTokenAccount,
+  TAccountEncryptedTokenAta,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
   TAccountSystemProgram
@@ -338,11 +341,14 @@ export function getInitVoteTokenAccountInstruction<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    voteTokenAccount: {
-      value: input.voteTokenAccount ?? null,
+    encryptedTokenAccount: {
+      value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    encryptedTokenAta: {
+      value: input.encryptedTokenAta ?? null,
+      isWritable: true,
+    },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     associatedTokenProgram: {
       value: input.associatedTokenProgram ?? null,
@@ -373,29 +379,29 @@ export function getInitVoteTokenAccountInstruction<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.encryptedTokenAccount),
+      getAccountMeta(accounts.encryptedTokenAta),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getInitVoteTokenAccountInstructionDataEncoder().encode(
-      args as InitVoteTokenAccountInstructionDataArgs
+    data: getInitEncryptedTokenAccountInstructionDataEncoder().encode(
+      args as InitEncryptedTokenAccountInstructionDataArgs
     ),
     programAddress,
-  } as InitVoteTokenAccountInstruction<
+  } as InitEncryptedTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
 
-export type ParsedInitVoteTokenAccountInstruction<
+export type ParsedInitEncryptedTokenAccountInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -403,24 +409,24 @@ export type ParsedInitVoteTokenAccountInstruction<
   accounts: {
     signer: TAccountMetas[0];
     tokenMint: TAccountMetas[1];
-    voteTokenAccount: TAccountMetas[2];
-    /** ATA owned by the VTA PDA, holding the actual SPL tokens */
-    voteTokenAta: TAccountMetas[3];
+    encryptedTokenAccount: TAccountMetas[2];
+    /** ATA owned by the ETA PDA, holding the actual SPL tokens */
+    encryptedTokenAta: TAccountMetas[3];
     tokenProgram: TAccountMetas[4];
     associatedTokenProgram: TAccountMetas[5];
     systemProgram: TAccountMetas[6];
   };
-  data: InitVoteTokenAccountInstructionData;
+  data: InitEncryptedTokenAccountInstructionData;
 };
 
-export function parseInitVoteTokenAccountInstruction<
+export function parseInitEncryptedTokenAccountInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedInitVoteTokenAccountInstruction<TProgram, TAccountMetas> {
+): ParsedInitEncryptedTokenAccountInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -436,13 +442,13 @@ export function parseInitVoteTokenAccountInstruction<
     accounts: {
       signer: getNextAccount(),
       tokenMint: getNextAccount(),
-      voteTokenAccount: getNextAccount(),
-      voteTokenAta: getNextAccount(),
+      encryptedTokenAccount: getNextAccount(),
+      encryptedTokenAta: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getInitVoteTokenAccountInstructionDataDecoder().decode(
+    data: getInitEncryptedTokenAccountInstructionDataDecoder().decode(
       instruction.data
     ),
   };

@@ -6,9 +6,9 @@ use arcium_macros::circuit_hash;
 use crate::ID;
 
 
-#[init_computation_definition_accounts("buy_vote_tokens", payer)]
+#[init_computation_definition_accounts("wrap_encrypted_tokens", payer)]
 #[derive(Accounts)]
-pub struct BuyVoteTokensCompDef<'info> {
+pub struct WrapEncryptedTokensCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(mut, address = derive_mxe_pda!())]
@@ -26,14 +26,14 @@ pub struct BuyVoteTokensCompDef<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn buy_vote_tokens_comp_def(ctx: Context<BuyVoteTokensCompDef>) -> Result<()> {
+pub fn wrap_encrypted_tokens_comp_def(ctx: Context<WrapEncryptedTokensCompDef>) -> Result<()> {
     #[cfg(feature = "hosted-compdefs")]
     {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
-                source: "https://pub-f4c38b2a6f20431a8856eb3b17373497.r2.dev/buy_vote_tokens.arcis".to_string(),
-                hash: circuit_hash!("buy_vote_tokens"),
+                source: "https://pub-f4c38b2a6f20431a8856eb3b17373497.r2.dev/wrap_encrypted_tokens.arcis".to_string(),
+                hash: circuit_hash!("wrap_encrypted_tokens"),
             })),
             None,
         )?;
@@ -45,9 +45,9 @@ pub fn buy_vote_tokens_comp_def(ctx: Context<BuyVoteTokensCompDef>) -> Result<()
     Ok(())
 }
 
-#[init_computation_definition_accounts("claim_vote_tokens", payer)]
+#[init_computation_definition_accounts("unwrap_encrypted_tokens", payer)]
 #[derive(Accounts)]
-pub struct ClaimVoteTokensCompDef<'info> {
+pub struct UnwrapEncryptedTokensCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(mut, address = derive_mxe_pda!())]
@@ -65,14 +65,14 @@ pub struct ClaimVoteTokensCompDef<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn claim_vote_tokens_comp_def(ctx: Context<ClaimVoteTokensCompDef>) -> Result<()> {
+pub fn unwrap_encrypted_tokens_comp_def(ctx: Context<UnwrapEncryptedTokensCompDef>) -> Result<()> {
     #[cfg(feature = "hosted-compdefs")]
     {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
-                source: "https://pub-f4c38b2a6f20431a8856eb3b17373497.r2.dev/claim_vote_tokens.arcis".to_string(),
-                hash: circuit_hash!("claim_vote_tokens"),
+                source: "https://pub-f4c38b2a6f20431a8856eb3b17373497.r2.dev/unwrap_encrypted_tokens.arcis".to_string(),
+                hash: circuit_hash!("unwrap_encrypted_tokens"),
             })),
             None,
         )?;

@@ -1,3 +1,3 @@
-export * from "./voteTokenAccount";
+export * from "./encryptedTokenAccount";
 export * from "./shareAccount";
 export * from "./opportunityMarketOption";

@@ -41,22 +41,22 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
-export const CLAIM_VOTE_TOKENS_DISCRIMINATOR = new Uint8Array([
-  107, 162, 69, 108, 16, 153, 226, 246,
+export const UNWRAP_ENCRYPTED_TOKENS_DISCRIMINATOR = new Uint8Array([
+  223, 93, 223, 112, 29, 86, 208, 219,
 ]);
 
-export function getClaimVoteTokensDiscriminatorBytes() {
+export function getUnwrapEncryptedTokensDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CLAIM_VOTE_TOKENS_DISCRIMINATOR
+    UNWRAP_ENCRYPTED_TOKENS_DISCRIMINATOR
   );
 }
 
-export type ClaimVoteTokensInstruction<
+export type UnwrapEncryptedTokensInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountTokenMint extends string | AccountMeta<string> = string,
-  TAccountVoteTokenAccount extends string | AccountMeta<string> = string,
-  TAccountVoteTokenAta extends string | AccountMeta<string> = string,
+  TAccountEncryptedTokenAccount extends string | AccountMeta<string> = string,
+  TAccountEncryptedTokenAta extends string | AccountMeta<string> = string,
   TAccountUserTokenAccount extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
@@ -86,12 +86,12 @@ export type ClaimVoteTokensInstruction<
       TAccountTokenMint extends string
         ? ReadonlyAccount<TAccountTokenMint>
         : TAccountTokenMint,
-      TAccountVoteTokenAccount extends string
-        ? WritableAccount<TAccountVoteTokenAccount>
-        : TAccountVoteTokenAccount,
-      TAccountVoteTokenAta extends string
-        ? WritableAccount<TAccountVoteTokenAta>
-        : TAccountVoteTokenAta,
+      TAccountEncryptedTokenAccount extends string
+        ? WritableAccount<TAccountEncryptedTokenAccount>
+        : TAccountEncryptedTokenAccount,
+      TAccountEncryptedTokenAta extends string
+        ? WritableAccount<TAccountEncryptedTokenAta>
+        : TAccountEncryptedTokenAta,
       TAccountUserTokenAccount extends string
         ? WritableAccount<TAccountUserTokenAccount>
         : TAccountUserTokenAccount,
@@ -135,29 +135,32 @@ export type ClaimVoteTokensInstruction<
     ]
   >;
 
-export type ClaimVoteTokensInstructionData = {
+export type UnwrapEncryptedTokensInstructionData = {
   discriminator: ReadonlyUint8Array;
   computationOffset: bigint;
   amount: bigint;
 };
 
-export type ClaimVoteTokensInstructionDataArgs = {
+export type UnwrapEncryptedTokensInstructionDataArgs = {
   computationOffset: number | bigint;
   amount: number | bigint;
 };
 
-export function getClaimVoteTokensInstructionDataEncoder(): FixedSizeEncoder<ClaimVoteTokensInstructionDataArgs> {
+export function getUnwrapEncryptedTokensInstructionDataEncoder(): FixedSizeEncoder<UnwrapEncryptedTokensInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['computationOffset', getU64Encoder()],
       ['amount', getU64Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: CLAIM_VOTE_TOKENS_DISCRIMINATOR })
+    (value) => ({
+      ...value,
+      discriminator: UNWRAP_ENCRYPTED_TOKENS_DISCRIMINATOR,
+    })
   );
 }
 
-export function getClaimVoteTokensInstructionDataDecoder(): FixedSizeDecoder<ClaimVoteTokensInstructionData> {
+export function getUnwrapEncryptedTokensInstructionDataDecoder(): FixedSizeDecoder<UnwrapEncryptedTokensInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['computationOffset', getU64Decoder()],
@@ -165,21 +168,21 @@ export function getClaimVoteTokensInstructionDataDecoder(): FixedSizeDecoder<Cla
   ]);
 }
 
-export function getClaimVoteTokensInstructionDataCodec(): FixedSizeCodec<
-  ClaimVoteTokensInstructionDataArgs,
-  ClaimVoteTokensInstructionData
+export function getUnwrapEncryptedTokensInstructionDataCodec(): FixedSizeCodec<
+  UnwrapEncryptedTokensInstructionDataArgs,
+  UnwrapEncryptedTokensInstructionData
 > {
   return combineCodec(
-    getClaimVoteTokensInstructionDataEncoder(),
-    getClaimVoteTokensInstructionDataDecoder()
+    getUnwrapEncryptedTokensInstructionDataEncoder(),
+    getUnwrapEncryptedTokensInstructionDataDecoder()
   );
 }
 
-export type ClaimVoteTokensAsyncInput<
+export type UnwrapEncryptedTokensAsyncInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountVoteTokenAccount extends string = string,
-  TAccountVoteTokenAta extends string = string,
+  TAccountEncryptedTokenAccount extends string = string,
+  TAccountEncryptedTokenAta extends string = string,
   TAccountUserTokenAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -196,9 +199,9 @@ export type ClaimVoteTokensAsyncInput<
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
-  voteTokenAccount: Address<TAccountVoteTokenAccount>;
-  /** ATA owned by VTA PDA (source of SPL tokens for withdrawal) */
-  voteTokenAta?: Address<TAccountVoteTokenAta>;
+  encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
+  /** ATA owned by ETA PDA (source of SPL tokens for withdrawal) */
+  encryptedTokenAta?: Address<TAccountEncryptedTokenAta>;
   /** Signer's token account (destination for claimed tokens) */
   userTokenAccount: Address<TAccountUserTokenAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
@@ -213,15 +216,15 @@ export type ClaimVoteTokensAsyncInput<
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
-  computationOffset: ClaimVoteTokensInstructionDataArgs['computationOffset'];
-  amount: ClaimVoteTokensInstructionDataArgs['amount'];
+  computationOffset: UnwrapEncryptedTokensInstructionDataArgs['computationOffset'];
+  amount: UnwrapEncryptedTokensInstructionDataArgs['amount'];
 };
 
-export async function getClaimVoteTokensInstructionAsync<
+export async function getUnwrapEncryptedTokensInstructionAsync<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
-  TAccountVoteTokenAccount extends string,
-  TAccountVoteTokenAta extends string,
+  TAccountEncryptedTokenAccount extends string,
+  TAccountEncryptedTokenAta extends string,
   TAccountUserTokenAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -237,11 +240,11 @@ export async function getClaimVoteTokensInstructionAsync<
   TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: ClaimVoteTokensAsyncInput<
+  input: UnwrapEncryptedTokensAsyncInput<
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -258,12 +261,12 @@ export async function getClaimVoteTokensInstructionAsync<
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
-  ClaimVoteTokensInstruction<
+  UnwrapEncryptedTokensInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -287,11 +290,14 @@ export async function getClaimVoteTokensInstructionAsync<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    voteTokenAccount: {
-      value: input.voteTokenAccount ?? null,
+    encryptedTokenAccount: {
+      value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    encryptedTokenAta: {
+      value: input.encryptedTokenAta ?? null,
+      isWritable: true,
+    },
     userTokenAccount: {
       value: input.userTokenAccount ?? null,
       isWritable: true,
@@ -321,13 +327,13 @@ export async function getClaimVoteTokensInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.voteTokenAta.value) {
-    accounts.voteTokenAta.value = await getProgramDerivedAddress({
+  if (!accounts.encryptedTokenAta.value) {
+    accounts.encryptedTokenAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
         getAddressEncoder().encode(
-          expectAddress(accounts.voteTokenAccount.value)
+          expectAddress(accounts.encryptedTokenAccount.value)
         ),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
@@ -369,8 +375,8 @@ export async function getClaimVoteTokensInstructionAsync<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.encryptedTokenAccount),
+      getAccountMeta(accounts.encryptedTokenAta),
       getAccountMeta(accounts.userTokenAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -385,16 +391,16 @@ export async function getClaimVoteTokensInstructionAsync<
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.arciumProgram),
     ],
-    data: getClaimVoteTokensInstructionDataEncoder().encode(
-      args as ClaimVoteTokensInstructionDataArgs
+    data: getUnwrapEncryptedTokensInstructionDataEncoder().encode(
+      args as UnwrapEncryptedTokensInstructionDataArgs
     ),
     programAddress,
-  } as ClaimVoteTokensInstruction<
+  } as UnwrapEncryptedTokensInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -411,11 +417,11 @@ export async function getClaimVoteTokensInstructionAsync<
   >);
 }
 
-export type ClaimVoteTokensInput<
+export type UnwrapEncryptedTokensInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountVoteTokenAccount extends string = string,
-  TAccountVoteTokenAta extends string = string,
+  TAccountEncryptedTokenAccount extends string = string,
+  TAccountEncryptedTokenAta extends string = string,
   TAccountUserTokenAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -432,9 +438,9 @@ export type ClaimVoteTokensInput<
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
-  voteTokenAccount: Address<TAccountVoteTokenAccount>;
-  /** ATA owned by VTA PDA (source of SPL tokens for withdrawal) */
-  voteTokenAta: Address<TAccountVoteTokenAta>;
+  encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
+  /** ATA owned by ETA PDA (source of SPL tokens for withdrawal) */
+  encryptedTokenAta: Address<TAccountEncryptedTokenAta>;
   /** Signer's token account (destination for claimed tokens) */
   userTokenAccount: Address<TAccountUserTokenAccount>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
@@ -449,15 +455,15 @@ export type ClaimVoteTokensInput<
   systemProgram?: Address<TAccountSystemProgram>;
   tokenProgram: Address<TAccountTokenProgram>;
   arciumProgram?: Address<TAccountArciumProgram>;
-  computationOffset: ClaimVoteTokensInstructionDataArgs['computationOffset'];
-  amount: ClaimVoteTokensInstructionDataArgs['amount'];
+  computationOffset: UnwrapEncryptedTokensInstructionDataArgs['computationOffset'];
+  amount: UnwrapEncryptedTokensInstructionDataArgs['amount'];
 };
 
-export function getClaimVoteTokensInstruction<
+export function getUnwrapEncryptedTokensInstruction<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
-  TAccountVoteTokenAccount extends string,
-  TAccountVoteTokenAta extends string,
+  TAccountEncryptedTokenAccount extends string,
+  TAccountEncryptedTokenAta extends string,
   TAccountUserTokenAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -473,11 +479,11 @@ export function getClaimVoteTokensInstruction<
   TAccountArciumProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: ClaimVoteTokensInput<
+  input: UnwrapEncryptedTokensInput<
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -493,12 +499,12 @@ export function getClaimVoteTokensInstruction<
     TAccountArciumProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): ClaimVoteTokensInstruction<
+): UnwrapEncryptedTokensInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountTokenMint,
-  TAccountVoteTokenAccount,
-  TAccountVoteTokenAta,
+  TAccountEncryptedTokenAccount,
+  TAccountEncryptedTokenAta,
   TAccountUserTokenAccount,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
@@ -521,11 +527,14 @@ export function getClaimVoteTokensInstruction<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    voteTokenAccount: {
-      value: input.voteTokenAccount ?? null,
+    encryptedTokenAccount: {
+      value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    encryptedTokenAta: {
+      value: input.encryptedTokenAta ?? null,
+      isWritable: true,
+    },
     userTokenAccount: {
       value: input.userTokenAccount ?? null,
       isWritable: true,
@@ -577,8 +586,8 @@ export function getClaimVoteTokensInstruction<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.encryptedTokenAccount),
+      getAccountMeta(accounts.encryptedTokenAta),
       getAccountMeta(accounts.userTokenAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -593,16 +602,16 @@ export function getClaimVoteTokensInstruction<
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.arciumProgram),
     ],
-    data: getClaimVoteTokensInstructionDataEncoder().encode(
-      args as ClaimVoteTokensInstructionDataArgs
+    data: getUnwrapEncryptedTokensInstructionDataEncoder().encode(
+      args as UnwrapEncryptedTokensInstructionDataArgs
     ),
     programAddress,
-  } as ClaimVoteTokensInstruction<
+  } as UnwrapEncryptedTokensInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -619,7 +628,7 @@ export function getClaimVoteTokensInstruction<
   >);
 }
 
-export type ParsedClaimVoteTokensInstruction<
+export type ParsedUnwrapEncryptedTokensInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -627,9 +636,9 @@ export type ParsedClaimVoteTokensInstruction<
   accounts: {
     signer: TAccountMetas[0];
     tokenMint: TAccountMetas[1];
-    voteTokenAccount: TAccountMetas[2];
-    /** ATA owned by VTA PDA (source of SPL tokens for withdrawal) */
-    voteTokenAta: TAccountMetas[3];
+    encryptedTokenAccount: TAccountMetas[2];
+    /** ATA owned by ETA PDA (source of SPL tokens for withdrawal) */
+    encryptedTokenAta: TAccountMetas[3];
     /** Signer's token account (destination for claimed tokens) */
     userTokenAccount: TAccountMetas[4];
     signPdaAccount: TAccountMetas[5];
@@ -645,17 +654,17 @@ export type ParsedClaimVoteTokensInstruction<
     tokenProgram: TAccountMetas[15];
     arciumProgram: TAccountMetas[16];
   };
-  data: ClaimVoteTokensInstructionData;
+  data: UnwrapEncryptedTokensInstructionData;
 };
 
-export function parseClaimVoteTokensInstruction<
+export function parseUnwrapEncryptedTokensInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedClaimVoteTokensInstruction<TProgram, TAccountMetas> {
+): ParsedUnwrapEncryptedTokensInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 17) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -671,8 +680,8 @@ export function parseClaimVoteTokensInstruction<
     accounts: {
       signer: getNextAccount(),
       tokenMint: getNextAccount(),
-      voteTokenAccount: getNextAccount(),
-      voteTokenAta: getNextAccount(),
+      encryptedTokenAccount: getNextAccount(),
+      encryptedTokenAta: getNextAccount(),
       userTokenAccount: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),
@@ -687,6 +696,8 @@ export function parseClaimVoteTokensInstruction<
       tokenProgram: getNextAccount(),
       arciumProgram: getNextAccount(),
     },
-    data: getClaimVoteTokensInstructionDataDecoder().decode(instruction.data),
+    data: getUnwrapEncryptedTokensInstructionDataDecoder().decode(
+      instruction.data
+    ),
   };
 }

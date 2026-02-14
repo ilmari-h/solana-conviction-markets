@@ -53,8 +53,8 @@ export type ClaimPendingDepositInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountTokenMint extends string | AccountMeta<string> = string,
-  TAccountVoteTokenAccount extends string | AccountMeta<string> = string,
-  TAccountVoteTokenAta extends string | AccountMeta<string> = string,
+  TAccountEncryptedTokenAccount extends string | AccountMeta<string> = string,
+  TAccountEncryptedTokenAta extends string | AccountMeta<string> = string,
   TAccountSignerTokenAccount extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -69,12 +69,12 @@ export type ClaimPendingDepositInstruction<
       TAccountTokenMint extends string
         ? ReadonlyAccount<TAccountTokenMint>
         : TAccountTokenMint,
-      TAccountVoteTokenAccount extends string
-        ? WritableAccount<TAccountVoteTokenAccount>
-        : TAccountVoteTokenAccount,
-      TAccountVoteTokenAta extends string
-        ? WritableAccount<TAccountVoteTokenAta>
-        : TAccountVoteTokenAta,
+      TAccountEncryptedTokenAccount extends string
+        ? WritableAccount<TAccountEncryptedTokenAccount>
+        : TAccountEncryptedTokenAccount,
+      TAccountEncryptedTokenAta extends string
+        ? WritableAccount<TAccountEncryptedTokenAta>
+        : TAccountEncryptedTokenAta,
       TAccountSignerTokenAccount extends string
         ? WritableAccount<TAccountSignerTokenAccount>
         : TAccountSignerTokenAccount,
@@ -120,16 +120,16 @@ export function getClaimPendingDepositInstructionDataCodec(): FixedSizeCodec<
 export type ClaimPendingDepositAsyncInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountVoteTokenAccount extends string = string,
-  TAccountVoteTokenAta extends string = string,
+  TAccountEncryptedTokenAccount extends string = string,
+  TAccountEncryptedTokenAta extends string = string,
   TAccountSignerTokenAccount extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
-  voteTokenAccount: Address<TAccountVoteTokenAccount>;
-  /** ATA owned by VTA PDA (source of pending tokens) */
-  voteTokenAta?: Address<TAccountVoteTokenAta>;
+  encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
+  /** ATA owned by ETA PDA (source of pending tokens) */
+  encryptedTokenAta?: Address<TAccountEncryptedTokenAta>;
   /** Signer's token account (destination for claimed tokens) */
   signerTokenAccount: Address<TAccountSignerTokenAccount>;
   tokenProgram: Address<TAccountTokenProgram>;
@@ -138,8 +138,8 @@ export type ClaimPendingDepositAsyncInput<
 export async function getClaimPendingDepositInstructionAsync<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
-  TAccountVoteTokenAccount extends string,
-  TAccountVoteTokenAta extends string,
+  TAccountEncryptedTokenAccount extends string,
+  TAccountEncryptedTokenAta extends string,
   TAccountSignerTokenAccount extends string,
   TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
@@ -147,8 +147,8 @@ export async function getClaimPendingDepositInstructionAsync<
   input: ClaimPendingDepositAsyncInput<
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountSignerTokenAccount,
     TAccountTokenProgram
   >,
@@ -158,8 +158,8 @@ export async function getClaimPendingDepositInstructionAsync<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountSignerTokenAccount,
     TAccountTokenProgram
   >
@@ -172,11 +172,14 @@ export async function getClaimPendingDepositInstructionAsync<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    voteTokenAccount: {
-      value: input.voteTokenAccount ?? null,
+    encryptedTokenAccount: {
+      value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    encryptedTokenAta: {
+      value: input.encryptedTokenAta ?? null,
+      isWritable: true,
+    },
     signerTokenAccount: {
       value: input.signerTokenAccount ?? null,
       isWritable: true,
@@ -189,13 +192,13 @@ export async function getClaimPendingDepositInstructionAsync<
   >;
 
   // Resolve default values.
-  if (!accounts.voteTokenAta.value) {
-    accounts.voteTokenAta.value = await getProgramDerivedAddress({
+  if (!accounts.encryptedTokenAta.value) {
+    accounts.encryptedTokenAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
         getAddressEncoder().encode(
-          expectAddress(accounts.voteTokenAccount.value)
+          expectAddress(accounts.encryptedTokenAccount.value)
         ),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
@@ -208,8 +211,8 @@ export async function getClaimPendingDepositInstructionAsync<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.encryptedTokenAccount),
+      getAccountMeta(accounts.encryptedTokenAta),
       getAccountMeta(accounts.signerTokenAccount),
       getAccountMeta(accounts.tokenProgram),
     ],
@@ -219,8 +222,8 @@ export async function getClaimPendingDepositInstructionAsync<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountSignerTokenAccount,
     TAccountTokenProgram
   >);
@@ -229,16 +232,16 @@ export async function getClaimPendingDepositInstructionAsync<
 export type ClaimPendingDepositInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountVoteTokenAccount extends string = string,
-  TAccountVoteTokenAta extends string = string,
+  TAccountEncryptedTokenAccount extends string = string,
+  TAccountEncryptedTokenAta extends string = string,
   TAccountSignerTokenAccount extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
-  voteTokenAccount: Address<TAccountVoteTokenAccount>;
-  /** ATA owned by VTA PDA (source of pending tokens) */
-  voteTokenAta: Address<TAccountVoteTokenAta>;
+  encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
+  /** ATA owned by ETA PDA (source of pending tokens) */
+  encryptedTokenAta: Address<TAccountEncryptedTokenAta>;
   /** Signer's token account (destination for claimed tokens) */
   signerTokenAccount: Address<TAccountSignerTokenAccount>;
   tokenProgram: Address<TAccountTokenProgram>;
@@ -247,8 +250,8 @@ export type ClaimPendingDepositInput<
 export function getClaimPendingDepositInstruction<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
-  TAccountVoteTokenAccount extends string,
-  TAccountVoteTokenAta extends string,
+  TAccountEncryptedTokenAccount extends string,
+  TAccountEncryptedTokenAta extends string,
   TAccountSignerTokenAccount extends string,
   TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
@@ -256,8 +259,8 @@ export function getClaimPendingDepositInstruction<
   input: ClaimPendingDepositInput<
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountSignerTokenAccount,
     TAccountTokenProgram
   >,
@@ -266,8 +269,8 @@ export function getClaimPendingDepositInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountTokenMint,
-  TAccountVoteTokenAccount,
-  TAccountVoteTokenAta,
+  TAccountEncryptedTokenAccount,
+  TAccountEncryptedTokenAta,
   TAccountSignerTokenAccount,
   TAccountTokenProgram
 > {
@@ -279,11 +282,14 @@ export function getClaimPendingDepositInstruction<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    voteTokenAccount: {
-      value: input.voteTokenAccount ?? null,
+    encryptedTokenAccount: {
+      value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
+    encryptedTokenAta: {
+      value: input.encryptedTokenAta ?? null,
+      isWritable: true,
+    },
     signerTokenAccount: {
       value: input.signerTokenAccount ?? null,
       isWritable: true,
@@ -300,8 +306,8 @@ export function getClaimPendingDepositInstruction<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.voteTokenAta),
+      getAccountMeta(accounts.encryptedTokenAccount),
+      getAccountMeta(accounts.encryptedTokenAta),
       getAccountMeta(accounts.signerTokenAccount),
       getAccountMeta(accounts.tokenProgram),
     ],
@@ -311,8 +317,8 @@ export function getClaimPendingDepositInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountTokenMint,
-    TAccountVoteTokenAccount,
-    TAccountVoteTokenAta,
+    TAccountEncryptedTokenAccount,
+    TAccountEncryptedTokenAta,
     TAccountSignerTokenAccount,
     TAccountTokenProgram
   >);
@@ -326,9 +332,9 @@ export type ParsedClaimPendingDepositInstruction<
   accounts: {
     signer: TAccountMetas[0];
     tokenMint: TAccountMetas[1];
-    voteTokenAccount: TAccountMetas[2];
-    /** ATA owned by VTA PDA (source of pending tokens) */
-    voteTokenAta: TAccountMetas[3];
+    encryptedTokenAccount: TAccountMetas[2];
+    /** ATA owned by ETA PDA (source of pending tokens) */
+    encryptedTokenAta: TAccountMetas[3];
     /** Signer's token account (destination for claimed tokens) */
     signerTokenAccount: TAccountMetas[4];
     tokenProgram: TAccountMetas[5];
@@ -359,8 +365,8 @@ export function parseClaimPendingDepositInstruction<
     accounts: {
       signer: getNextAccount(),
       tokenMint: getNextAccount(),
-      voteTokenAccount: getNextAccount(),
-      voteTokenAta: getNextAccount(),
+      encryptedTokenAccount: getNextAccount(),
+      encryptedTokenAta: getNextAccount(),
       signerTokenAccount: getNextAccount(),
       tokenProgram: getNextAccount(),
     },

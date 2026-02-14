@@ -38,8 +38,8 @@ export interface Account {
   tokenAccount: Address;
 }
 
-export interface AccountWithVTA extends Account {
-  voteTokenAccount: Address;
+export interface AccountWithETA extends Account {
+  encryptedTokenAccount: Address;
 }
 
 export type WithAddress<T> = T & {
@@ -135,7 +135,7 @@ async function createAccount(): Promise<Omit<Account, "initialAirdroppedLamports
  * 3. Airdrops SOL to all accounts in parallel
  * 4. Creates a market using the createMarket instruction
  *
- * Note: This does NOT initialize vote token accounts or open the market.
+ * Note: This does NOT initialize encrypted token accounts or open the market.
  * Those operations require MPC computation and should be done separately.
  */
 export async function createTestEnvironment(

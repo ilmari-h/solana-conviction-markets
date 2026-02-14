@@ -12,31 +12,30 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
 import {
   awaitComputationFinalization,
-  initVoteTokenAccount,
-  initEphemeralVoteTokenAccount,
-  mintVoteTokens,
-  claimVoteTokens,
+  initEncryptedTokenAccount,
+  initEphemeralEncryptedTokenAccount,
+  wrapEncryptedTokens,
+  unwrapEncryptedTokens,
   randomComputationOffset,
-  fetchVoteTokenAccount,
-  getVoteTokenAccountAddress,
-  getEphemeralVoteTokenAccountAddress,
+  fetchEncryptedTokenAccount,
+  getEncryptedTokenAccountAddress,
+  getEphemeralEncryptedTokenAccountAddress,
 } from "../js/src";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sendTransaction } from "./utils/transaction";
 import { createMintAndFundAccount } from "./utils/spl-token";
 import { nonceToBytes } from "./utils/nonce";
-import { getArciumEnv, getMXEPublicKey, deserializeLE } from "@arcium-hq/client";
+import { getArciumEnv, getMXEPublicKey } from "@arcium-hq/client";
 import { OpportunityMarket } from "../target/types/opportunity_market";
 import * as fs from "fs";
 import * as os from "os";
-import { randomBytes } from "crypto";
 import { generateX25519Keypair, createCipher } from "../js/src/x25519/keypair";
 import { expect } from "chai";
 
 const RPC_URL = process.env.ANCHOR_PROVIDER_URL || "http://127.0.0.1:8899";
 const WS_URL = RPC_URL.replace("http", "ws").replace(":8899", ":8900");
 
-describe("Vote Token Account (SPL)", () => {
+describe("Encrypted Token Account (SPL)", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace.OpportunityMarket as Program<OpportunityMarket>;
   const provider = anchor.getProvider() as anchor.AnchorProvider;
@@ -58,20 +57,20 @@ describe("Vote Token Account (SPL)", () => {
   });
 
   /**
-   * Fetches the VTA from chain and decrypts the encrypted balance.
+   * Fetches the ETA from chain and decrypts the encrypted balance.
    */
-  async function decryptVtaBalance(
-    vtaAddress: Parameters<typeof fetchVoteTokenAccount>[1],
+  async function decryptEtaBalance(
+    etaAddress: Parameters<typeof fetchEncryptedTokenAccount>[1],
     userSecretKey: Uint8Array,
   ): Promise<bigint> {
-    const vta = await fetchVoteTokenAccount(rpc, vtaAddress);
+    const eta = await fetchEncryptedTokenAccount(rpc, etaAddress);
     const cipher = createCipher(userSecretKey, mxePublicKey);
-    const nonceBytes = nonceToBytes(vta.data.stateNonce);
-    const decrypted = cipher.decrypt(vta.data.encryptedState, nonceBytes);
+    const nonceBytes = nonceToBytes(eta.data.stateNonce);
+    const decrypted = cipher.decrypt(eta.data.encryptedState, nonceBytes);
     return decrypted[0];
   }
 
-  it("can init VTA, mint vote tokens, and claim them back", async () => {
+  it("can init ETA, wrap encrypted tokens, and unwrap them back", async () => {
     // Generate a user keypair and airdrop SOL for fees
     const user = await generateKeyPairSigner();
     await airdrop({
@@ -93,84 +92,84 @@ describe("Vote Token Account (SPL)", () => {
     // Generate x25519 keypair for encryption
     const keypair = generateX25519Keypair();
 
-    // Init vote token account (no MPC needed - just creates empty account)
-    const initVtaIx = await initVoteTokenAccount({
+    // Init encrypted token account (no MPC needed - just creates empty account)
+    const initEtaIx = await initEncryptedTokenAccount({
       signer: user,
       tokenMint: mint.address,
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
       userPubkey: keypair.publicKey,
     });
 
-    await sendTransaction(rpc, sendAndConfirm, user, [initVtaIx], {
-      label: "initVoteTokenAccount",
+    await sendTransaction(rpc, sendAndConfirm, user, [initEtaIx], {
+      label: "initEncryptedTokenAccount",
     });
 
-    // Verify VTA was created with correct owner and mint
-    const [vtaAddress] = await getVoteTokenAccountAddress(mint.address, user.address, programId);
-    const vtaAccount = await fetchVoteTokenAccount(rpc, vtaAddress);
-    expect(vtaAccount.data.owner).to.equal(user.address);
-    expect(vtaAccount.data.tokenMint).to.equal(mint.address);
+    // Verify ETA was created with correct owner and mint
+    const [etaAddress] = await getEncryptedTokenAccountAddress(mint.address, user.address, programId);
+    const etaAccount = await fetchEncryptedTokenAccount(rpc, etaAddress);
+    expect(etaAccount.data.owner).to.equal(user.address);
+    expect(etaAccount.data.tokenMint).to.equal(mint.address);
     // Means not initialized
-    expect(vtaAccount.data.stateNonce).to.equal(0n);
+    expect(etaAccount.data.stateNonce).to.equal(0n);
 
-    // Mint vote tokens (transfers SPL tokens from user ATA -> VTA's ATA, updates encrypted balance)
-    const voteTokenAmount = 50_000_000n;
-    const mintOffset = randomComputationOffset();
+    // Wrap encrypted tokens (transfers SPL tokens from user ATA -> ETA's ATA, updates encrypted balance)
+    const wrapAmount = 50_000_000n;
+    const wrapOffset = randomComputationOffset();
 
-    const mintVtIx = await mintVoteTokens(
+    const wrapIx = await wrapEncryptedTokens(
       {
         signer: user,
         tokenMint: mint.address,
-        voteTokenAccount: vtaAddress,
+        encryptedTokenAccount: etaAddress,
         signerTokenAccount: userAta,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        amount: voteTokenAmount,
+        amount: wrapAmount,
       },
       {
         clusterOffset: arciumEnv.arciumClusterOffset,
-        computationOffset: mintOffset,
+        computationOffset: wrapOffset,
       },
     );
 
-    await sendTransaction(rpc, sendAndConfirm, user, [mintVtIx], {
-      label: "mintVoteTokens",
+    await sendTransaction(rpc, sendAndConfirm, user, [wrapIx], {
+      label: "wrapEncryptedTokens",
     });
-    await awaitComputationFinalization(rpc, mintOffset);
+    await awaitComputationFinalization(rpc, wrapOffset);
 
-    // Verify encrypted balance equals minted amount
-    const balanceAfterMint = await decryptVtaBalance(vtaAddress, keypair.secretKey);
-    expect(balanceAfterMint).to.equal(voteTokenAmount);
+    // Verify encrypted balance equals wrapped amount
+    const balanceAfterWrap = await decryptEtaBalance(etaAddress, keypair.secretKey);
+    expect(balanceAfterWrap).to.equal(wrapAmount);
 
-    // Claim vote tokens back (transfers SPL tokens from VTA's ATA -> user ATA, updates encrypted balance)
-    const claimAmount = 25_000_000n;
-    const claimOffset = randomComputationOffset();
+    // Unwrap encrypted tokens (transfers SPL tokens from ETA's ATA -> user ATA, updates encrypted balance)
+    const unwrapAmount = 25_000_000n;
+    const unwrapOffset = randomComputationOffset();
 
-    const claimVtIx = await claimVoteTokens(
+    const unwrapIx = await unwrapEncryptedTokens(
       {
         signer: user,
         tokenMint: mint.address,
-        voteTokenAccount: vtaAddress,
+        encryptedTokenAccount: etaAddress,
         userTokenAccount: userAta,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        amount: claimAmount,
+        amount: unwrapAmount,
       },
       {
         clusterOffset: arciumEnv.arciumClusterOffset,
-        computationOffset: claimOffset,
+        computationOffset: unwrapOffset,
       },
     );
 
-    await sendTransaction(rpc, sendAndConfirm, user, [claimVtIx], {
-      label: "claimVoteTokens",
+    await sendTransaction(rpc, sendAndConfirm, user, [unwrapIx], {
+      label: "unwrapEncryptedTokens",
     });
-    await awaitComputationFinalization(rpc, claimOffset);
+    await awaitComputationFinalization(rpc, unwrapOffset);
 
-    // Verify encrypted balance decreased by claimed amount
-    const balanceAfterClaim = await decryptVtaBalance(vtaAddress, keypair.secretKey);
-    expect(balanceAfterClaim).to.equal(voteTokenAmount - claimAmount);
+    // Verify encrypted balance decreased by unwrapped amount
+    const balanceAfterUnwrap = await decryptEtaBalance(etaAddress, keypair.secretKey);
+    expect(balanceAfterUnwrap).to.equal(wrapAmount - unwrapAmount);
   });
 
-  it("another user can create ephemeral VTA", async () => {
+  it("another user can create ephemeral ETA", async () => {
     // Generate owner keypair and airdrop SOL
     const owner = await generateKeyPairSigner();
     await airdrop({
@@ -179,7 +178,7 @@ describe("Vote Token Account (SPL)", () => {
       commitment: "confirmed",
     });
 
-    // Generate another user (payer) who will create the ephemeral VTA
+    // Generate another user (payer) who will create the ephemeral ETA
     const payer = await generateKeyPairSigner();
     await airdrop({
       recipientAddress: payer.address,
@@ -200,21 +199,21 @@ describe("Vote Token Account (SPL)", () => {
     // Generate x25519 keypair for encryption
     const keypair = generateX25519Keypair();
 
-    // Owner inits their regular VTA first
-    const initVtaIx = await initVoteTokenAccount({
+    // Owner inits their regular ETA first
+    const initEtaIx = await initEncryptedTokenAccount({
       signer: owner,
       tokenMint: mint.address,
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
       userPubkey: keypair.publicKey,
     });
 
-    await sendTransaction(rpc, sendAndConfirm, owner, [initVtaIx], {
-      label: "initVoteTokenAccount (owner)",
+    await sendTransaction(rpc, sendAndConfirm, owner, [initEtaIx], {
+      label: "initEncryptedTokenAccount (owner)",
     });
 
-    // Payer creates ephemeral VTA for owner (permissionless)
+    // Payer creates ephemeral ETA for owner (permissionless)
     const ephemeralIndex = 1n;
-    const initEphemeralIx = await initEphemeralVoteTokenAccount({
+    const initEphemeralIx = await initEphemeralEncryptedTokenAccount({
       signer: payer,
       owner: owner.address,
       tokenMint: mint.address,
@@ -223,78 +222,78 @@ describe("Vote Token Account (SPL)", () => {
     });
 
     await sendTransaction(rpc, sendAndConfirm, payer, [initEphemeralIx], {
-      label: "initEphemeralVoteTokenAccount (payer creates for owner)",
+      label: "initEphemeralEncryptedTokenAccount (payer creates for owner)",
     });
 
-    // Verify ephemeral VTA was created with correct owner and copied user_pubkey
-    const [ephemeralVtaAddress] = await getEphemeralVoteTokenAccountAddress(
+    // Verify ephemeral ETA was created with correct owner and copied user_pubkey
+    const [ephemeralEtaAddress] = await getEphemeralEncryptedTokenAccountAddress(
       mint.address,
       owner.address,
       ephemeralIndex,
       programId,
     );
-    const ephemeralVta = await fetchVoteTokenAccount(rpc, ephemeralVtaAddress);
-    expect(ephemeralVta.data.owner).to.equal(owner.address);
-    expect(ephemeralVta.data.tokenMint).to.equal(mint.address);
+    const ephemeralEta = await fetchEncryptedTokenAccount(rpc, ephemeralEtaAddress);
+    expect(ephemeralEta.data.owner).to.equal(owner.address);
+    expect(ephemeralEta.data.tokenMint).to.equal(mint.address);
 
-    // Owner mints tokens to their ephemeral VTA
-    const voteTokenAmount = 50_000_000n;
-    const mintOffset = randomComputationOffset();
+    // Owner wraps tokens to their ephemeral ETA
+    const wrapAmount = 50_000_000n;
+    const wrapOffset = randomComputationOffset();
 
-    const mintVtIx = await mintVoteTokens(
+    const wrapIx = await wrapEncryptedTokens(
       {
         signer: owner,
         tokenMint: mint.address,
-        voteTokenAccount: ephemeralVtaAddress,
+        encryptedTokenAccount: ephemeralEtaAddress,
         signerTokenAccount: ownerAta,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        amount: voteTokenAmount,
+        amount: wrapAmount,
       },
       {
         clusterOffset: arciumEnv.arciumClusterOffset,
-        computationOffset: mintOffset,
+        computationOffset: wrapOffset,
       },
     );
 
-    await sendTransaction(rpc, sendAndConfirm, owner, [mintVtIx], {
-      label: "mintVoteTokens (to ephemeral VTA)",
+    await sendTransaction(rpc, sendAndConfirm, owner, [wrapIx], {
+      label: "wrapEncryptedTokens (to ephemeral ETA)",
     });
-    await awaitComputationFinalization(rpc, mintOffset);
+    await awaitComputationFinalization(rpc, wrapOffset);
 
-    // Verify encrypted balance in ephemeral VTA
-    const balanceAfterMint = await decryptVtaBalance(ephemeralVtaAddress, keypair.secretKey);
-    expect(balanceAfterMint).to.equal(voteTokenAmount);
+    // Verify encrypted balance in ephemeral ETA
+    const balanceAfterWrap = await decryptEtaBalance(ephemeralEtaAddress, keypair.secretKey);
+    expect(balanceAfterWrap).to.equal(wrapAmount);
 
-    // Owner claims tokens from ephemeral VTA back to their ATA
-    const claimAmount = 30_000_000n;
-    const claimOffset = randomComputationOffset();
+    // Owner unwraps tokens from ephemeral ETA back to their ATA
+    const unwrapAmount = 30_000_000n;
+    const unwrapOffset = randomComputationOffset();
 
-    const claimVtIx = await claimVoteTokens(
+    const unwrapIx = await unwrapEncryptedTokens(
       {
         signer: owner,
         tokenMint: mint.address,
-        voteTokenAccount: ephemeralVtaAddress,
+        encryptedTokenAccount: ephemeralEtaAddress,
         userTokenAccount: ownerAta,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        amount: claimAmount,
+        amount: unwrapAmount,
       },
       {
         clusterOffset: arciumEnv.arciumClusterOffset,
-        computationOffset: claimOffset,
+        computationOffset: unwrapOffset,
       },
     );
 
-    await sendTransaction(rpc, sendAndConfirm, owner, [claimVtIx], {
-      label: "claimVoteTokens (from ephemeral VTA)",
+    await sendTransaction(rpc, sendAndConfirm, owner, [unwrapIx], {
+      label: "unwrapEncryptedTokens (from ephemeral ETA)",
     });
-    await awaitComputationFinalization(rpc, claimOffset);
+    await awaitComputationFinalization(rpc, unwrapOffset);
 
     // Verify encrypted balance decreased
-    const balanceAfterClaim = await decryptVtaBalance(ephemeralVtaAddress, keypair.secretKey);
-    expect(balanceAfterClaim).to.equal(voteTokenAmount - claimAmount);
+    const balanceAfterUnwrap = await decryptEtaBalance(ephemeralEtaAddress, keypair.secretKey);
+    expect(balanceAfterUnwrap).to.equal(wrapAmount - unwrapAmount);
   });
 
-  it("cannot create ephemeral VTA if regular VTA does not exist", async () => {
+  it("cannot create ephemeral ETA if regular ETA does not exist", async () => {
     const owner = await generateKeyPairSigner();
 
     const payer = await generateKeyPairSigner();
@@ -312,9 +311,9 @@ describe("Vote Token Account (SPL)", () => {
       1_000_000n,
     );
 
-    // Payer tries to create ephemeral VTA for owner without regular VTA existing
+    // Payer tries to create ephemeral ETA for owner without regular ETA existing
     const ephemeralIndex = 1n;
-    const initEphemeralIx = await initEphemeralVoteTokenAccount({
+    const initEphemeralIx = await initEphemeralEncryptedTokenAccount({
       signer: payer,
       owner: owner.address,
       tokenMint: mint.address,
@@ -324,7 +323,7 @@ describe("Vote Token Account (SPL)", () => {
 
     expect(async () => {
       await sendTransaction(rpc, sendAndConfirm, payer, [initEphemeralIx], {
-        label: "initEphemeralVoteTokenAccount (should fail)",
+        label: "initEphemeralEncryptedTokenAccount (should fail)",
       });
 
     }).to.throw;

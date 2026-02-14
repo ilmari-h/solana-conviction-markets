@@ -42,25 +42,26 @@ import {
   type ResolvedAccount,
 } from '../shared';
 
-export const INIT_EPHEMERAL_VOTE_TOKEN_ACCOUNT_DISCRIMINATOR = new Uint8Array([
-  24, 238, 42, 208, 54, 182, 247, 80,
-]);
+export const INIT_EPHEMERAL_ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR =
+  new Uint8Array([193, 174, 116, 225, 159, 78, 6, 234]);
 
-export function getInitEphemeralVoteTokenAccountDiscriminatorBytes() {
+export function getInitEphemeralEncryptedTokenAccountDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    INIT_EPHEMERAL_VOTE_TOKEN_ACCOUNT_DISCRIMINATOR
+    INIT_EPHEMERAL_ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR
   );
 }
 
-export type InitEphemeralVoteTokenAccountInstruction<
+export type InitEphemeralEncryptedTokenAccountInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountOwner extends string | AccountMeta<string> = string,
   TAccountTokenMint extends string | AccountMeta<string> = string,
-  TAccountSourceVoteTokenAccount extends string | AccountMeta<string> = string,
-  TAccountEphemeralVoteTokenAccount extends string | AccountMeta<string> =
+  TAccountSourceEncryptedTokenAccount extends string | AccountMeta<string> =
     string,
-  TAccountEphemeralVoteTokenAta extends string | AccountMeta<string> = string,
+  TAccountEphemeralEncryptedTokenAccount extends string | AccountMeta<string> =
+    string,
+  TAccountEphemeralEncryptedTokenAta extends string | AccountMeta<string> =
+    string,
   TAccountTokenProgram extends string | AccountMeta<string> = string,
   TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
     'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
@@ -81,15 +82,15 @@ export type InitEphemeralVoteTokenAccountInstruction<
       TAccountTokenMint extends string
         ? ReadonlyAccount<TAccountTokenMint>
         : TAccountTokenMint,
-      TAccountSourceVoteTokenAccount extends string
-        ? ReadonlyAccount<TAccountSourceVoteTokenAccount>
-        : TAccountSourceVoteTokenAccount,
-      TAccountEphemeralVoteTokenAccount extends string
-        ? WritableAccount<TAccountEphemeralVoteTokenAccount>
-        : TAccountEphemeralVoteTokenAccount,
-      TAccountEphemeralVoteTokenAta extends string
-        ? WritableAccount<TAccountEphemeralVoteTokenAta>
-        : TAccountEphemeralVoteTokenAta,
+      TAccountSourceEncryptedTokenAccount extends string
+        ? ReadonlyAccount<TAccountSourceEncryptedTokenAccount>
+        : TAccountSourceEncryptedTokenAccount,
+      TAccountEphemeralEncryptedTokenAccount extends string
+        ? WritableAccount<TAccountEphemeralEncryptedTokenAccount>
+        : TAccountEphemeralEncryptedTokenAccount,
+      TAccountEphemeralEncryptedTokenAta extends string
+        ? WritableAccount<TAccountEphemeralEncryptedTokenAta>
+        : TAccountEphemeralEncryptedTokenAta,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -103,16 +104,16 @@ export type InitEphemeralVoteTokenAccountInstruction<
     ]
   >;
 
-export type InitEphemeralVoteTokenAccountInstructionData = {
+export type InitEphemeralEncryptedTokenAccountInstructionData = {
   discriminator: ReadonlyUint8Array;
   index: bigint;
 };
 
-export type InitEphemeralVoteTokenAccountInstructionDataArgs = {
+export type InitEphemeralEncryptedTokenAccountInstructionDataArgs = {
   index: number | bigint;
 };
 
-export function getInitEphemeralVoteTokenAccountInstructionDataEncoder(): FixedSizeEncoder<InitEphemeralVoteTokenAccountInstructionDataArgs> {
+export function getInitEphemeralEncryptedTokenAccountInstructionDataEncoder(): FixedSizeEncoder<InitEphemeralEncryptedTokenAccountInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
@@ -120,35 +121,35 @@ export function getInitEphemeralVoteTokenAccountInstructionDataEncoder(): FixedS
     ]),
     (value) => ({
       ...value,
-      discriminator: INIT_EPHEMERAL_VOTE_TOKEN_ACCOUNT_DISCRIMINATOR,
+      discriminator: INIT_EPHEMERAL_ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR,
     })
   );
 }
 
-export function getInitEphemeralVoteTokenAccountInstructionDataDecoder(): FixedSizeDecoder<InitEphemeralVoteTokenAccountInstructionData> {
+export function getInitEphemeralEncryptedTokenAccountInstructionDataDecoder(): FixedSizeDecoder<InitEphemeralEncryptedTokenAccountInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['index', getU64Decoder()],
   ]);
 }
 
-export function getInitEphemeralVoteTokenAccountInstructionDataCodec(): FixedSizeCodec<
-  InitEphemeralVoteTokenAccountInstructionDataArgs,
-  InitEphemeralVoteTokenAccountInstructionData
+export function getInitEphemeralEncryptedTokenAccountInstructionDataCodec(): FixedSizeCodec<
+  InitEphemeralEncryptedTokenAccountInstructionDataArgs,
+  InitEphemeralEncryptedTokenAccountInstructionData
 > {
   return combineCodec(
-    getInitEphemeralVoteTokenAccountInstructionDataEncoder(),
-    getInitEphemeralVoteTokenAccountInstructionDataDecoder()
+    getInitEphemeralEncryptedTokenAccountInstructionDataEncoder(),
+    getInitEphemeralEncryptedTokenAccountInstructionDataDecoder()
   );
 }
 
-export type InitEphemeralVoteTokenAccountAsyncInput<
+export type InitEphemeralEncryptedTokenAccountAsyncInput<
   TAccountSigner extends string = string,
   TAccountOwner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountSourceVoteTokenAccount extends string = string,
-  TAccountEphemeralVoteTokenAccount extends string = string,
-  TAccountEphemeralVoteTokenAta extends string = string,
+  TAccountSourceEncryptedTokenAccount extends string = string,
+  TAccountEphemeralEncryptedTokenAccount extends string = string,
+  TAccountEphemeralEncryptedTokenAta extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
@@ -156,51 +157,51 @@ export type InitEphemeralVoteTokenAccountAsyncInput<
   signer: TransactionSigner<TAccountSigner>;
   owner: Address<TAccountOwner>;
   tokenMint: Address<TAccountTokenMint>;
-  /** Source VTA - must be a regular VTA (derived with index 0) */
-  sourceVoteTokenAccount?: Address<TAccountSourceVoteTokenAccount>;
-  /** New ephemeral VTA - derived with index in seed */
-  ephemeralVoteTokenAccount?: Address<TAccountEphemeralVoteTokenAccount>;
-  /** ATA owned by the ephemeral VTA PDA */
-  ephemeralVoteTokenAta?: Address<TAccountEphemeralVoteTokenAta>;
+  /** Source ETA - must be a regular ETA (derived with index 0) */
+  sourceEncryptedTokenAccount?: Address<TAccountSourceEncryptedTokenAccount>;
+  /** New ephemeral ETA - derived with index in seed */
+  ephemeralEncryptedTokenAccount?: Address<TAccountEphemeralEncryptedTokenAccount>;
+  /** ATA owned by the ephemeral ETA PDA */
+  ephemeralEncryptedTokenAta?: Address<TAccountEphemeralEncryptedTokenAta>;
   tokenProgram: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
-  index: InitEphemeralVoteTokenAccountInstructionDataArgs['index'];
+  index: InitEphemeralEncryptedTokenAccountInstructionDataArgs['index'];
 };
 
-export async function getInitEphemeralVoteTokenAccountInstructionAsync<
+export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
   TAccountSigner extends string,
   TAccountOwner extends string,
   TAccountTokenMint extends string,
-  TAccountSourceVoteTokenAccount extends string,
-  TAccountEphemeralVoteTokenAccount extends string,
-  TAccountEphemeralVoteTokenAta extends string,
+  TAccountSourceEncryptedTokenAccount extends string,
+  TAccountEphemeralEncryptedTokenAccount extends string,
+  TAccountEphemeralEncryptedTokenAta extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: InitEphemeralVoteTokenAccountAsyncInput<
+  input: InitEphemeralEncryptedTokenAccountAsyncInput<
     TAccountSigner,
     TAccountOwner,
     TAccountTokenMint,
-    TAccountSourceVoteTokenAccount,
-    TAccountEphemeralVoteTokenAccount,
-    TAccountEphemeralVoteTokenAta,
+    TAccountSourceEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
 ): Promise<
-  InitEphemeralVoteTokenAccountInstruction<
+  InitEphemeralEncryptedTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountOwner,
     TAccountTokenMint,
-    TAccountSourceVoteTokenAccount,
-    TAccountEphemeralVoteTokenAccount,
-    TAccountEphemeralVoteTokenAta,
+    TAccountSourceEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
@@ -215,16 +216,16 @@ export async function getInitEphemeralVoteTokenAccountInstructionAsync<
     signer: { value: input.signer ?? null, isWritable: true },
     owner: { value: input.owner ?? null, isWritable: false },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    sourceVoteTokenAccount: {
-      value: input.sourceVoteTokenAccount ?? null,
+    sourceEncryptedTokenAccount: {
+      value: input.sourceEncryptedTokenAccount ?? null,
       isWritable: false,
     },
-    ephemeralVoteTokenAccount: {
-      value: input.ephemeralVoteTokenAccount ?? null,
+    ephemeralEncryptedTokenAccount: {
+      value: input.ephemeralEncryptedTokenAccount ?? null,
       isWritable: true,
     },
-    ephemeralVoteTokenAta: {
-      value: input.ephemeralVoteTokenAta ?? null,
+    ephemeralEncryptedTokenAta: {
+      value: input.ephemeralEncryptedTokenAta ?? null,
       isWritable: true,
     },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -243,45 +244,48 @@ export async function getInitEphemeralVoteTokenAccountInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.sourceVoteTokenAccount.value) {
-    accounts.sourceVoteTokenAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            118, 111, 116, 101, 95, 116, 111, 107, 101, 110, 95, 97, 99, 99,
-            111, 117, 110, 116,
-          ])
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
-        getAddressEncoder().encode(expectAddress(accounts.owner.value)),
-        getBytesEncoder().encode(new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0])),
-      ],
-    });
+  if (!accounts.sourceEncryptedTokenAccount.value) {
+    accounts.sourceEncryptedTokenAccount.value = await getProgramDerivedAddress(
+      {
+        programAddress,
+        seeds: [
+          getBytesEncoder().encode(
+            new Uint8Array([
+              101, 110, 99, 114, 121, 112, 116, 101, 100, 95, 116, 111, 107,
+              101, 110, 95, 97, 99, 99, 111, 117, 110, 116,
+            ])
+          ),
+          getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
+          getAddressEncoder().encode(expectAddress(accounts.owner.value)),
+          getBytesEncoder().encode(new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0])),
+        ],
+      }
+    );
   }
-  if (!accounts.ephemeralVoteTokenAccount.value) {
-    accounts.ephemeralVoteTokenAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            118, 111, 116, 101, 95, 116, 111, 107, 101, 110, 95, 97, 99, 99,
-            111, 117, 110, 116,
-          ])
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
-        getAddressEncoder().encode(expectAddress(accounts.owner.value)),
-        getU64Encoder().encode(expectSome(args.index)),
-      ],
-    });
+  if (!accounts.ephemeralEncryptedTokenAccount.value) {
+    accounts.ephemeralEncryptedTokenAccount.value =
+      await getProgramDerivedAddress({
+        programAddress,
+        seeds: [
+          getBytesEncoder().encode(
+            new Uint8Array([
+              101, 110, 99, 114, 121, 112, 116, 101, 100, 95, 116, 111, 107,
+              101, 110, 95, 97, 99, 99, 111, 117, 110, 116,
+            ])
+          ),
+          getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
+          getAddressEncoder().encode(expectAddress(accounts.owner.value)),
+          getU64Encoder().encode(expectSome(args.index)),
+        ],
+      });
   }
-  if (!accounts.ephemeralVoteTokenAta.value) {
-    accounts.ephemeralVoteTokenAta.value = await getProgramDerivedAddress({
+  if (!accounts.ephemeralEncryptedTokenAta.value) {
+    accounts.ephemeralEncryptedTokenAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
         getAddressEncoder().encode(
-          expectAddress(accounts.ephemeralVoteTokenAccount.value)
+          expectAddress(accounts.ephemeralEncryptedTokenAccount.value)
         ),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
@@ -303,38 +307,38 @@ export async function getInitEphemeralVoteTokenAccountInstructionAsync<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.owner),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.sourceVoteTokenAccount),
-      getAccountMeta(accounts.ephemeralVoteTokenAccount),
-      getAccountMeta(accounts.ephemeralVoteTokenAta),
+      getAccountMeta(accounts.sourceEncryptedTokenAccount),
+      getAccountMeta(accounts.ephemeralEncryptedTokenAccount),
+      getAccountMeta(accounts.ephemeralEncryptedTokenAta),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getInitEphemeralVoteTokenAccountInstructionDataEncoder().encode(
-      args as InitEphemeralVoteTokenAccountInstructionDataArgs
+    data: getInitEphemeralEncryptedTokenAccountInstructionDataEncoder().encode(
+      args as InitEphemeralEncryptedTokenAccountInstructionDataArgs
     ),
     programAddress,
-  } as InitEphemeralVoteTokenAccountInstruction<
+  } as InitEphemeralEncryptedTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountOwner,
     TAccountTokenMint,
-    TAccountSourceVoteTokenAccount,
-    TAccountEphemeralVoteTokenAccount,
-    TAccountEphemeralVoteTokenAta,
+    TAccountSourceEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
 
-export type InitEphemeralVoteTokenAccountInput<
+export type InitEphemeralEncryptedTokenAccountInput<
   TAccountSigner extends string = string,
   TAccountOwner extends string = string,
   TAccountTokenMint extends string = string,
-  TAccountSourceVoteTokenAccount extends string = string,
-  TAccountEphemeralVoteTokenAccount extends string = string,
-  TAccountEphemeralVoteTokenAta extends string = string,
+  TAccountSourceEncryptedTokenAccount extends string = string,
+  TAccountEphemeralEncryptedTokenAccount extends string = string,
+  TAccountEphemeralEncryptedTokenAta extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
@@ -342,50 +346,50 @@ export type InitEphemeralVoteTokenAccountInput<
   signer: TransactionSigner<TAccountSigner>;
   owner: Address<TAccountOwner>;
   tokenMint: Address<TAccountTokenMint>;
-  /** Source VTA - must be a regular VTA (derived with index 0) */
-  sourceVoteTokenAccount: Address<TAccountSourceVoteTokenAccount>;
-  /** New ephemeral VTA - derived with index in seed */
-  ephemeralVoteTokenAccount: Address<TAccountEphemeralVoteTokenAccount>;
-  /** ATA owned by the ephemeral VTA PDA */
-  ephemeralVoteTokenAta: Address<TAccountEphemeralVoteTokenAta>;
+  /** Source ETA - must be a regular ETA (derived with index 0) */
+  sourceEncryptedTokenAccount: Address<TAccountSourceEncryptedTokenAccount>;
+  /** New ephemeral ETA - derived with index in seed */
+  ephemeralEncryptedTokenAccount: Address<TAccountEphemeralEncryptedTokenAccount>;
+  /** ATA owned by the ephemeral ETA PDA */
+  ephemeralEncryptedTokenAta: Address<TAccountEphemeralEncryptedTokenAta>;
   tokenProgram: Address<TAccountTokenProgram>;
   associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
-  index: InitEphemeralVoteTokenAccountInstructionDataArgs['index'];
+  index: InitEphemeralEncryptedTokenAccountInstructionDataArgs['index'];
 };
 
-export function getInitEphemeralVoteTokenAccountInstruction<
+export function getInitEphemeralEncryptedTokenAccountInstruction<
   TAccountSigner extends string,
   TAccountOwner extends string,
   TAccountTokenMint extends string,
-  TAccountSourceVoteTokenAccount extends string,
-  TAccountEphemeralVoteTokenAccount extends string,
-  TAccountEphemeralVoteTokenAta extends string,
+  TAccountSourceEncryptedTokenAccount extends string,
+  TAccountEphemeralEncryptedTokenAccount extends string,
+  TAccountEphemeralEncryptedTokenAta extends string,
   TAccountTokenProgram extends string,
   TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: InitEphemeralVoteTokenAccountInput<
+  input: InitEphemeralEncryptedTokenAccountInput<
     TAccountSigner,
     TAccountOwner,
     TAccountTokenMint,
-    TAccountSourceVoteTokenAccount,
-    TAccountEphemeralVoteTokenAccount,
-    TAccountEphemeralVoteTokenAta,
+    TAccountSourceEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): InitEphemeralVoteTokenAccountInstruction<
+): InitEphemeralEncryptedTokenAccountInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountOwner,
   TAccountTokenMint,
-  TAccountSourceVoteTokenAccount,
-  TAccountEphemeralVoteTokenAccount,
-  TAccountEphemeralVoteTokenAta,
+  TAccountSourceEncryptedTokenAccount,
+  TAccountEphemeralEncryptedTokenAccount,
+  TAccountEphemeralEncryptedTokenAta,
   TAccountTokenProgram,
   TAccountAssociatedTokenProgram,
   TAccountSystemProgram
@@ -399,16 +403,16 @@ export function getInitEphemeralVoteTokenAccountInstruction<
     signer: { value: input.signer ?? null, isWritable: true },
     owner: { value: input.owner ?? null, isWritable: false },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    sourceVoteTokenAccount: {
-      value: input.sourceVoteTokenAccount ?? null,
+    sourceEncryptedTokenAccount: {
+      value: input.sourceEncryptedTokenAccount ?? null,
       isWritable: false,
     },
-    ephemeralVoteTokenAccount: {
-      value: input.ephemeralVoteTokenAccount ?? null,
+    ephemeralEncryptedTokenAccount: {
+      value: input.ephemeralEncryptedTokenAccount ?? null,
       isWritable: true,
     },
-    ephemeralVoteTokenAta: {
-      value: input.ephemeralVoteTokenAta ?? null,
+    ephemeralEncryptedTokenAta: {
+      value: input.ephemeralEncryptedTokenAta ?? null,
       isWritable: true,
     },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -442,32 +446,32 @@ export function getInitEphemeralVoteTokenAccountInstruction<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.owner),
       getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.sourceVoteTokenAccount),
-      getAccountMeta(accounts.ephemeralVoteTokenAccount),
-      getAccountMeta(accounts.ephemeralVoteTokenAta),
+      getAccountMeta(accounts.sourceEncryptedTokenAccount),
+      getAccountMeta(accounts.ephemeralEncryptedTokenAccount),
+      getAccountMeta(accounts.ephemeralEncryptedTokenAta),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getInitEphemeralVoteTokenAccountInstructionDataEncoder().encode(
-      args as InitEphemeralVoteTokenAccountInstructionDataArgs
+    data: getInitEphemeralEncryptedTokenAccountInstructionDataEncoder().encode(
+      args as InitEphemeralEncryptedTokenAccountInstructionDataArgs
     ),
     programAddress,
-  } as InitEphemeralVoteTokenAccountInstruction<
+  } as InitEphemeralEncryptedTokenAccountInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountOwner,
     TAccountTokenMint,
-    TAccountSourceVoteTokenAccount,
-    TAccountEphemeralVoteTokenAccount,
-    TAccountEphemeralVoteTokenAta,
+    TAccountSourceEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAccount,
+    TAccountEphemeralEncryptedTokenAta,
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
 
-export type ParsedInitEphemeralVoteTokenAccountInstruction<
+export type ParsedInitEphemeralEncryptedTokenAccountInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -476,27 +480,30 @@ export type ParsedInitEphemeralVoteTokenAccountInstruction<
     signer: TAccountMetas[0];
     owner: TAccountMetas[1];
     tokenMint: TAccountMetas[2];
-    /** Source VTA - must be a regular VTA (derived with index 0) */
-    sourceVoteTokenAccount: TAccountMetas[3];
-    /** New ephemeral VTA - derived with index in seed */
-    ephemeralVoteTokenAccount: TAccountMetas[4];
-    /** ATA owned by the ephemeral VTA PDA */
-    ephemeralVoteTokenAta: TAccountMetas[5];
+    /** Source ETA - must be a regular ETA (derived with index 0) */
+    sourceEncryptedTokenAccount: TAccountMetas[3];
+    /** New ephemeral ETA - derived with index in seed */
+    ephemeralEncryptedTokenAccount: TAccountMetas[4];
+    /** ATA owned by the ephemeral ETA PDA */
+    ephemeralEncryptedTokenAta: TAccountMetas[5];
     tokenProgram: TAccountMetas[6];
     associatedTokenProgram: TAccountMetas[7];
     systemProgram: TAccountMetas[8];
   };
-  data: InitEphemeralVoteTokenAccountInstructionData;
+  data: InitEphemeralEncryptedTokenAccountInstructionData;
 };
 
-export function parseInitEphemeralVoteTokenAccountInstruction<
+export function parseInitEphemeralEncryptedTokenAccountInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedInitEphemeralVoteTokenAccountInstruction<TProgram, TAccountMetas> {
+): ParsedInitEphemeralEncryptedTokenAccountInstruction<
+  TProgram,
+  TAccountMetas
+> {
   if (instruction.accounts.length < 9) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -513,14 +520,14 @@ export function parseInitEphemeralVoteTokenAccountInstruction<
       signer: getNextAccount(),
       owner: getNextAccount(),
       tokenMint: getNextAccount(),
-      sourceVoteTokenAccount: getNextAccount(),
-      ephemeralVoteTokenAccount: getNextAccount(),
-      ephemeralVoteTokenAta: getNextAccount(),
+      sourceEncryptedTokenAccount: getNextAccount(),
+      ephemeralEncryptedTokenAccount: getNextAccount(),
+      ephemeralEncryptedTokenAta: getNextAccount(),
       tokenProgram: getNextAccount(),
       associatedTokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getInitEphemeralVoteTokenAccountInstructionDataDecoder().decode(
+    data: getInitEphemeralEncryptedTokenAccountInstructionDataDecoder().decode(
       instruction.data
     ),
   };

@@ -20,40 +20,40 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type VoteTokenPurchasedEvent = {
-  voteToken: Address;
+export type EncryptedTokenWrappedEvent = {
+  encryptedTokenAccount: Address;
   buyer: Address;
   lamportsSpent: bigint;
 };
 
-export type VoteTokenPurchasedEventArgs = {
-  voteToken: Address;
+export type EncryptedTokenWrappedEventArgs = {
+  encryptedTokenAccount: Address;
   buyer: Address;
   lamportsSpent: number | bigint;
 };
 
-export function getVoteTokenPurchasedEventEncoder(): FixedSizeEncoder<VoteTokenPurchasedEventArgs> {
+export function getEncryptedTokenWrappedEventEncoder(): FixedSizeEncoder<EncryptedTokenWrappedEventArgs> {
   return getStructEncoder([
-    ['voteToken', getAddressEncoder()],
+    ['encryptedTokenAccount', getAddressEncoder()],
     ['buyer', getAddressEncoder()],
     ['lamportsSpent', getU64Encoder()],
   ]);
 }
 
-export function getVoteTokenPurchasedEventDecoder(): FixedSizeDecoder<VoteTokenPurchasedEvent> {
+export function getEncryptedTokenWrappedEventDecoder(): FixedSizeDecoder<EncryptedTokenWrappedEvent> {
   return getStructDecoder([
-    ['voteToken', getAddressDecoder()],
+    ['encryptedTokenAccount', getAddressDecoder()],
     ['buyer', getAddressDecoder()],
     ['lamportsSpent', getU64Decoder()],
   ]);
 }
 
-export function getVoteTokenPurchasedEventCodec(): FixedSizeCodec<
-  VoteTokenPurchasedEventArgs,
-  VoteTokenPurchasedEvent
+export function getEncryptedTokenWrappedEventCodec(): FixedSizeCodec<
+  EncryptedTokenWrappedEventArgs,
+  EncryptedTokenWrappedEvent
 > {
   return combineCodec(
-    getVoteTokenPurchasedEventEncoder(),
-    getVoteTokenPurchasedEventDecoder()
+    getEncryptedTokenWrappedEventEncoder(),
+    getEncryptedTokenWrappedEventDecoder()
   );
 }

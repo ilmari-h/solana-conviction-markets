@@ -63,16 +63,16 @@ describe("OpportunityMarket", () => {
     await runner.fundMarket();
     const openTimestamp = await runner.openMarket();
 
-    // Initialize VTAs and mint vote tokens for all participants
-    const mintAmount = 100_000_000n;
+    // Initialize ETAs and wrap encrypted tokens for all participants
+    const wrapAmount = 100_000_000n;
     for (const userId of runner.participants) {
-      await runner.initVoteTokenAccount(userId);
-      await runner.mintVoteTokens(userId, mintAmount);
+      await runner.initEncryptedTokenAccount(userId);
+      await runner.wrapEncryptedTokens(userId, wrapAmount);
     }
 
-    // Creator also needs VTA to add options
-    await runner.initVoteTokenAccount(runner.creator);
-    await runner.mintVoteTokens(runner.creator, 100n);
+    // Creator also needs ETA to add options
+    await runner.initEncryptedTokenAccount(runner.creator);
+    await runner.wrapEncryptedTokens(runner.creator, 100n);
 
     // Wait for market staking period to be active
     await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
@@ -312,13 +312,13 @@ describe("OpportunityMarket", () => {
     // Get the single participant
     const user = runner.participants[0];
 
-    // Initialize VTA and mint vote tokens for user
-    const voteTokenMintAmount = 100_000_000n;
-    await runner.initVoteTokenAccount(user);
-    await runner.mintVoteTokens(user, voteTokenMintAmount);
+    // Initialize ETA and wrap encrypted tokens for user
+    const wrapAmount = 100_000_000n;
+    await runner.initEncryptedTokenAccount(user);
+    await runner.wrapEncryptedTokens(user, wrapAmount);
 
-    // Calculate stake amounts: 1/4 of vote tokens for each action
-    const quarterAmount = voteTokenMintAmount / 4n; // 25_000_000n
+    // Calculate stake amounts: 1/4 of wrapped tokens for each action
+    const quarterAmount = wrapAmount / 4n; // 25_000_000n
 
     // Wait for market staking period to be active
     await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
@@ -326,7 +326,7 @@ describe("OpportunityMarket", () => {
     // Create an observer keypair that can read stakes
     const observer = generateX25519Keypair();
 
-    // User adds 2 options, staking 1/4 of vote tokens for each
+    // User adds 2 options, staking 1/4 of wrapped tokens for each
     // This creates share accounts 0 and 1
     const { optionIndex: optionA, shareAccountId: sa0 } = await runner.addMarketOption(user, "Option A", quarterAmount, observer.publicKey);
     const { optionIndex: optionB, shareAccountId: sa1 } = await runner.addMarketOption(user, "Option B", quarterAmount, observer.publicKey);
@@ -338,7 +338,7 @@ describe("OpportunityMarket", () => {
       { userId: user, amount: quarterAmount, optionIndex: optionB },
     ], observer.publicKey);
 
-    // User now has 4 share accounts, with all vote tokens staked
+    // User now has 4 share accounts, with all wrapped tokens staked
     const userShareAccounts = runner.getUserShareAccounts(user);
     expect(userShareAccounts.length).to.equal(4);
 

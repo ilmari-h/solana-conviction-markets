@@ -72,7 +72,7 @@ export type AddMarketOptionInstruction<
   TAccountMarket extends string | AccountMeta<string> = string,
   TAccountCentralState extends string | AccountMeta<string> = string,
   TAccountOption extends string | AccountMeta<string> = string,
-  TAccountSourceVta extends string | AccountMeta<string> = string,
+  TAccountSourceEta extends string | AccountMeta<string> = string,
   TAccountShareAccount extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
@@ -107,9 +107,9 @@ export type AddMarketOptionInstruction<
       TAccountOption extends string
         ? WritableAccount<TAccountOption>
         : TAccountOption,
-      TAccountSourceVta extends string
-        ? WritableAccount<TAccountSourceVta>
-        : TAccountSourceVta,
+      TAccountSourceEta extends string
+        ? WritableAccount<TAccountSourceEta>
+        : TAccountSourceEta,
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
         : TAccountShareAccount,
@@ -219,7 +219,7 @@ export type AddMarketOptionAsyncInput<
   TAccountMarket extends string = string,
   TAccountCentralState extends string = string,
   TAccountOption extends string = string,
-  TAccountSourceVta extends string = string,
+  TAccountSourceEta extends string = string,
   TAccountShareAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -237,7 +237,7 @@ export type AddMarketOptionAsyncInput<
   market: Address<TAccountMarket>;
   centralState?: Address<TAccountCentralState>;
   option?: Address<TAccountOption>;
-  sourceVta: Address<TAccountSourceVta>;
+  sourceEta: Address<TAccountSourceEta>;
   shareAccount?: Address<TAccountShareAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -265,7 +265,7 @@ export async function getAddMarketOptionInstructionAsync<
   TAccountMarket extends string,
   TAccountCentralState extends string,
   TAccountOption extends string,
-  TAccountSourceVta extends string,
+  TAccountSourceEta extends string,
   TAccountShareAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -285,7 +285,7 @@ export async function getAddMarketOptionInstructionAsync<
     TAccountMarket,
     TAccountCentralState,
     TAccountOption,
-    TAccountSourceVta,
+    TAccountSourceEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -307,7 +307,7 @@ export async function getAddMarketOptionInstructionAsync<
     TAccountMarket,
     TAccountCentralState,
     TAccountOption,
-    TAccountSourceVta,
+    TAccountSourceEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -332,7 +332,7 @@ export async function getAddMarketOptionInstructionAsync<
     market: { value: input.market ?? null, isWritable: true },
     centralState: { value: input.centralState ?? null, isWritable: false },
     option: { value: input.option ?? null, isWritable: true },
-    sourceVta: { value: input.sourceVta ?? null, isWritable: true },
+    sourceEta: { value: input.sourceEta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -434,7 +434,7 @@ export async function getAddMarketOptionInstructionAsync<
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.centralState),
       getAccountMeta(accounts.option),
-      getAccountMeta(accounts.sourceVta),
+      getAccountMeta(accounts.sourceEta),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -458,7 +458,7 @@ export async function getAddMarketOptionInstructionAsync<
     TAccountMarket,
     TAccountCentralState,
     TAccountOption,
-    TAccountSourceVta,
+    TAccountSourceEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -479,7 +479,7 @@ export type AddMarketOptionInput<
   TAccountMarket extends string = string,
   TAccountCentralState extends string = string,
   TAccountOption extends string = string,
-  TAccountSourceVta extends string = string,
+  TAccountSourceEta extends string = string,
   TAccountShareAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -497,7 +497,7 @@ export type AddMarketOptionInput<
   market: Address<TAccountMarket>;
   centralState: Address<TAccountCentralState>;
   option: Address<TAccountOption>;
-  sourceVta: Address<TAccountSourceVta>;
+  sourceEta: Address<TAccountSourceEta>;
   shareAccount: Address<TAccountShareAccount>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -525,7 +525,7 @@ export function getAddMarketOptionInstruction<
   TAccountMarket extends string,
   TAccountCentralState extends string,
   TAccountOption extends string,
-  TAccountSourceVta extends string,
+  TAccountSourceEta extends string,
   TAccountShareAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -545,7 +545,7 @@ export function getAddMarketOptionInstruction<
     TAccountMarket,
     TAccountCentralState,
     TAccountOption,
-    TAccountSourceVta,
+    TAccountSourceEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -566,7 +566,7 @@ export function getAddMarketOptionInstruction<
   TAccountMarket,
   TAccountCentralState,
   TAccountOption,
-  TAccountSourceVta,
+  TAccountSourceEta,
   TAccountShareAccount,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
@@ -590,7 +590,7 @@ export function getAddMarketOptionInstruction<
     market: { value: input.market ?? null, isWritable: true },
     centralState: { value: input.centralState ?? null, isWritable: false },
     option: { value: input.option ?? null, isWritable: true },
-    sourceVta: { value: input.sourceVta ?? null, isWritable: true },
+    sourceEta: { value: input.sourceEta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -640,7 +640,7 @@ export function getAddMarketOptionInstruction<
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.centralState),
       getAccountMeta(accounts.option),
-      getAccountMeta(accounts.sourceVta),
+      getAccountMeta(accounts.sourceEta),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -664,7 +664,7 @@ export function getAddMarketOptionInstruction<
     TAccountMarket,
     TAccountCentralState,
     TAccountOption,
-    TAccountSourceVta,
+    TAccountSourceEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -690,7 +690,7 @@ export type ParsedAddMarketOptionInstruction<
     market: TAccountMetas[1];
     centralState: TAccountMetas[2];
     option: TAccountMetas[3];
-    sourceVta: TAccountMetas[4];
+    sourceEta: TAccountMetas[4];
     shareAccount: TAccountMetas[5];
     signPdaAccount: TAccountMetas[6];
     mxeAccount: TAccountMetas[7];
@@ -732,7 +732,7 @@ export function parseAddMarketOptionInstruction<
       market: getNextAccount(),
       centralState: getNextAccount(),
       option: getNextAccount(),
-      sourceVta: getNextAccount(),
+      sourceEta: getNextAccount(),
       shareAccount: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),

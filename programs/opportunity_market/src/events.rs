@@ -8,8 +8,8 @@ pub struct MarketCreatedEvent {
 }
 
 #[event]
-pub struct VoteTokenPurchasedEvent {
-    pub vote_token: Pubkey,
+pub struct EncryptedTokenWrappedEvent {
+    pub encrypted_token_account: Pubkey,
     pub buyer: Pubkey,
     pub lamports_spent: u64,
 }
@@ -50,6 +50,6 @@ pub struct SharesUnstakedError {
 }
 
 #[event]
-pub struct VoteTokensClaimedError {
+pub struct EncryptedTokensUnwrappedError {
     pub user: Pubkey,
 }

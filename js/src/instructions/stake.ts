@@ -9,7 +9,7 @@ import { type ByteArray, toNumberArray } from "../utils";
 export interface StakeParams {
   signer: TransactionSigner;
   market: Address;
-  userVta: Address;
+  userEta: Address;
   shareAccountId: number;
   amountCiphertext: ByteArray;
   selectedOptionCiphertext: ByteArray;
@@ -25,7 +25,7 @@ export async function stake(
   const {
     signer,
     market,
-    userVta,
+    userEta,
     shareAccountId,
     amountCiphertext,
     selectedOptionCiphertext,
@@ -38,7 +38,7 @@ export async function stake(
     ...getComputeAccounts("buy_opportunity_market_shares", config),
     signer,
     market,
-    userVta,
+    userEta,
     shareAccountId,
     amountCiphertext: toNumberArray(amountCiphertext),
     selectedOptionCiphertext: toNumberArray(selectedOptionCiphertext),

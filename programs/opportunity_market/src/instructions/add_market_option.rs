@@ -4,7 +4,7 @@ use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
 use crate::events::{SharesPurchasedError, SharesPurchasedEvent};
-use crate::state::{CentralState, OpportunityMarket, OpportunityMarketOption, ShareAccount, VoteTokenAccount};
+use crate::state::{CentralState, OpportunityMarket, OpportunityMarketOption, ShareAccount, EncryptedTokenAccount};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::COMP_DEF_OFFSET_ADD_OPTION_STAKE;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
@@ -40,11 +40,11 @@ pub struct AddMarketOption<'info> {
 
     #[account(
         mut,
-        constraint = source_vta.owner == creator.key() @ ErrorCode::Unauthorized,
-        constraint = source_vta.token_mint == market.mint @ ErrorCode::InvalidMint,
-        constraint = !source_vta.locked @ ErrorCode::Locked,
+        constraint = source_eta.owner == creator.key() @ ErrorCode::Unauthorized,
+        constraint = source_eta.token_mint == market.mint @ ErrorCode::InvalidMint,
+        constraint = !source_eta.locked @ ErrorCode::Locked,
     )]
-    pub source_vta: Box<Account<'info, VoteTokenAccount>>,
+    pub source_eta: Box<Account<'info, EncryptedTokenAccount>>,
 
     #[account(
         mut,
@@ -99,7 +99,7 @@ pub fn add_market_option(
     authorized_reader_pubkey: [u8; 32],
     authorized_reader_nonce: u128,
 ) -> Result<()> {
-    let user_pubkey = ctx.accounts.source_vta.user_pubkey;
+    let user_pubkey = ctx.accounts.source_eta.user_pubkey;
     let market = &mut ctx.accounts.market;
 
     // Option index must match total_options + 1
@@ -134,12 +134,12 @@ pub fn add_market_option(
     ctx.accounts.share_account.staked_at_timestamp = Some(current_timestamp);
     ctx.accounts.share_account.locked = true;
 
-    let source_vta_key = ctx.accounts.source_vta.key();
-    let source_vta_nonce = ctx.accounts.source_vta.state_nonce;
+    let source_eta_key = ctx.accounts.source_eta.key();
+    let source_eta_nonce = ctx.accounts.source_eta.state_nonce;
 
     let share_account_key = ctx.accounts.share_account.key();
 
-    ctx.accounts.source_vta.locked = true;
+    ctx.accounts.source_eta.locked = true;
 
     // Build args for encrypted computation
     let args = ArgBuilder::new()
@@ -152,10 +152,10 @@ pub fn add_market_option(
         .x25519_pubkey(authorized_reader_pubkey)
         .plaintext_u128(authorized_reader_nonce)
 
-        // User's VTA (Enc<Shared, VoteTokenBalance>)
+        // User's ETA (Enc<Shared, EncryptedTokenBalance>)
         .x25519_pubkey(user_pubkey)
-        .plaintext_u128(source_vta_nonce)
-        .account(source_vta_key, 8, 32 * 1)
+        .plaintext_u128(source_eta_nonce)
+        .account(source_eta_key, 8, 32 * 1)
 
         // Share account context (Shared)
         .x25519_pubkey(user_pubkey)
@@ -179,7 +179,7 @@ pub fn add_market_option(
             &ctx.accounts.mxe_account,
             &[
                 CallbackAccount {
-                    pubkey: source_vta_key,
+                    pubkey: source_eta_key,
                     is_writable: true,
                 },
                 CallbackAccount {
@@ -213,7 +213,7 @@ pub struct AddOptionStakeCallback<'info> {
 
     // Callback accounts
     #[account(mut)]
-    pub source_vta: Account<'info, VoteTokenAccount>,
+    pub source_eta: Account<'info, EncryptedTokenAccount>,
 
     #[account(mut)]
     pub share_account: Account<'info, ShareAccount>,
@@ -224,7 +224,7 @@ pub fn add_market_option_callback(
     output: SignedComputationOutputs<AddOptionStakeOutput>,
 ) -> Result<()> {
     // Unlock
-    ctx.accounts.source_vta.locked = false;
+    ctx.accounts.source_eta.locked = false;
     ctx.accounts.share_account.locked = false;
 
     // Verify output - on error, rollback and return Ok so mutations persist
@@ -237,7 +237,7 @@ pub fn add_market_option_callback(
             // Rollback
             ctx.accounts.share_account.staked_at_timestamp = None;
             emit!(SharesPurchasedError {
-                user: ctx.accounts.source_vta.owner,
+                user: ctx.accounts.source_eta.owner,
             });
             return Ok(());
         }
@@ -247,7 +247,7 @@ pub fn add_market_option_callback(
         // Rollback
         ctx.accounts.share_account.staked_at_timestamp = None;
         emit!(SharesPurchasedError {
-            user: ctx.accounts.source_vta.owner,
+            user: ctx.accounts.source_eta.owner,
         });
         return Ok(());
     }
@@ -256,9 +256,9 @@ pub fn add_market_option_callback(
     let bought_shares_mxe = res.field_2;
     let bought_shares_shared = res.field_3;
 
-    // Update source VTA balance
-    ctx.accounts.source_vta.state_nonce = new_user_balance.nonce;
-    ctx.accounts.source_vta.encrypted_state = new_user_balance.ciphertexts;
+    // Update source ETA balance
+    ctx.accounts.source_eta.state_nonce = new_user_balance.nonce;
+    ctx.accounts.source_eta.encrypted_state = new_user_balance.ciphertexts;
 
     // Update share account encrypted state
     ctx.accounts.share_account.state_nonce = bought_shares_mxe.nonce;
@@ -267,7 +267,7 @@ pub fn add_market_option_callback(
     ctx.accounts.share_account.encrypted_state_disclosure = bought_shares_shared.ciphertexts;
 
     emit!(SharesPurchasedEvent {
-        buyer: ctx.accounts.source_vta.owner,
+        buyer: ctx.accounts.source_eta.owner,
         encrypted_disclosed_amount: bought_shares_shared.ciphertexts[0],
         nonce: bought_shares_shared.nonce
     });

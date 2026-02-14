@@ -33,17 +33,17 @@ import {
 import { OPPORTUNITY_MARKET_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
-export const CLAIM_VOTE_TOKENS_COMP_DEF_DISCRIMINATOR = new Uint8Array([
-  225, 132, 181, 53, 139, 117, 248, 142,
+export const UNWRAP_ENCRYPTED_TOKENS_COMP_DEF_DISCRIMINATOR = new Uint8Array([
+  130, 70, 53, 253, 16, 169, 50, 36,
 ]);
 
-export function getClaimVoteTokensCompDefDiscriminatorBytes() {
+export function getUnwrapEncryptedTokensCompDefDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CLAIM_VOTE_TOKENS_COMP_DEF_DISCRIMINATOR
+    UNWRAP_ENCRYPTED_TOKENS_COMP_DEF_DISCRIMINATOR
   );
 }
 
-export type ClaimVoteTokensCompDefInstruction<
+export type UnwrapEncryptedTokensCompDefInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountPayer extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
@@ -86,39 +86,39 @@ export type ClaimVoteTokensCompDefInstruction<
     ]
   >;
 
-export type ClaimVoteTokensCompDefInstructionData = {
+export type UnwrapEncryptedTokensCompDefInstructionData = {
   discriminator: ReadonlyUint8Array;
 };
 
-export type ClaimVoteTokensCompDefInstructionDataArgs = {};
+export type UnwrapEncryptedTokensCompDefInstructionDataArgs = {};
 
-export function getClaimVoteTokensCompDefInstructionDataEncoder(): FixedSizeEncoder<ClaimVoteTokensCompDefInstructionDataArgs> {
+export function getUnwrapEncryptedTokensCompDefInstructionDataEncoder(): FixedSizeEncoder<UnwrapEncryptedTokensCompDefInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
     (value) => ({
       ...value,
-      discriminator: CLAIM_VOTE_TOKENS_COMP_DEF_DISCRIMINATOR,
+      discriminator: UNWRAP_ENCRYPTED_TOKENS_COMP_DEF_DISCRIMINATOR,
     })
   );
 }
 
-export function getClaimVoteTokensCompDefInstructionDataDecoder(): FixedSizeDecoder<ClaimVoteTokensCompDefInstructionData> {
+export function getUnwrapEncryptedTokensCompDefInstructionDataDecoder(): FixedSizeDecoder<UnwrapEncryptedTokensCompDefInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
   ]);
 }
 
-export function getClaimVoteTokensCompDefInstructionDataCodec(): FixedSizeCodec<
-  ClaimVoteTokensCompDefInstructionDataArgs,
-  ClaimVoteTokensCompDefInstructionData
+export function getUnwrapEncryptedTokensCompDefInstructionDataCodec(): FixedSizeCodec<
+  UnwrapEncryptedTokensCompDefInstructionDataArgs,
+  UnwrapEncryptedTokensCompDefInstructionData
 > {
   return combineCodec(
-    getClaimVoteTokensCompDefInstructionDataEncoder(),
-    getClaimVoteTokensCompDefInstructionDataDecoder()
+    getUnwrapEncryptedTokensCompDefInstructionDataEncoder(),
+    getUnwrapEncryptedTokensCompDefInstructionDataDecoder()
   );
 }
 
-export type ClaimVoteTokensCompDefInput<
+export type UnwrapEncryptedTokensCompDefInput<
   TAccountPayer extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountCompDefAccount extends string = string,
@@ -136,7 +136,7 @@ export type ClaimVoteTokensCompDefInput<
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
-export function getClaimVoteTokensCompDefInstruction<
+export function getUnwrapEncryptedTokensCompDefInstruction<
   TAccountPayer extends string,
   TAccountMxeAccount extends string,
   TAccountCompDefAccount extends string,
@@ -146,7 +146,7 @@ export function getClaimVoteTokensCompDefInstruction<
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: ClaimVoteTokensCompDefInput<
+  input: UnwrapEncryptedTokensCompDefInput<
     TAccountPayer,
     TAccountMxeAccount,
     TAccountCompDefAccount,
@@ -156,7 +156,7 @@ export function getClaimVoteTokensCompDefInstruction<
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): ClaimVoteTokensCompDefInstruction<
+): UnwrapEncryptedTokensCompDefInstruction<
   TProgramAddress,
   TAccountPayer,
   TAccountMxeAccount,
@@ -213,9 +213,9 @@ export function getClaimVoteTokensCompDefInstruction<
       getAccountMeta(accounts.arciumProgram),
       getAccountMeta(accounts.systemProgram),
     ],
-    data: getClaimVoteTokensCompDefInstructionDataEncoder().encode({}),
+    data: getUnwrapEncryptedTokensCompDefInstructionDataEncoder().encode({}),
     programAddress,
-  } as ClaimVoteTokensCompDefInstruction<
+  } as UnwrapEncryptedTokensCompDefInstruction<
     TProgramAddress,
     TAccountPayer,
     TAccountMxeAccount,
@@ -227,7 +227,7 @@ export function getClaimVoteTokensCompDefInstruction<
   >);
 }
 
-export type ParsedClaimVoteTokensCompDefInstruction<
+export type ParsedUnwrapEncryptedTokensCompDefInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -241,17 +241,17 @@ export type ParsedClaimVoteTokensCompDefInstruction<
     arciumProgram: TAccountMetas[5];
     systemProgram: TAccountMetas[6];
   };
-  data: ClaimVoteTokensCompDefInstructionData;
+  data: UnwrapEncryptedTokensCompDefInstructionData;
 };
 
-export function parseClaimVoteTokensCompDefInstruction<
+export function parseUnwrapEncryptedTokensCompDefInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedClaimVoteTokensCompDefInstruction<TProgram, TAccountMetas> {
+): ParsedUnwrapEncryptedTokensCompDefInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -273,7 +273,7 @@ export function parseClaimVoteTokensCompDefInstruction<
       arciumProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getClaimVoteTokensCompDefInstructionDataDecoder().decode(
+    data: getUnwrapEncryptedTokensCompDefInstructionDataDecoder().decode(
       instruction.data
     ),
   };

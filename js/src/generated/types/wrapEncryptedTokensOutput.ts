@@ -25,7 +25,7 @@ import {
  * The output of the callback instruction. Provided as a struct with ordered fields
  * as anchor does not support tuples and tuple structs yet.
  */
-export type BuyVoteTokensOutput = {
+export type WrapEncryptedTokensOutput = {
   field0: {
     encryptionKey: Array<number>;
     nonce: bigint;
@@ -33,7 +33,7 @@ export type BuyVoteTokensOutput = {
   };
 };
 
-export type BuyVoteTokensOutputArgs = {
+export type WrapEncryptedTokensOutputArgs = {
   field0: {
     encryptionKey: Array<number>;
     nonce: number | bigint;
@@ -41,7 +41,7 @@ export type BuyVoteTokensOutputArgs = {
   };
 };
 
-export function getBuyVoteTokensOutputEncoder(): FixedSizeEncoder<BuyVoteTokensOutputArgs> {
+export function getWrapEncryptedTokensOutputEncoder(): FixedSizeEncoder<WrapEncryptedTokensOutputArgs> {
   return getStructEncoder([
     [
       'field0',
@@ -59,7 +59,7 @@ export function getBuyVoteTokensOutputEncoder(): FixedSizeEncoder<BuyVoteTokensO
   ]);
 }
 
-export function getBuyVoteTokensOutputDecoder(): FixedSizeDecoder<BuyVoteTokensOutput> {
+export function getWrapEncryptedTokensOutputDecoder(): FixedSizeDecoder<WrapEncryptedTokensOutput> {
   return getStructDecoder([
     [
       'field0',
@@ -77,12 +77,12 @@ export function getBuyVoteTokensOutputDecoder(): FixedSizeDecoder<BuyVoteTokensO
   ]);
 }
 
-export function getBuyVoteTokensOutputCodec(): FixedSizeCodec<
-  BuyVoteTokensOutputArgs,
-  BuyVoteTokensOutput
+export function getWrapEncryptedTokensOutputCodec(): FixedSizeCodec<
+  WrapEncryptedTokensOutputArgs,
+  WrapEncryptedTokensOutput
 > {
   return combineCodec(
-    getBuyVoteTokensOutputEncoder(),
-    getBuyVoteTokensOutputDecoder()
+    getWrapEncryptedTokensOutputEncoder(),
+    getWrapEncryptedTokensOutputDecoder()
   );
 }

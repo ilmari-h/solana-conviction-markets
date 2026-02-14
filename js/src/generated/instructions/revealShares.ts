@@ -60,7 +60,7 @@ export type RevealSharesInstruction<
   TAccountOwner extends string | AccountMeta<string> = string,
   TAccountMarket extends string | AccountMeta<string> = string,
   TAccountShareAccount extends string | AccountMeta<string> = string,
-  TAccountUserVta extends string | AccountMeta<string> = string,
+  TAccountUserEta extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
   TAccountMempoolAccount extends string | AccountMeta<string> = string,
@@ -94,9 +94,9 @@ export type RevealSharesInstruction<
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
         : TAccountShareAccount,
-      TAccountUserVta extends string
-        ? WritableAccount<TAccountUserVta>
-        : TAccountUserVta,
+      TAccountUserEta extends string
+        ? WritableAccount<TAccountUserEta>
+        : TAccountUserEta,
       TAccountSignPdaAccount extends string
         ? WritableAccount<TAccountSignPdaAccount>
         : TAccountSignPdaAccount,
@@ -179,7 +179,7 @@ export type RevealSharesAsyncInput<
   TAccountOwner extends string = string,
   TAccountMarket extends string = string,
   TAccountShareAccount extends string = string,
-  TAccountUserVta extends string = string,
+  TAccountUserEta extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountMempoolAccount extends string = string,
@@ -196,7 +196,7 @@ export type RevealSharesAsyncInput<
   owner: Address<TAccountOwner>;
   market: Address<TAccountMarket>;
   shareAccount?: Address<TAccountShareAccount>;
-  userVta: Address<TAccountUserVta>;
+  userEta: Address<TAccountUserEta>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -217,7 +217,7 @@ export async function getRevealSharesInstructionAsync<
   TAccountOwner extends string,
   TAccountMarket extends string,
   TAccountShareAccount extends string,
-  TAccountUserVta extends string,
+  TAccountUserEta extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
   TAccountMempoolAccount extends string,
@@ -236,7 +236,7 @@ export async function getRevealSharesInstructionAsync<
     TAccountOwner,
     TAccountMarket,
     TAccountShareAccount,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -257,7 +257,7 @@ export async function getRevealSharesInstructionAsync<
     TAccountOwner,
     TAccountMarket,
     TAccountShareAccount,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -281,7 +281,7 @@ export async function getRevealSharesInstructionAsync<
     owner: { value: input.owner ?? null, isWritable: false },
     market: { value: input.market ?? null, isWritable: false },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
-    userVta: { value: input.userVta ?? null, isWritable: true },
+    userEta: { value: input.userEta ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
     mempoolAccount: { value: input.mempoolAccount ?? null, isWritable: true },
@@ -358,7 +358,7 @@ export async function getRevealSharesInstructionAsync<
       getAccountMeta(accounts.owner),
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.shareAccount),
-      getAccountMeta(accounts.userVta),
+      getAccountMeta(accounts.userEta),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
       getAccountMeta(accounts.mempoolAccount),
@@ -381,7 +381,7 @@ export async function getRevealSharesInstructionAsync<
     TAccountOwner,
     TAccountMarket,
     TAccountShareAccount,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -401,7 +401,7 @@ export type RevealSharesInput<
   TAccountOwner extends string = string,
   TAccountMarket extends string = string,
   TAccountShareAccount extends string = string,
-  TAccountUserVta extends string = string,
+  TAccountUserEta extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountMempoolAccount extends string = string,
@@ -418,7 +418,7 @@ export type RevealSharesInput<
   owner: Address<TAccountOwner>;
   market: Address<TAccountMarket>;
   shareAccount: Address<TAccountShareAccount>;
-  userVta: Address<TAccountUserVta>;
+  userEta: Address<TAccountUserEta>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
   mempoolAccount: Address<TAccountMempoolAccount>;
@@ -439,7 +439,7 @@ export function getRevealSharesInstruction<
   TAccountOwner extends string,
   TAccountMarket extends string,
   TAccountShareAccount extends string,
-  TAccountUserVta extends string,
+  TAccountUserEta extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
   TAccountMempoolAccount extends string,
@@ -458,7 +458,7 @@ export function getRevealSharesInstruction<
     TAccountOwner,
     TAccountMarket,
     TAccountShareAccount,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -478,7 +478,7 @@ export function getRevealSharesInstruction<
   TAccountOwner,
   TAccountMarket,
   TAccountShareAccount,
-  TAccountUserVta,
+  TAccountUserEta,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
   TAccountMempoolAccount,
@@ -501,7 +501,7 @@ export function getRevealSharesInstruction<
     owner: { value: input.owner ?? null, isWritable: false },
     market: { value: input.market ?? null, isWritable: false },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
-    userVta: { value: input.userVta ?? null, isWritable: true },
+    userEta: { value: input.userEta ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
     mempoolAccount: { value: input.mempoolAccount ?? null, isWritable: true },
@@ -550,7 +550,7 @@ export function getRevealSharesInstruction<
       getAccountMeta(accounts.owner),
       getAccountMeta(accounts.market),
       getAccountMeta(accounts.shareAccount),
-      getAccountMeta(accounts.userVta),
+      getAccountMeta(accounts.userEta),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
       getAccountMeta(accounts.mempoolAccount),
@@ -573,7 +573,7 @@ export function getRevealSharesInstruction<
     TAccountOwner,
     TAccountMarket,
     TAccountShareAccount,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
     TAccountMempoolAccount,
@@ -598,7 +598,7 @@ export type ParsedRevealSharesInstruction<
     owner: TAccountMetas[1];
     market: TAccountMetas[2];
     shareAccount: TAccountMetas[3];
-    userVta: TAccountMetas[4];
+    userEta: TAccountMetas[4];
     signPdaAccount: TAccountMetas[5];
     mxeAccount: TAccountMetas[6];
     mempoolAccount: TAccountMetas[7];
@@ -639,7 +639,7 @@ export function parseRevealSharesInstruction<
       owner: getNextAccount(),
       market: getNextAccount(),
       shareAccount: getNextAccount(),
-      userVta: getNextAccount(),
+      userEta: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),
       mempoolAccount: getNextAccount(),

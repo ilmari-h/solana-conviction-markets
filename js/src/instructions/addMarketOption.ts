@@ -9,7 +9,7 @@ import { type ByteArray, toNumberArray } from "../utils";
 export interface AddMarketOptionParams {
   creator: TransactionSigner;
   market: Address;
-  sourceVta: Address;
+  sourceEta: Address;
   shareAccount: Address;
   optionIndex: number;
   shareAccountId: number;
@@ -27,7 +27,7 @@ export async function addMarketOption(
   const {
     creator,
     market,
-    sourceVta,
+    sourceEta,
     shareAccount,
     optionIndex,
     shareAccountId,
@@ -42,7 +42,7 @@ export async function addMarketOption(
     ...getComputeAccounts("add_option_stake", config),
     creator,
     market,
-    sourceVta,
+    sourceEta,
     shareAccount,
     optionIndex,
     shareAccountId,

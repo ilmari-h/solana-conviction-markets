@@ -1,11 +1,11 @@
 import { type TransactionSigner, type Address } from "@solana/kit";
 import {
-  getInitVoteTokenAccountInstructionAsync,
-  type InitVoteTokenAccountInstruction,
+  getInitEncryptedTokenAccountInstructionAsync,
+  type InitEncryptedTokenAccountInstruction,
 } from "../generated";
 import { type ByteArray, toNumberArray } from "../utils";
 
-export interface InitVoteTokenAccountParams {
+export interface InitEncryptedTokenAccountParams {
   /** The signer/payer for the transaction */
   signer: TransactionSigner;
   tokenMint: Address;
@@ -14,12 +14,12 @@ export interface InitVoteTokenAccountParams {
   userPubkey: ByteArray;
 }
 
-export async function initVoteTokenAccount(
-  input: InitVoteTokenAccountParams
-): Promise<InitVoteTokenAccountInstruction> {
+export async function initEncryptedTokenAccount(
+  input: InitEncryptedTokenAccountParams
+): Promise<InitEncryptedTokenAccountInstruction> {
   const { signer, tokenMint, tokenProgram, userPubkey } = input;
 
-  return getInitVoteTokenAccountInstructionAsync({
+  return getInitEncryptedTokenAccountInstructionAsync({
     signer,
     tokenMint,
     tokenProgram,

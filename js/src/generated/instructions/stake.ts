@@ -62,7 +62,7 @@ export type StakeInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountMarket extends string | AccountMeta<string> = string,
-  TAccountUserVta extends string | AccountMeta<string> = string,
+  TAccountUserEta extends string | AccountMeta<string> = string,
   TAccountShareAccount extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
@@ -91,9 +91,9 @@ export type StakeInstruction<
       TAccountMarket extends string
         ? ReadonlyAccount<TAccountMarket>
         : TAccountMarket,
-      TAccountUserVta extends string
-        ? WritableAccount<TAccountUserVta>
-        : TAccountUserVta,
+      TAccountUserEta extends string
+        ? WritableAccount<TAccountUserEta>
+        : TAccountUserEta,
       TAccountShareAccount extends string
         ? WritableAccount<TAccountShareAccount>
         : TAccountShareAccount,
@@ -200,7 +200,7 @@ export function getStakeInstructionDataCodec(): FixedSizeCodec<
 export type StakeAsyncInput<
   TAccountSigner extends string = string,
   TAccountMarket extends string = string,
-  TAccountUserVta extends string = string,
+  TAccountUserEta extends string = string,
   TAccountShareAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -216,7 +216,7 @@ export type StakeAsyncInput<
 > = {
   signer: TransactionSigner<TAccountSigner>;
   market: Address<TAccountMarket>;
-  userVta: Address<TAccountUserVta>;
+  userEta: Address<TAccountUserEta>;
   shareAccount?: Address<TAccountShareAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -241,7 +241,7 @@ export type StakeAsyncInput<
 export async function getStakeInstructionAsync<
   TAccountSigner extends string,
   TAccountMarket extends string,
-  TAccountUserVta extends string,
+  TAccountUserEta extends string,
   TAccountShareAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -259,7 +259,7 @@ export async function getStakeInstructionAsync<
   input: StakeAsyncInput<
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -279,7 +279,7 @@ export async function getStakeInstructionAsync<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -302,7 +302,7 @@ export async function getStakeInstructionAsync<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: false },
-    userVta: { value: input.userVta ?? null, isWritable: true },
+    userEta: { value: input.userEta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -378,7 +378,7 @@ export async function getStakeInstructionAsync<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.market),
-      getAccountMeta(accounts.userVta),
+      getAccountMeta(accounts.userEta),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -400,7 +400,7 @@ export async function getStakeInstructionAsync<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -419,7 +419,7 @@ export async function getStakeInstructionAsync<
 export type StakeInput<
   TAccountSigner extends string = string,
   TAccountMarket extends string = string,
-  TAccountUserVta extends string = string,
+  TAccountUserEta extends string = string,
   TAccountShareAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -435,7 +435,7 @@ export type StakeInput<
 > = {
   signer: TransactionSigner<TAccountSigner>;
   market: Address<TAccountMarket>;
-  userVta: Address<TAccountUserVta>;
+  userEta: Address<TAccountUserEta>;
   shareAccount: Address<TAccountShareAccount>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -460,7 +460,7 @@ export type StakeInput<
 export function getStakeInstruction<
   TAccountSigner extends string,
   TAccountMarket extends string,
-  TAccountUserVta extends string,
+  TAccountUserEta extends string,
   TAccountShareAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -478,7 +478,7 @@ export function getStakeInstruction<
   input: StakeInput<
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -497,7 +497,7 @@ export function getStakeInstruction<
   TProgramAddress,
   TAccountSigner,
   TAccountMarket,
-  TAccountUserVta,
+  TAccountUserEta,
   TAccountShareAccount,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
@@ -519,7 +519,7 @@ export function getStakeInstruction<
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
     market: { value: input.market ?? null, isWritable: false },
-    userVta: { value: input.userVta ?? null, isWritable: true },
+    userEta: { value: input.userEta ?? null, isWritable: true },
     shareAccount: { value: input.shareAccount ?? null, isWritable: true },
     signPdaAccount: { value: input.signPdaAccount ?? null, isWritable: true },
     mxeAccount: { value: input.mxeAccount ?? null, isWritable: false },
@@ -567,7 +567,7 @@ export function getStakeInstruction<
     accounts: [
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.market),
-      getAccountMeta(accounts.userVta),
+      getAccountMeta(accounts.userEta),
       getAccountMeta(accounts.shareAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -589,7 +589,7 @@ export function getStakeInstruction<
     TProgramAddress,
     TAccountSigner,
     TAccountMarket,
-    TAccountUserVta,
+    TAccountUserEta,
     TAccountShareAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -613,7 +613,7 @@ export type ParsedStakeInstruction<
   accounts: {
     signer: TAccountMetas[0];
     market: TAccountMetas[1];
-    userVta: TAccountMetas[2];
+    userEta: TAccountMetas[2];
     shareAccount: TAccountMetas[3];
     signPdaAccount: TAccountMetas[4];
     mxeAccount: TAccountMetas[5];
@@ -653,7 +653,7 @@ export function parseStakeInstruction<
     accounts: {
       signer: getNextAccount(),
       market: getNextAccount(),
-      userVta: getNextAccount(),
+      userEta: getNextAccount(),
       shareAccount: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),

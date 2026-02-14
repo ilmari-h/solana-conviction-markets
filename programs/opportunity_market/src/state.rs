@@ -51,10 +51,10 @@ pub struct OpportunityMarket {
 
 #[account]
 #[derive(InitSpace)]
-pub struct VoteTokenAccount {
+pub struct EncryptedTokenAccount {
     pub encrypted_state: [[u8; 32]; 1],  // encrypted token amount
     pub bump: u8,
-    pub index: u64,  // PDA seed index (0 for regular VTAs, arbitrary for ephemeral VTAs)
+    pub index: u64,  // PDA seed index (0 for regular ETAs, arbitrary for ephemeral ETAs)
     pub owner: Pubkey,
     pub state_nonce: u128,
     pub token_mint: Pubkey,
@@ -62,7 +62,9 @@ pub struct VoteTokenAccount {
 
     // Locked while waiting for Arcium MPC callback
     pub locked: bool,
-    pub pending_deposit: u64,  // tracks unconfirmed deposits for safety
+
+    // Tracks unconfirmed deposits for safety
+    pub pending_deposit: u64,  
 }
 
 #[account]

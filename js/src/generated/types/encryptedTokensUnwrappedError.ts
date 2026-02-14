@@ -18,24 +18,24 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type VoteTokensClaimedError = { user: Address };
+export type EncryptedTokensUnwrappedError = { user: Address };
 
-export type VoteTokensClaimedErrorArgs = VoteTokensClaimedError;
+export type EncryptedTokensUnwrappedErrorArgs = EncryptedTokensUnwrappedError;
 
-export function getVoteTokensClaimedErrorEncoder(): FixedSizeEncoder<VoteTokensClaimedErrorArgs> {
+export function getEncryptedTokensUnwrappedErrorEncoder(): FixedSizeEncoder<EncryptedTokensUnwrappedErrorArgs> {
   return getStructEncoder([['user', getAddressEncoder()]]);
 }
 
-export function getVoteTokensClaimedErrorDecoder(): FixedSizeDecoder<VoteTokensClaimedError> {
+export function getEncryptedTokensUnwrappedErrorDecoder(): FixedSizeDecoder<EncryptedTokensUnwrappedError> {
   return getStructDecoder([['user', getAddressDecoder()]]);
 }
 
-export function getVoteTokensClaimedErrorCodec(): FixedSizeCodec<
-  VoteTokensClaimedErrorArgs,
-  VoteTokensClaimedError
+export function getEncryptedTokensUnwrappedErrorCodec(): FixedSizeCodec<
+  EncryptedTokensUnwrappedErrorArgs,
+  EncryptedTokensUnwrappedError
 > {
   return combineCodec(
-    getVoteTokensClaimedErrorEncoder(),
-    getVoteTokensClaimedErrorDecoder()
+    getEncryptedTokensUnwrappedErrorEncoder(),
+    getEncryptedTokensUnwrappedErrorDecoder()
   );
 }

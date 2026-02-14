@@ -45,17 +45,17 @@ import {
   type ReadonlyUint8Array,
 } from '@solana/kit';
 
-export const VOTE_TOKEN_ACCOUNT_DISCRIMINATOR = new Uint8Array([
-  147, 20, 17, 210, 187, 123, 96, 22,
+export const ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR = new Uint8Array([
+  238, 123, 84, 113, 137, 77, 62, 75,
 ]);
 
-export function getVoteTokenAccountDiscriminatorBytes() {
+export function getEncryptedTokenAccountDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    VOTE_TOKEN_ACCOUNT_DISCRIMINATOR
+    ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR
   );
 }
 
-export type VoteTokenAccount = {
+export type EncryptedTokenAccount = {
   discriminator: ReadonlyUint8Array;
   encryptedState: Array<Array<number>>;
   bump: number;
@@ -68,7 +68,7 @@ export type VoteTokenAccount = {
   pendingDeposit: bigint;
 };
 
-export type VoteTokenAccountArgs = {
+export type EncryptedTokenAccountArgs = {
   encryptedState: Array<Array<number>>;
   bump: number;
   index: number | bigint;
@@ -80,7 +80,7 @@ export type VoteTokenAccountArgs = {
   pendingDeposit: number | bigint;
 };
 
-export function getVoteTokenAccountEncoder(): FixedSizeEncoder<VoteTokenAccountArgs> {
+export function getEncryptedTokenAccountEncoder(): FixedSizeEncoder<EncryptedTokenAccountArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
@@ -99,11 +99,14 @@ export function getVoteTokenAccountEncoder(): FixedSizeEncoder<VoteTokenAccountA
       ['locked', getBooleanEncoder()],
       ['pendingDeposit', getU64Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: VOTE_TOKEN_ACCOUNT_DISCRIMINATOR })
+    (value) => ({
+      ...value,
+      discriminator: ENCRYPTED_TOKEN_ACCOUNT_DISCRIMINATOR,
+    })
   );
 }
 
-export function getVoteTokenAccountDecoder(): FixedSizeDecoder<VoteTokenAccount> {
+export function getEncryptedTokenAccountDecoder(): FixedSizeDecoder<EncryptedTokenAccount> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     [
@@ -123,60 +126,66 @@ export function getVoteTokenAccountDecoder(): FixedSizeDecoder<VoteTokenAccount>
   ]);
 }
 
-export function getVoteTokenAccountCodec(): FixedSizeCodec<
-  VoteTokenAccountArgs,
-  VoteTokenAccount
+export function getEncryptedTokenAccountCodec(): FixedSizeCodec<
+  EncryptedTokenAccountArgs,
+  EncryptedTokenAccount
 > {
   return combineCodec(
-    getVoteTokenAccountEncoder(),
-    getVoteTokenAccountDecoder()
+    getEncryptedTokenAccountEncoder(),
+    getEncryptedTokenAccountDecoder()
   );
 }
 
-export function decodeVoteTokenAccount<TAddress extends string = string>(
+export function decodeEncryptedTokenAccount<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress>
-): Account<VoteTokenAccount, TAddress>;
-export function decodeVoteTokenAccount<TAddress extends string = string>(
+): Account<EncryptedTokenAccount, TAddress>;
+export function decodeEncryptedTokenAccount<TAddress extends string = string>(
   encodedAccount: MaybeEncodedAccount<TAddress>
-): MaybeAccount<VoteTokenAccount, TAddress>;
-export function decodeVoteTokenAccount<TAddress extends string = string>(
+): MaybeAccount<EncryptedTokenAccount, TAddress>;
+export function decodeEncryptedTokenAccount<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>
 ):
-  | Account<VoteTokenAccount, TAddress>
-  | MaybeAccount<VoteTokenAccount, TAddress> {
+  | Account<EncryptedTokenAccount, TAddress>
+  | MaybeAccount<EncryptedTokenAccount, TAddress> {
   return decodeAccount(
     encodedAccount as MaybeEncodedAccount<TAddress>,
-    getVoteTokenAccountDecoder()
+    getEncryptedTokenAccountDecoder()
   );
 }
 
-export async function fetchVoteTokenAccount<TAddress extends string = string>(
-  rpc: Parameters<typeof fetchEncodedAccount>[0],
-  address: Address<TAddress>,
-  config?: FetchAccountConfig
-): Promise<Account<VoteTokenAccount, TAddress>> {
-  const maybeAccount = await fetchMaybeVoteTokenAccount(rpc, address, config);
-  assertAccountExists(maybeAccount);
-  return maybeAccount;
-}
-
-export async function fetchMaybeVoteTokenAccount<
+export async function fetchEncryptedTokenAccount<
   TAddress extends string = string,
 >(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
   config?: FetchAccountConfig
-): Promise<MaybeAccount<VoteTokenAccount, TAddress>> {
-  const maybeAccount = await fetchEncodedAccount(rpc, address, config);
-  return decodeVoteTokenAccount(maybeAccount);
+): Promise<Account<EncryptedTokenAccount, TAddress>> {
+  const maybeAccount = await fetchMaybeEncryptedTokenAccount(
+    rpc,
+    address,
+    config
+  );
+  assertAccountExists(maybeAccount);
+  return maybeAccount;
 }
 
-export async function fetchAllVoteTokenAccount(
+export async function fetchMaybeEncryptedTokenAccount<
+  TAddress extends string = string,
+>(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  address: Address<TAddress>,
+  config?: FetchAccountConfig
+): Promise<MaybeAccount<EncryptedTokenAccount, TAddress>> {
+  const maybeAccount = await fetchEncodedAccount(rpc, address, config);
+  return decodeEncryptedTokenAccount(maybeAccount);
+}
+
+export async function fetchAllEncryptedTokenAccount(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<Account<VoteTokenAccount>[]> {
-  const maybeAccounts = await fetchAllMaybeVoteTokenAccount(
+): Promise<Account<EncryptedTokenAccount>[]> {
+  const maybeAccounts = await fetchAllMaybeEncryptedTokenAccount(
     rpc,
     addresses,
     config
@@ -185,13 +194,13 @@ export async function fetchAllVoteTokenAccount(
   return maybeAccounts;
 }
 
-export async function fetchAllMaybeVoteTokenAccount(
+export async function fetchAllMaybeEncryptedTokenAccount(
   rpc: Parameters<typeof fetchEncodedAccounts>[0],
   addresses: Array<Address>,
   config?: FetchAccountsConfig
-): Promise<MaybeAccount<VoteTokenAccount>[]> {
+): Promise<MaybeAccount<EncryptedTokenAccount>[]> {
   const maybeAccounts = await fetchEncodedAccounts(rpc, addresses, config);
   return maybeAccounts.map((maybeAccount) =>
-    decodeVoteTokenAccount(maybeAccount)
+    decodeEncryptedTokenAccount(maybeAccount)
   );
 }

@@ -6,14 +6,14 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::state::VoteTokenAccount;
-use crate::COMP_DEF_OFFSET_BUY_VOTE_TOKENS;
+use crate::state::EncryptedTokenAccount;
+use crate::COMP_DEF_OFFSET_WRAP_ENCRYPTED_TOKENS;
 use crate::{ArciumSignerAccount, ID, ID_CONST};
 
-#[queue_computation_accounts("buy_vote_tokens", signer)]
+#[queue_computation_accounts("wrap_encrypted_tokens", signer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
-pub struct MintVoteTokens<'info> {
+pub struct WrapEncryptedTokens<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
@@ -21,11 +21,11 @@ pub struct MintVoteTokens<'info> {
 
     #[account(
         mut,
-        constraint = vote_token_account.owner == signer.key() @ ErrorCode::Unauthorized,
-        constraint = vote_token_account.token_mint == token_mint.key() @ ErrorCode::InvalidMint,
-        constraint = !vote_token_account.locked @ ErrorCode::Locked
+        constraint = encrypted_token_account.owner == signer.key() @ ErrorCode::Unauthorized,
+        constraint = encrypted_token_account.token_mint == token_mint.key() @ ErrorCode::InvalidMint,
+        constraint = !encrypted_token_account.locked @ ErrorCode::Locked
     )]
-    pub vote_token_account: Box<Account<'info, VoteTokenAccount>>,
+    pub encrypted_token_account: Box<Account<'info, EncryptedTokenAccount>>,
 
     /// The signer's token account (source of SPL tokens)
     #[account(
@@ -36,14 +36,14 @@ pub struct MintVoteTokens<'info> {
     )]
     pub signer_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    /// ATA owned by the VTA PDA (destination of SPL tokens)
+    /// ATA owned by the ETA PDA (destination of SPL tokens)
     #[account(
         mut,
         associated_token::mint = token_mint,
-        associated_token::authority = vote_token_account,
+        associated_token::authority = encrypted_token_account,
         associated_token::token_program = token_program,
     )]
-    pub vote_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
 
     // Arcium accounts
     #[account(
@@ -66,7 +66,7 @@ pub struct MintVoteTokens<'info> {
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
     /// CHECK: computation_account
     pub computation_account: UncheckedAccount<'info>,
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_VOTE_TOKENS))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_WRAP_ENCRYPTED_TOKENS))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
     #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
@@ -79,23 +79,23 @@ pub struct MintVoteTokens<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
-pub fn mint_vote_tokens(
-    ctx: Context<MintVoteTokens>,
+pub fn wrap_encrypted_tokens(
+    ctx: Context<WrapEncryptedTokens>,
     computation_offset: u64,
     amount: u64,
 ) -> Result<()> {
-    let vta = &mut ctx.accounts.vote_token_account;
-    let user_pubkey = vta.user_pubkey;
-    let vta_pubkey = vta.key();
+    let eta = &mut ctx.accounts.encrypted_token_account;
+    let user_pubkey = eta.user_pubkey;
+    let eta_pubkey = eta.key();
 
-    // Transfer SPL tokens from signer's token account to VTA's ATA
+    // Transfer SPL tokens from signer's token account to ETA's ATA
     transfer_checked(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             TransferChecked {
                 from: ctx.accounts.signer_token_account.to_account_info(),
                 mint: ctx.accounts.token_mint.to_account_info(),
-                to: ctx.accounts.vote_token_ata.to_account_info(),
+                to: ctx.accounts.encrypted_token_ata.to_account_info(),
                 authority: ctx.accounts.signer.to_account_info(),
             },
         ),
@@ -105,19 +105,19 @@ pub fn mint_vote_tokens(
 
     // Track the pending deposit for safety (can be reclaimed if callback fails)
     // Lock
-    vta.pending_deposit = vta
+    eta.pending_deposit = eta
         .pending_deposit
         .checked_add(amount)
         .ok_or(ErrorCode::Overflow)?;
-    vta.locked = true;
+    eta.locked = true;
 
     // Build args for encrypted computation
-    // Circuit signature: buy_vote_tokens(balance_ctx, is_initialized, amount)
-    let is_initialized = vta.state_nonce != 0;
+    // Circuit signature: wrap_encrypted_tokens(balance_ctx, is_initialized, amount)
+    let is_initialized = eta.state_nonce != 0;
     let args = ArgBuilder::new()
         .x25519_pubkey(user_pubkey)
-        .plaintext_u128(vta.state_nonce)
-        .account(vta_pubkey, 8, 32 * 1)
+        .plaintext_u128(eta.state_nonce)
+        .account(eta_pubkey, 8, 32 * 1)
         .plaintext_bool(is_initialized)
         .plaintext_u64(amount)
         .build();
@@ -128,11 +128,11 @@ pub fn mint_vote_tokens(
         ctx.accounts,
         computation_offset,
         args,
-        vec![BuyVoteTokensCallback::callback_ix(
+        vec![WrapEncryptedTokensCallback::callback_ix(
             computation_offset,
             &ctx.accounts.mxe_account,
             &[CallbackAccount {
-                pubkey: vta_pubkey,
+                pubkey: eta_pubkey,
                 is_writable: true,
             }],
         )?],
@@ -143,11 +143,11 @@ pub fn mint_vote_tokens(
     Ok(())
 }
 
-#[callback_accounts("buy_vote_tokens")]
+#[callback_accounts("wrap_encrypted_tokens")]
 #[derive(Accounts)]
-pub struct BuyVoteTokensCallback<'info> {
+pub struct WrapEncryptedTokensCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_BUY_VOTE_TOKENS))]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_WRAP_ENCRYPTED_TOKENS))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
@@ -161,36 +161,36 @@ pub struct BuyVoteTokensCallback<'info> {
 
     // Callback accounts
     #[account(mut)]
-    pub vote_token_account: Account<'info, VoteTokenAccount>,
+    pub encrypted_token_account: Account<'info, EncryptedTokenAccount>,
 }
 
-pub fn buy_vote_tokens_callback(
-    ctx: Context<BuyVoteTokensCallback>,
-    output: SignedComputationOutputs<BuyVoteTokensOutput>,
+pub fn wrap_encrypted_tokens_callback(
+    ctx: Context<WrapEncryptedTokensCallback>,
+    output: SignedComputationOutputs<WrapEncryptedTokensOutput>,
 ) -> Result<()> {
     let encrypted_balance = match output.verify_output(
         &ctx.accounts.cluster_account,
         &ctx.accounts.computation_account,
     ) {
-        Ok(BuyVoteTokensOutput { field_0 }) => field_0,
+        Ok(WrapEncryptedTokensOutput { field_0 }) => field_0,
 
         // We do not reset account state here because can be done manually via
         // `claim_pending_deposit`
         Err(_) => return Err(ErrorCode::AbortedComputation.into()),
     };
 
-    let vta = &mut ctx.accounts.vote_token_account;
+    let eta = &mut ctx.accounts.encrypted_token_account;
 
     // Check that pending deposit exists. User could have withdrawn funds.
-    require!(vta.pending_deposit > 0 && vta.locked, ErrorCode::InsufficientBalance);
+    require!(eta.pending_deposit > 0 && eta.locked, ErrorCode::InsufficientBalance);
 
     // Set pending deposit to 0 and unlock account.
-    vta.pending_deposit = 0;
-    vta.locked = false;
+    eta.pending_deposit = 0;
+    eta.locked = false;
 
     // Update encrypted state
-    vta.state_nonce = encrypted_balance.nonce;
-    vta.encrypted_state = encrypted_balance.ciphertexts;
+    eta.state_nonce = encrypted_balance.nonce;
+    eta.encrypted_state = encrypted_balance.ciphertexts;
 
     Ok(())
 }

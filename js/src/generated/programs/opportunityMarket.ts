@@ -19,21 +19,15 @@ import {
   type ParsedAddOptionStakeCompDefInstruction,
   type ParsedBuyOpportunityMarketSharesCallbackInstruction,
   type ParsedBuyOpportunityMarketSharesCompDefInstruction,
-  type ParsedBuyVoteTokensCallbackInstruction,
-  type ParsedBuyVoteTokensCompDefInstruction,
   type ParsedClaimPendingDepositInstruction,
-  type ParsedClaimVoteTokensCallbackInstruction,
-  type ParsedClaimVoteTokensCompDefInstruction,
-  type ParsedClaimVoteTokensInstruction,
   type ParsedCloseShareAccountInstruction,
   type ParsedCreateMarketInstruction,
   type ParsedExtendRevealPeriodInstruction,
   type ParsedIncrementOptionTallyInstruction,
   type ParsedInitCentralStateInstruction,
-  type ParsedInitEphemeralVoteTokenAccountInstruction,
+  type ParsedInitEncryptedTokenAccountInstruction,
+  type ParsedInitEphemeralEncryptedTokenAccountInstruction,
   type ParsedInitShareAccountInstruction,
-  type ParsedInitVoteTokenAccountInstruction,
-  type ParsedMintVoteTokensInstruction,
   type ParsedOpenMarketInstruction,
   type ParsedRevealSharesCallbackInstruction,
   type ParsedRevealSharesCompDefInstruction,
@@ -44,7 +38,13 @@ import {
   type ParsedUnstakeEarlyCallbackInstruction,
   type ParsedUnstakeEarlyCompDefInstruction,
   type ParsedUnstakeEarlyInstruction,
+  type ParsedUnwrapEncryptedTokensCallbackInstruction,
+  type ParsedUnwrapEncryptedTokensCompDefInstruction,
+  type ParsedUnwrapEncryptedTokensInstruction,
   type ParsedUpdateCentralStateInstruction,
+  type ParsedWrapEncryptedTokensCallbackInstruction,
+  type ParsedWrapEncryptedTokensCompDefInstruction,
+  type ParsedWrapEncryptedTokensInstruction,
 } from '../instructions';
 
 export const OPPORTUNITY_MARKET_PROGRAM_ADDRESS =
@@ -56,12 +56,12 @@ export enum OpportunityMarketAccount {
   ClockAccount,
   Cluster,
   ComputationDefinitionAccount,
+  EncryptedTokenAccount,
   FeePool,
   MXEAccount,
   OpportunityMarket,
   OpportunityMarketOption,
   ShareAccount,
-  VoteTokenAccount,
 }
 
 export function identifyOpportunityMarketAccount(
@@ -127,6 +127,17 @@ export function identifyOpportunityMarketAccount(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([238, 123, 84, 113, 137, 77, 62, 75])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketAccount.EncryptedTokenAccount;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([172, 38, 77, 146, 148, 5, 51, 242])
       ),
       0
@@ -178,17 +189,6 @@ export function identifyOpportunityMarketAccount(
   ) {
     return OpportunityMarketAccount.ShareAccount;
   }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([147, 20, 17, 210, 187, 123, 96, 22])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketAccount.VoteTokenAccount;
-  }
   throw new Error(
     'The provided account could not be identified as a opportunityMarket account.'
   );
@@ -200,21 +200,15 @@ export enum OpportunityMarketInstruction {
   AddOptionStakeCompDef,
   BuyOpportunityMarketSharesCallback,
   BuyOpportunityMarketSharesCompDef,
-  BuyVoteTokensCallback,
-  BuyVoteTokensCompDef,
   ClaimPendingDeposit,
-  ClaimVoteTokens,
-  ClaimVoteTokensCallback,
-  ClaimVoteTokensCompDef,
   CloseShareAccount,
   CreateMarket,
   ExtendRevealPeriod,
   IncrementOptionTally,
   InitCentralState,
-  InitEphemeralVoteTokenAccount,
+  InitEncryptedTokenAccount,
+  InitEphemeralEncryptedTokenAccount,
   InitShareAccount,
-  InitVoteTokenAccount,
-  MintVoteTokens,
   OpenMarket,
   RevealShares,
   RevealSharesCallback,
@@ -225,7 +219,13 @@ export enum OpportunityMarketInstruction {
   UnstakeEarly,
   UnstakeEarlyCallback,
   UnstakeEarlyCompDef,
+  UnwrapEncryptedTokens,
+  UnwrapEncryptedTokensCallback,
+  UnwrapEncryptedTokensCompDef,
   UpdateCentralState,
+  WrapEncryptedTokens,
+  WrapEncryptedTokensCallback,
+  WrapEncryptedTokensCompDef,
 }
 
 export function identifyOpportunityMarketInstruction(
@@ -291,67 +291,12 @@ export function identifyOpportunityMarketInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([117, 33, 34, 58, 21, 216, 104, 131])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.BuyVoteTokensCallback;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([164, 174, 146, 68, 20, 202, 223, 78])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.BuyVoteTokensCompDef;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([236, 140, 88, 225, 51, 46, 77, 249])
       ),
       0
     )
   ) {
     return OpportunityMarketInstruction.ClaimPendingDeposit;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([107, 162, 69, 108, 16, 153, 226, 246])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.ClaimVoteTokens;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([234, 116, 49, 160, 167, 181, 51, 32])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.ClaimVoteTokensCallback;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([225, 132, 181, 53, 139, 117, 248, 142])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.ClaimVoteTokensCompDef;
   }
   if (
     containsBytes(
@@ -412,12 +357,23 @@ export function identifyOpportunityMarketInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([24, 238, 42, 208, 54, 182, 247, 80])
+        new Uint8Array([50, 44, 236, 188, 218, 183, 120, 61])
       ),
       0
     )
   ) {
-    return OpportunityMarketInstruction.InitEphemeralVoteTokenAccount;
+    return OpportunityMarketInstruction.InitEncryptedTokenAccount;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([193, 174, 116, 225, 159, 78, 6, 234])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.InitEphemeralEncryptedTokenAccount;
   }
   if (
     containsBytes(
@@ -429,28 +385,6 @@ export function identifyOpportunityMarketInstruction(
     )
   ) {
     return OpportunityMarketInstruction.InitShareAccount;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([101, 189, 10, 58, 87, 35, 49, 163])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.InitVoteTokenAccount;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([131, 125, 39, 240, 75, 196, 200, 187])
-      ),
-      0
-    )
-  ) {
-    return OpportunityMarketInstruction.MintVoteTokens;
   }
   if (
     containsBytes(
@@ -566,12 +500,78 @@ export function identifyOpportunityMarketInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([223, 93, 223, 112, 29, 86, 208, 219])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.UnwrapEncryptedTokens;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([79, 46, 246, 46, 89, 103, 215, 38])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.UnwrapEncryptedTokensCallback;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([130, 70, 53, 253, 16, 169, 50, 36])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.UnwrapEncryptedTokensCompDef;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([228, 211, 60, 53, 115, 153, 149, 194])
       ),
       0
     )
   ) {
     return OpportunityMarketInstruction.UpdateCentralState;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([249, 160, 73, 35, 110, 134, 22, 106])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.WrapEncryptedTokens;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([27, 163, 220, 185, 248, 98, 6, 225])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.WrapEncryptedTokensCallback;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([197, 168, 125, 251, 47, 209, 49, 126])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.WrapEncryptedTokensCompDef;
   }
   throw new Error(
     'The provided instruction could not be identified as a opportunityMarket instruction.'
@@ -597,23 +597,8 @@ export type ParsedOpportunityMarketInstruction<
       instructionType: OpportunityMarketInstruction.BuyOpportunityMarketSharesCompDef;
     } & ParsedBuyOpportunityMarketSharesCompDefInstruction<TProgram>)
   | ({
-      instructionType: OpportunityMarketInstruction.BuyVoteTokensCallback;
-    } & ParsedBuyVoteTokensCallbackInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.BuyVoteTokensCompDef;
-    } & ParsedBuyVoteTokensCompDefInstruction<TProgram>)
-  | ({
       instructionType: OpportunityMarketInstruction.ClaimPendingDeposit;
     } & ParsedClaimPendingDepositInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.ClaimVoteTokens;
-    } & ParsedClaimVoteTokensInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.ClaimVoteTokensCallback;
-    } & ParsedClaimVoteTokensCallbackInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.ClaimVoteTokensCompDef;
-    } & ParsedClaimVoteTokensCompDefInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.CloseShareAccount;
     } & ParsedCloseShareAccountInstruction<TProgram>)
@@ -630,17 +615,14 @@ export type ParsedOpportunityMarketInstruction<
       instructionType: OpportunityMarketInstruction.InitCentralState;
     } & ParsedInitCentralStateInstruction<TProgram>)
   | ({
-      instructionType: OpportunityMarketInstruction.InitEphemeralVoteTokenAccount;
-    } & ParsedInitEphemeralVoteTokenAccountInstruction<TProgram>)
+      instructionType: OpportunityMarketInstruction.InitEncryptedTokenAccount;
+    } & ParsedInitEncryptedTokenAccountInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.InitEphemeralEncryptedTokenAccount;
+    } & ParsedInitEphemeralEncryptedTokenAccountInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.InitShareAccount;
     } & ParsedInitShareAccountInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.InitVoteTokenAccount;
-    } & ParsedInitVoteTokenAccountInstruction<TProgram>)
-  | ({
-      instructionType: OpportunityMarketInstruction.MintVoteTokens;
-    } & ParsedMintVoteTokensInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.OpenMarket;
     } & ParsedOpenMarketInstruction<TProgram>)
@@ -672,5 +654,23 @@ export type ParsedOpportunityMarketInstruction<
       instructionType: OpportunityMarketInstruction.UnstakeEarlyCompDef;
     } & ParsedUnstakeEarlyCompDefInstruction<TProgram>)
   | ({
+      instructionType: OpportunityMarketInstruction.UnwrapEncryptedTokens;
+    } & ParsedUnwrapEncryptedTokensInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.UnwrapEncryptedTokensCallback;
+    } & ParsedUnwrapEncryptedTokensCallbackInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.UnwrapEncryptedTokensCompDef;
+    } & ParsedUnwrapEncryptedTokensCompDefInstruction<TProgram>)
+  | ({
       instructionType: OpportunityMarketInstruction.UpdateCentralState;
-    } & ParsedUpdateCentralStateInstruction<TProgram>);
+    } & ParsedUpdateCentralStateInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.WrapEncryptedTokens;
+    } & ParsedWrapEncryptedTokensInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.WrapEncryptedTokensCallback;
+    } & ParsedWrapEncryptedTokensCallbackInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.WrapEncryptedTokensCompDef;
+    } & ParsedWrapEncryptedTokensCompDefInstruction<TProgram>);

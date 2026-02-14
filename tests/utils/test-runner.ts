@@ -28,8 +28,8 @@ import {
   fetchMaybeCentralState,
   randomComputationOffset,
   getInitCentralStateInstructionAsync,
-  initVoteTokenAccount,
-  mintVoteTokens,
+  initEncryptedTokenAccount,
+  wrapEncryptedTokens,
   addMarketOption,
   initShareAccount,
   stake,
@@ -41,7 +41,7 @@ import {
   awaitComputationFinalization,
   awaitBatchComputationFinalization,
   type ComputationResult,
-  getVoteTokenAccountAddress,
+  getEncryptedTokenAccountAddress,
   getShareAccountAddress as getShareAccountAddressPda,
   fetchShareAccount,
   getOpportunityMarketOptionAddress,
@@ -73,7 +73,7 @@ interface TestUser {
   solanaKeypair: KeyPairSigner;
   x25519Keypair: X25519Keypair;
   tokenAccount: Address;
-  voteTokenAccount?: Address;
+  encryptedTokenAccount?: Address;
   shareAccounts: ShareAccountInfo[];
 }
 
@@ -417,10 +417,10 @@ export class TestRunner {
     user.shareAccounts.push(info);
   }
 
-  private assertVtaInitialized(user: TestUser): void {
-    if (!user.voteTokenAccount) {
+  private assertEtaInitialized(user: TestUser): void {
+    if (!user.encryptedTokenAccount) {
       throw new Error(
-        `VTA not initialized for user ${user.solanaKeypair.address}. Call initVoteTokenAccount first.`
+        `ETA not initialized for user ${user.solanaKeypair.address}. Call initEncryptedTokenAccount first.`
       );
     }
   }
@@ -495,13 +495,13 @@ export class TestRunner {
   }
 
   // ============================================================================
-  // VTA Operations
+  // ETA Operations
   // ============================================================================
 
-  async initVoteTokenAccount(userId: Address): Promise<Address> {
+  async initEncryptedTokenAccount(userId: Address): Promise<Address> {
     const user = this.getUser(userId);
 
-    const ix = await initVoteTokenAccount({
+    const ix = await initEncryptedTokenAccount({
       signer: user.solanaKeypair,
       tokenMint: this.mint.address,
       tokenProgram: TOKEN_PROGRAM_ADDRESS,
@@ -509,24 +509,24 @@ export class TestRunner {
     });
 
     await sendTransaction(this.rpc, this.sendAndConfirm, user.solanaKeypair, [ix], {
-      label: `Init VTA for ${userId.toString().slice(0, 8)}...`,
+      label: `Init ETA for ${userId.toString().slice(0, 8)}...`,
     });
 
-    const [vtaAddress] = await getVoteTokenAccountAddress(this.mint.address, userId);
-    user.voteTokenAccount = vtaAddress;
-    return vtaAddress;
+    const [etaAddress] = await getEncryptedTokenAccountAddress(this.mint.address, userId);
+    user.encryptedTokenAccount = etaAddress;
+    return etaAddress;
   }
 
-  async mintVoteTokens(userId: Address, amount: bigint): Promise<void> {
+  async wrapEncryptedTokens(userId: Address, amount: bigint): Promise<void> {
     const user = this.getUser(userId);
-    this.assertVtaInitialized(user);
+    this.assertEtaInitialized(user);
     const offset = randomComputationOffset();
 
-    const ix = await mintVoteTokens(
+    const ix = await wrapEncryptedTokens(
       {
         signer: user.solanaKeypair,
         tokenMint: this.mint.address,
-        voteTokenAccount: user.voteTokenAccount!,
+        encryptedTokenAccount: user.encryptedTokenAccount!,
         signerTokenAccount: user.tokenAccount,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
         amount,
@@ -535,11 +535,11 @@ export class TestRunner {
     );
 
     await sendTransaction(this.rpc, this.sendAndConfirm, user.solanaKeypair, [ix], {
-      label: `Mint ${amount} vote tokens`,
+      label: `Wrap ${amount} encrypted tokens`,
     });
 
     const result = await awaitComputationFinalization(this.rpc, offset);
-    this.assertComputationSucceeded(result, "mintVoteTokens");
+    this.assertComputationSucceeded(result, "wrapEncryptedTokens");
   }
 
   // ============================================================================
@@ -553,7 +553,7 @@ export class TestRunner {
     authorizedReaderPubkey?: Uint8Array
   ): Promise<{ optionIndex: number; shareAccountId: number }> {
     const user = this.getUser(userId);
-    this.assertVtaInitialized(user);
+    this.assertEtaInitialized(user);
 
     const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
     const optionIndex = ++this.optionCount;
@@ -583,7 +583,7 @@ export class TestRunner {
       {
         creator: user.solanaKeypair,
         market: this.marketAddress,
-        sourceVta: user.voteTokenAccount!,
+        sourceEta: user.encryptedTokenAccount!,
         shareAccount: shareAccountAddress,
         optionIndex,
         shareAccountId,
@@ -629,8 +629,8 @@ export class TestRunner {
     purchases: SharePurchase[],
     authorizedReaderPubkey?: Uint8Array
   ): Promise<number[]> {
-    // Group purchases by user to handle VTA locking correctly
-    // Each stake locks the VTA until callback completes, so same-user stakes must be sequential
+    // Group purchases by user to handle ETA locking correctly
+    // Each stake locks the ETA until callback completes, so same-user stakes must be sequential
     const purchasesByUser = new Map<string, { purchase: SharePurchase; originalIndex: number }[]>();
     for (let i = 0; i < purchases.length; i++) {
       const p = purchases[i];
@@ -649,7 +649,7 @@ export class TestRunner {
       Array.from(purchasesByUser.entries()).map(async ([_userId, userPurchases]) => {
         for (const { purchase: p, originalIndex } of userPurchases) {
           const user = this.getUser(p.userId);
-          this.assertVtaInitialized(user);
+          this.assertEtaInitialized(user);
 
           const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
           const shareAccountId = this.getNextShareAccountId(user);
@@ -671,7 +671,7 @@ export class TestRunner {
           const ciphertexts = cipher.encrypt([p.amount, BigInt(p.optionIndex)], inputNonce);
           const computationOffset = randomComputationOffset();
 
-          const [userVta] = await getVoteTokenAccountAddress(this.mint.address, p.userId);
+          const [userEta] = await getEncryptedTokenAccountAddress(this.mint.address, p.userId);
 
           // Use provided authorized reader or default to user's own pubkey
           const readerPubkey = authorizedReaderPubkey ?? user.x25519Keypair.publicKey;
@@ -680,7 +680,7 @@ export class TestRunner {
             {
               signer: user.solanaKeypair,
               market: this.marketAddress,
-              userVta,
+              userEta,
               shareAccountId,
               amountCiphertext: ciphertexts[0],
               selectedOptionCiphertext: ciphertexts[1],
@@ -696,7 +696,7 @@ export class TestRunner {
           });
 
           // Wait for this computation to finalize before next stake for this user
-          // This ensures the VTA is unlocked by the callback
+          // This ensures the ETA is unlocked by the callback
           const result = await awaitComputationFinalization(this.rpc, computationOffset);
           this.assertComputationSucceeded(result, "stakeOnOption");
 
@@ -736,8 +736,8 @@ export class TestRunner {
   }
 
   async revealSharesBatch(reveals: RevealRequest[]): Promise<void> {
-    // Group reveals by user to handle VTA locking correctly
-    // Each reveal locks the VTA until callback completes, so same-user reveals must be sequential
+    // Group reveals by user to handle ETA locking correctly
+    // Each reveal locks the ETA until callback completes, so same-user reveals must be sequential
     const revealsByUser = new Map<string, RevealRequest[]>();
     for (const r of reveals) {
       const key = r.userId.toString();
@@ -753,14 +753,14 @@ export class TestRunner {
         for (const r of userReveals) {
           const user = this.getUser(r.userId);
           const computationOffset = randomComputationOffset();
-          const [userVta] = await getVoteTokenAccountAddress(this.mint.address, r.userId);
+          const [userEta] = await getEncryptedTokenAccountAddress(this.mint.address, r.userId);
 
           const ix = await revealShares(
             {
               signer: user.solanaKeypair,
               owner: user.solanaKeypair.address,
               market: this.marketAddress,
-              userVta,
+              userEta,
               shareAccountId: r.shareAccountId,
             },
             this.getArciumConfig(computationOffset)
@@ -771,7 +771,7 @@ export class TestRunner {
           });
 
           // Wait for this computation to finalize before next reveal for this user
-          // This ensures the VTA is unlocked by the callback
+          // This ensures the ETA is unlocked by the callback
           const result = await awaitComputationFinalization(this.rpc, computationOffset);
           this.assertComputationSucceeded(result, "revealShares");
         }

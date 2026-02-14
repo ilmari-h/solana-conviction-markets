@@ -14,8 +14,8 @@ import {
 } from "@arcium-hq/client";
 import { PublicKey } from "@solana/web3.js";
 import {
-  getBuyVoteTokensCompDefInstruction,
-  getClaimVoteTokensCompDefInstruction,
+  getWrapEncryptedTokensCompDefInstruction,
+  getUnwrapEncryptedTokensCompDefInstruction,
   getBuyOpportunityMarketSharesCompDefInstruction,
   getRevealSharesCompDefInstruction,
   getUnstakeEarlyCompDefInstruction,
@@ -26,16 +26,16 @@ import {
 import { BN } from "bn.js";
 
 export type CompDefCircuitName =
-  | "buy_vote_tokens"
-  | "claim_vote_tokens"
+  | "wrap_encrypted_tokens"
+  | "unwrap_encrypted_tokens"
   | "buy_opportunity_market_shares"
   | "reveal_shares"
   | "unstake_early"
   | "add_option_stake";
 
 export const ALL_COMP_DEF_CIRCUITS: CompDefCircuitName[] = [
-  "buy_vote_tokens",
-  "claim_vote_tokens",
+  "wrap_encrypted_tokens",
+  "unwrap_encrypted_tokens",
   "buy_opportunity_market_shares",
   "reveal_shares",
   "unstake_early",
@@ -98,11 +98,11 @@ export async function getInitCompDefInstruction(
   };
 
   switch (circuitName) {
-    case "buy_vote_tokens":
-      return getBuyVoteTokensCompDefInstruction(baseInput, { programAddress: programId });
+    case "wrap_encrypted_tokens":
+      return getWrapEncryptedTokensCompDefInstruction(baseInput, { programAddress: programId });
 
-    case "claim_vote_tokens":
-      return getClaimVoteTokensCompDefInstruction(baseInput, { programAddress: programId });
+    case "unwrap_encrypted_tokens":
+      return getUnwrapEncryptedTokensCompDefInstruction(baseInput, { programAddress: programId });
 
     case "buy_opportunity_market_shares":
       return getBuyOpportunityMarketSharesCompDefInstruction(baseInput, { programAddress: programId });

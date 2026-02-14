@@ -13,8 +13,8 @@ pub use error::ErrorCode;
 pub use instructions::*;
 pub use state::*;
 
-pub const COMP_DEF_OFFSET_BUY_VOTE_TOKENS: u32 = comp_def_offset("buy_vote_tokens");
-pub const COMP_DEF_OFFSET_CLAIM_VOTE_TOKENS: u32 = comp_def_offset("claim_vote_tokens");
+pub const COMP_DEF_OFFSET_WRAP_ENCRYPTED_TOKENS: u32 = comp_def_offset("wrap_encrypted_tokens");
+pub const COMP_DEF_OFFSET_UNWRAP_ENCRYPTED_TOKENS: u32 = comp_def_offset("unwrap_encrypted_tokens");
 pub const COMP_DEF_OFFSET_BUY_OPPORTUNITY_MARKET_SHARES: u32 = comp_def_offset("buy_opportunity_market_shares");
 pub const COMP_DEF_OFFSET_REVEAL_SHARES: u32 = comp_def_offset("reveal_shares");
 pub const COMP_DEF_OFFSET_UNSTAKE_EARLY: u32 = comp_def_offset("unstake_early");
@@ -26,12 +26,12 @@ declare_id!("jsK4sUrViFZvKTCFw2ekhyTtCydyntGZ1fdY7PXtbgw");
 pub mod opportunity_market {
     use super::*;
 
-    pub fn buy_vote_tokens_comp_def(ctx: Context<BuyVoteTokensCompDef>) -> Result<()> {
-        instructions::buy_vote_tokens_comp_def(ctx)
+    pub fn wrap_encrypted_tokens_comp_def(ctx: Context<WrapEncryptedTokensCompDef>) -> Result<()> {
+        instructions::wrap_encrypted_tokens_comp_def(ctx)
     }
 
-    pub fn claim_vote_tokens_comp_def(ctx: Context<ClaimVoteTokensCompDef>) -> Result<()> {
-        instructions::claim_vote_tokens_comp_def(ctx)
+    pub fn unwrap_encrypted_tokens_comp_def(ctx: Context<UnwrapEncryptedTokensCompDef>) -> Result<()> {
+        instructions::unwrap_encrypted_tokens_comp_def(ctx)
     }
 
     pub fn reveal_shares_comp_def(ctx: Context<RevealSharesCompDef>) -> Result<()> {
@@ -151,50 +151,50 @@ pub mod opportunity_market {
         instructions::init_share_account(ctx, state_nonce, share_account_id)
     }
 
-    pub fn init_vote_token_account(
-        ctx: Context<InitVoteTokenAccount>,
+    pub fn init_encrypted_token_account(
+        ctx: Context<InitEncryptedTokenAccount>,
         user_pubkey: [u8; 32],
     ) -> Result<()> {
-        instructions::init_vote_token_account(ctx, user_pubkey)
+        instructions::init_encrypted_token_account(ctx, user_pubkey)
     }
 
-    pub fn init_ephemeral_vote_token_account(
-        ctx: Context<InitEphemeralVoteTokenAccount>,
+    pub fn init_ephemeral_encrypted_token_account(
+        ctx: Context<InitEphemeralEncryptedTokenAccount>,
         index: u64,
     ) -> Result<()> {
-        instructions::init_ephemeral_vote_token_account(ctx, index)
+        instructions::init_ephemeral_encrypted_token_account(ctx, index)
     }
 
-    pub fn mint_vote_tokens(
-        ctx: Context<MintVoteTokens>,
+    pub fn wrap_encrypted_tokens(
+        ctx: Context<WrapEncryptedTokens>,
         computation_offset: u64,
         amount: u64,
     ) -> Result<()> {
-        instructions::mint_vote_tokens(ctx, computation_offset, amount)
+        instructions::wrap_encrypted_tokens(ctx, computation_offset, amount)
     }
 
-    #[arcium_callback(encrypted_ix = "buy_vote_tokens")]
-    pub fn buy_vote_tokens_callback(
-        ctx: Context<BuyVoteTokensCallback>,
-        output: SignedComputationOutputs<BuyVoteTokensOutput>,
+    #[arcium_callback(encrypted_ix = "wrap_encrypted_tokens")]
+    pub fn wrap_encrypted_tokens_callback(
+        ctx: Context<WrapEncryptedTokensCallback>,
+        output: SignedComputationOutputs<WrapEncryptedTokensOutput>,
     ) -> Result<()> {
-        instructions::buy_vote_tokens_callback(ctx, output)
+        instructions::wrap_encrypted_tokens_callback(ctx, output)
     }
 
-    pub fn claim_vote_tokens(
-        ctx: Context<ClaimVoteTokens>,
+    pub fn unwrap_encrypted_tokens(
+        ctx: Context<UnwrapEncryptedTokens>,
         computation_offset: u64,
         amount: u64,
     ) -> Result<()> {
-        instructions::claim_vote_tokens(ctx, computation_offset, amount)
+        instructions::unwrap_encrypted_tokens(ctx, computation_offset, amount)
     }
 
-    #[arcium_callback(encrypted_ix = "claim_vote_tokens")]
-    pub fn claim_vote_tokens_callback(
-        ctx: Context<ClaimVoteTokensCallback>,
-        output: SignedComputationOutputs<ClaimVoteTokensOutput>,
+    #[arcium_callback(encrypted_ix = "unwrap_encrypted_tokens")]
+    pub fn unwrap_encrypted_tokens_callback(
+        ctx: Context<UnwrapEncryptedTokensCallback>,
+        output: SignedComputationOutputs<UnwrapEncryptedTokensOutput>,
     ) -> Result<()> {
-        instructions::claim_vote_tokens_callback(ctx, output)
+        instructions::unwrap_encrypted_tokens_callback(ctx, output)
     }
 
     pub fn buy_opportunity_market_shares_comp_def(ctx: Context<BuyOpportunityMarketSharesCompDef>) -> Result<()> {

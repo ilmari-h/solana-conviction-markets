@@ -40,23 +40,23 @@ import {
 import { OPPORTUNITY_MARKET_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import {
-  getClaimVoteTokensOutputDecoder,
-  getClaimVoteTokensOutputEncoder,
-  type ClaimVoteTokensOutput,
-  type ClaimVoteTokensOutputArgs,
+  getWrapEncryptedTokensOutputDecoder,
+  getWrapEncryptedTokensOutputEncoder,
+  type WrapEncryptedTokensOutput,
+  type WrapEncryptedTokensOutputArgs,
 } from '../types';
 
-export const CLAIM_VOTE_TOKENS_CALLBACK_DISCRIMINATOR = new Uint8Array([
-  234, 116, 49, 160, 167, 181, 51, 32,
+export const WRAP_ENCRYPTED_TOKENS_CALLBACK_DISCRIMINATOR = new Uint8Array([
+  27, 163, 220, 185, 248, 98, 6, 225,
 ]);
 
-export function getClaimVoteTokensCallbackDiscriminatorBytes() {
+export function getWrapEncryptedTokensCallbackDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CLAIM_VOTE_TOKENS_CALLBACK_DISCRIMINATOR
+    WRAP_ENCRYPTED_TOKENS_CALLBACK_DISCRIMINATOR
   );
 }
 
-export type ClaimVoteTokensCallbackInstruction<
+export type WrapEncryptedTokensCallbackInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountArciumProgram extends string | AccountMeta<string> =
     'Arcj82pX7HxYKLR92qvgZUAd7vGS1k4hQvAFcPATFdEQ',
@@ -66,11 +66,7 @@ export type ClaimVoteTokensCallbackInstruction<
   TAccountClusterAccount extends string | AccountMeta<string> = string,
   TAccountInstructionsSysvar extends string | AccountMeta<string> =
     'Sysvar1nstructions1111111111111111111111111',
-  TAccountVoteTokenAccount extends string | AccountMeta<string> = string,
-  TAccountUserTokenAccount extends string | AccountMeta<string> = string,
-  TAccountVoteTokenAta extends string | AccountMeta<string> = string,
-  TAccountTokenMint extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends string | AccountMeta<string> = string,
+  TAccountEncryptedTokenAccount extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -94,53 +90,41 @@ export type ClaimVoteTokensCallbackInstruction<
       TAccountInstructionsSysvar extends string
         ? ReadonlyAccount<TAccountInstructionsSysvar>
         : TAccountInstructionsSysvar,
-      TAccountVoteTokenAccount extends string
-        ? WritableAccount<TAccountVoteTokenAccount>
-        : TAccountVoteTokenAccount,
-      TAccountUserTokenAccount extends string
-        ? WritableAccount<TAccountUserTokenAccount>
-        : TAccountUserTokenAccount,
-      TAccountVoteTokenAta extends string
-        ? WritableAccount<TAccountVoteTokenAta>
-        : TAccountVoteTokenAta,
-      TAccountTokenMint extends string
-        ? ReadonlyAccount<TAccountTokenMint>
-        : TAccountTokenMint,
-      TAccountTokenProgram extends string
-        ? ReadonlyAccount<TAccountTokenProgram>
-        : TAccountTokenProgram,
+      TAccountEncryptedTokenAccount extends string
+        ? WritableAccount<TAccountEncryptedTokenAccount>
+        : TAccountEncryptedTokenAccount,
       ...TRemainingAccounts,
     ]
   >;
 
-export type ClaimVoteTokensCallbackInstructionData = {
+export type WrapEncryptedTokensCallbackInstructionData = {
   discriminator: ReadonlyUint8Array;
   output:
     | {
         __kind: 'Success';
-        fields: readonly [ClaimVoteTokensOutput, Array<number>];
+        fields: readonly [WrapEncryptedTokensOutput, Array<number>];
       }
     | { __kind: 'Failure' }
     | {
         __kind: 'MarkerForIdlBuildDoNotUseThis';
-        fields: readonly [ClaimVoteTokensOutput];
+        fields: readonly [WrapEncryptedTokensOutput];
       };
 };
 
-export type ClaimVoteTokensCallbackInstructionDataArgs = {
+export type WrapEncryptedTokensCallbackInstructionDataArgs = {
   output:
     | {
         __kind: 'Success';
-        fields: readonly [ClaimVoteTokensOutputArgs, Array<number>];
+        fields: readonly [WrapEncryptedTokensOutputArgs, Array<number>];
       }
     | { __kind: 'Failure' }
     | {
         __kind: 'MarkerForIdlBuildDoNotUseThis';
-        fields: readonly [ClaimVoteTokensOutputArgs];
+        fields: readonly [WrapEncryptedTokensOutputArgs];
       };
 };
 
-export function getClaimVoteTokensCallbackInstructionDataEncoder(): Encoder<ClaimVoteTokensCallbackInstructionDataArgs> {
+export function getWrapEncryptedTokensCallbackInstructionDataEncoder(): Encoder<WrapEncryptedTokensCallbackInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
@@ -153,7 +137,7 @@ export function getClaimVoteTokensCallbackInstructionDataEncoder(): Encoder<Clai
               [
                 'fields',
                 getTupleEncoder([
-                  getClaimVoteTokensOutputEncoder(),
+                  getWrapEncryptedTokensOutputEncoder(),
                   getArrayEncoder(getU8Encoder(), { size: 64 }),
                 ]),
               ],
@@ -163,7 +147,10 @@ export function getClaimVoteTokensCallbackInstructionDataEncoder(): Encoder<Clai
           [
             'MarkerForIdlBuildDoNotUseThis',
             getStructEncoder([
-              ['fields', getTupleEncoder([getClaimVoteTokensOutputEncoder()])],
+              [
+                'fields',
+                getTupleEncoder([getWrapEncryptedTokensOutputEncoder()]),
+              ],
             ]),
           ],
         ]),
@@ -171,12 +158,12 @@ export function getClaimVoteTokensCallbackInstructionDataEncoder(): Encoder<Clai
     ]),
     (value) => ({
       ...value,
-      discriminator: CLAIM_VOTE_TOKENS_CALLBACK_DISCRIMINATOR,
+      discriminator: WRAP_ENCRYPTED_TOKENS_CALLBACK_DISCRIMINATOR,
     })
   );
 }
 
-export function getClaimVoteTokensCallbackInstructionDataDecoder(): Decoder<ClaimVoteTokensCallbackInstructionData> {
+export function getWrapEncryptedTokensCallbackInstructionDataDecoder(): Decoder<WrapEncryptedTokensCallbackInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     [
@@ -188,7 +175,7 @@ export function getClaimVoteTokensCallbackInstructionDataDecoder(): Decoder<Clai
             [
               'fields',
               getTupleDecoder([
-                getClaimVoteTokensOutputDecoder(),
+                getWrapEncryptedTokensOutputDecoder(),
                 getArrayDecoder(getU8Decoder(), { size: 64 }),
               ]),
             ],
@@ -198,7 +185,10 @@ export function getClaimVoteTokensCallbackInstructionDataDecoder(): Decoder<Clai
         [
           'MarkerForIdlBuildDoNotUseThis',
           getStructDecoder([
-            ['fields', getTupleDecoder([getClaimVoteTokensOutputDecoder()])],
+            [
+              'fields',
+              getTupleDecoder([getWrapEncryptedTokensOutputDecoder()]),
+            ],
           ]),
         ],
       ]),
@@ -206,28 +196,24 @@ export function getClaimVoteTokensCallbackInstructionDataDecoder(): Decoder<Clai
   ]);
 }
 
-export function getClaimVoteTokensCallbackInstructionDataCodec(): Codec<
-  ClaimVoteTokensCallbackInstructionDataArgs,
-  ClaimVoteTokensCallbackInstructionData
+export function getWrapEncryptedTokensCallbackInstructionDataCodec(): Codec<
+  WrapEncryptedTokensCallbackInstructionDataArgs,
+  WrapEncryptedTokensCallbackInstructionData
 > {
   return combineCodec(
-    getClaimVoteTokensCallbackInstructionDataEncoder(),
-    getClaimVoteTokensCallbackInstructionDataDecoder()
+    getWrapEncryptedTokensCallbackInstructionDataEncoder(),
+    getWrapEncryptedTokensCallbackInstructionDataDecoder()
   );
 }
 
-export type ClaimVoteTokensCallbackInput<
+export type WrapEncryptedTokensCallbackInput<
   TAccountArciumProgram extends string = string,
   TAccountCompDefAccount extends string = string,
   TAccountMxeAccount extends string = string,
   TAccountComputationAccount extends string = string,
   TAccountClusterAccount extends string = string,
   TAccountInstructionsSysvar extends string = string,
-  TAccountVoteTokenAccount extends string = string,
-  TAccountUserTokenAccount extends string = string,
-  TAccountVoteTokenAta extends string = string,
-  TAccountTokenMint extends string = string,
-  TAccountTokenProgram extends string = string,
+  TAccountEncryptedTokenAccount extends string = string,
 > = {
   arciumProgram?: Address<TAccountArciumProgram>;
   compDefAccount: Address<TAccountCompDefAccount>;
@@ -235,47 +221,31 @@ export type ClaimVoteTokensCallbackInput<
   computationAccount: Address<TAccountComputationAccount>;
   clusterAccount: Address<TAccountClusterAccount>;
   instructionsSysvar?: Address<TAccountInstructionsSysvar>;
-  voteTokenAccount: Address<TAccountVoteTokenAccount>;
-  /** User's token account to receive claimed SPL tokens */
-  userTokenAccount: Address<TAccountUserTokenAccount>;
-  /** VTA's ATA holding SPL tokens (source for withdrawal) */
-  voteTokenAta: Address<TAccountVoteTokenAta>;
-  /** Token mint for transfer_checked */
-  tokenMint: Address<TAccountTokenMint>;
-  /** Token program for CPI */
-  tokenProgram: Address<TAccountTokenProgram>;
-  output: ClaimVoteTokensCallbackInstructionDataArgs['output'];
+  encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
+  output: WrapEncryptedTokensCallbackInstructionDataArgs['output'];
 };
 
-export function getClaimVoteTokensCallbackInstruction<
+export function getWrapEncryptedTokensCallbackInstruction<
   TAccountArciumProgram extends string,
   TAccountCompDefAccount extends string,
   TAccountMxeAccount extends string,
   TAccountComputationAccount extends string,
   TAccountClusterAccount extends string,
   TAccountInstructionsSysvar extends string,
-  TAccountVoteTokenAccount extends string,
-  TAccountUserTokenAccount extends string,
-  TAccountVoteTokenAta extends string,
-  TAccountTokenMint extends string,
-  TAccountTokenProgram extends string,
+  TAccountEncryptedTokenAccount extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
-  input: ClaimVoteTokensCallbackInput<
+  input: WrapEncryptedTokensCallbackInput<
     TAccountArciumProgram,
     TAccountCompDefAccount,
     TAccountMxeAccount,
     TAccountComputationAccount,
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
-    TAccountVoteTokenAccount,
-    TAccountUserTokenAccount,
-    TAccountVoteTokenAta,
-    TAccountTokenMint,
-    TAccountTokenProgram
+    TAccountEncryptedTokenAccount
   >,
   config?: { programAddress?: TProgramAddress }
-): ClaimVoteTokensCallbackInstruction<
+): WrapEncryptedTokensCallbackInstruction<
   TProgramAddress,
   TAccountArciumProgram,
   TAccountCompDefAccount,
@@ -283,11 +253,7 @@ export function getClaimVoteTokensCallbackInstruction<
   TAccountComputationAccount,
   TAccountClusterAccount,
   TAccountInstructionsSysvar,
-  TAccountVoteTokenAccount,
-  TAccountUserTokenAccount,
-  TAccountVoteTokenAta,
-  TAccountTokenMint,
-  TAccountTokenProgram
+  TAccountEncryptedTokenAccount
 > {
   // Program address.
   const programAddress =
@@ -307,17 +273,10 @@ export function getClaimVoteTokensCallbackInstruction<
       value: input.instructionsSysvar ?? null,
       isWritable: false,
     },
-    voteTokenAccount: {
-      value: input.voteTokenAccount ?? null,
+    encryptedTokenAccount: {
+      value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    userTokenAccount: {
-      value: input.userTokenAccount ?? null,
-      isWritable: true,
-    },
-    voteTokenAta: { value: input.voteTokenAta ?? null, isWritable: true },
-    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -346,17 +305,13 @@ export function getClaimVoteTokensCallbackInstruction<
       getAccountMeta(accounts.computationAccount),
       getAccountMeta(accounts.clusterAccount),
       getAccountMeta(accounts.instructionsSysvar),
-      getAccountMeta(accounts.voteTokenAccount),
-      getAccountMeta(accounts.userTokenAccount),
-      getAccountMeta(accounts.voteTokenAta),
-      getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.tokenProgram),
+      getAccountMeta(accounts.encryptedTokenAccount),
     ],
-    data: getClaimVoteTokensCallbackInstructionDataEncoder().encode(
-      args as ClaimVoteTokensCallbackInstructionDataArgs
+    data: getWrapEncryptedTokensCallbackInstructionDataEncoder().encode(
+      args as WrapEncryptedTokensCallbackInstructionDataArgs
     ),
     programAddress,
-  } as ClaimVoteTokensCallbackInstruction<
+  } as WrapEncryptedTokensCallbackInstruction<
     TProgramAddress,
     TAccountArciumProgram,
     TAccountCompDefAccount,
@@ -364,15 +319,11 @@ export function getClaimVoteTokensCallbackInstruction<
     TAccountComputationAccount,
     TAccountClusterAccount,
     TAccountInstructionsSysvar,
-    TAccountVoteTokenAccount,
-    TAccountUserTokenAccount,
-    TAccountVoteTokenAta,
-    TAccountTokenMint,
-    TAccountTokenProgram
+    TAccountEncryptedTokenAccount
   >);
 }
 
-export type ParsedClaimVoteTokensCallbackInstruction<
+export type ParsedWrapEncryptedTokensCallbackInstruction<
   TProgram extends string = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
@@ -384,28 +335,20 @@ export type ParsedClaimVoteTokensCallbackInstruction<
     computationAccount: TAccountMetas[3];
     clusterAccount: TAccountMetas[4];
     instructionsSysvar: TAccountMetas[5];
-    voteTokenAccount: TAccountMetas[6];
-    /** User's token account to receive claimed SPL tokens */
-    userTokenAccount: TAccountMetas[7];
-    /** VTA's ATA holding SPL tokens (source for withdrawal) */
-    voteTokenAta: TAccountMetas[8];
-    /** Token mint for transfer_checked */
-    tokenMint: TAccountMetas[9];
-    /** Token program for CPI */
-    tokenProgram: TAccountMetas[10];
+    encryptedTokenAccount: TAccountMetas[6];
   };
-  data: ClaimVoteTokensCallbackInstructionData;
+  data: WrapEncryptedTokensCallbackInstructionData;
 };
 
-export function parseClaimVoteTokensCallbackInstruction<
+export function parseWrapEncryptedTokensCallbackInstruction<
   TProgram extends string,
   TAccountMetas extends readonly AccountMeta[],
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
-): ParsedClaimVoteTokensCallbackInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 11) {
+): ParsedWrapEncryptedTokensCallbackInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -424,13 +367,9 @@ export function parseClaimVoteTokensCallbackInstruction<
       computationAccount: getNextAccount(),
       clusterAccount: getNextAccount(),
       instructionsSysvar: getNextAccount(),
-      voteTokenAccount: getNextAccount(),
-      userTokenAccount: getNextAccount(),
-      voteTokenAta: getNextAccount(),
-      tokenMint: getNextAccount(),
-      tokenProgram: getNextAccount(),
+      encryptedTokenAccount: getNextAccount(),
     },
-    data: getClaimVoteTokensCallbackInstructionDataDecoder().decode(
+    data: getWrapEncryptedTokensCallbackInstructionDataDecoder().decode(
       instruction.data
     ),
   };
