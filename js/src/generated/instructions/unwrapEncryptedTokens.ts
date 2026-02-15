@@ -56,7 +56,8 @@ export type UnwrapEncryptedTokensInstruction<
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountTokenMint extends string | AccountMeta<string> = string,
   TAccountEncryptedTokenAccount extends string | AccountMeta<string> = string,
-  TAccountEncryptedTokenAta extends string | AccountMeta<string> = string,
+  TAccountTokenVault extends string | AccountMeta<string> = string,
+  TAccountTokenVaultAta extends string | AccountMeta<string> = string,
   TAccountUserTokenAccount extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
   TAccountMxeAccount extends string | AccountMeta<string> = string,
@@ -89,9 +90,12 @@ export type UnwrapEncryptedTokensInstruction<
       TAccountEncryptedTokenAccount extends string
         ? WritableAccount<TAccountEncryptedTokenAccount>
         : TAccountEncryptedTokenAccount,
-      TAccountEncryptedTokenAta extends string
-        ? WritableAccount<TAccountEncryptedTokenAta>
-        : TAccountEncryptedTokenAta,
+      TAccountTokenVault extends string
+        ? ReadonlyAccount<TAccountTokenVault>
+        : TAccountTokenVault,
+      TAccountTokenVaultAta extends string
+        ? WritableAccount<TAccountTokenVaultAta>
+        : TAccountTokenVaultAta,
       TAccountUserTokenAccount extends string
         ? WritableAccount<TAccountUserTokenAccount>
         : TAccountUserTokenAccount,
@@ -182,7 +186,8 @@ export type UnwrapEncryptedTokensAsyncInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
   TAccountEncryptedTokenAccount extends string = string,
-  TAccountEncryptedTokenAta extends string = string,
+  TAccountTokenVault extends string = string,
+  TAccountTokenVaultAta extends string = string,
   TAccountUserTokenAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -200,8 +205,10 @@ export type UnwrapEncryptedTokensAsyncInput<
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
   encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
-  /** ATA owned by ETA PDA (source of SPL tokens for withdrawal) */
-  encryptedTokenAta?: Address<TAccountEncryptedTokenAta>;
+  /** Token vault holding all wrapped tokens */
+  tokenVault?: Address<TAccountTokenVault>;
+  /** ATA owned by TokenVault PDA (source of SPL tokens for withdrawal) */
+  tokenVaultAta?: Address<TAccountTokenVaultAta>;
   /** Signer's token account (destination for claimed tokens) */
   userTokenAccount: Address<TAccountUserTokenAccount>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
@@ -224,7 +231,8 @@ export async function getUnwrapEncryptedTokensInstructionAsync<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
   TAccountEncryptedTokenAccount extends string,
-  TAccountEncryptedTokenAta extends string,
+  TAccountTokenVault extends string,
+  TAccountTokenVaultAta extends string,
   TAccountUserTokenAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -244,7 +252,8 @@ export async function getUnwrapEncryptedTokensInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
+    TAccountTokenVault,
+    TAccountTokenVaultAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -266,7 +275,8 @@ export async function getUnwrapEncryptedTokensInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
+    TAccountTokenVault,
+    TAccountTokenVaultAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -294,10 +304,8 @@ export async function getUnwrapEncryptedTokensInstructionAsync<
       value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    encryptedTokenAta: {
-      value: input.encryptedTokenAta ?? null,
-      isWritable: true,
-    },
+    tokenVault: { value: input.tokenVault ?? null, isWritable: false },
+    tokenVaultAta: { value: input.tokenVaultAta ?? null, isWritable: true },
     userTokenAccount: {
       value: input.userTokenAccount ?? null,
       isWritable: true,
@@ -327,14 +335,22 @@ export async function getUnwrapEncryptedTokensInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.encryptedTokenAta.value) {
-    accounts.encryptedTokenAta.value = await getProgramDerivedAddress({
+  if (!accounts.tokenVault.value) {
+    accounts.tokenVault.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(
+          new Uint8Array([116, 111, 107, 101, 110, 95, 118, 97, 117, 108, 116])
+        ),
+      ],
+    });
+  }
+  if (!accounts.tokenVaultAta.value) {
+    accounts.tokenVaultAta.value = await getProgramDerivedAddress({
       programAddress:
         'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
       seeds: [
-        getAddressEncoder().encode(
-          expectAddress(accounts.encryptedTokenAccount.value)
-        ),
+        getAddressEncoder().encode(expectAddress(accounts.tokenVault.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
         getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
       ],
@@ -376,7 +392,8 @@ export async function getUnwrapEncryptedTokensInstructionAsync<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.encryptedTokenAccount),
-      getAccountMeta(accounts.encryptedTokenAta),
+      getAccountMeta(accounts.tokenVault),
+      getAccountMeta(accounts.tokenVaultAta),
       getAccountMeta(accounts.userTokenAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -400,7 +417,8 @@ export async function getUnwrapEncryptedTokensInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
+    TAccountTokenVault,
+    TAccountTokenVaultAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -421,7 +439,8 @@ export type UnwrapEncryptedTokensInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
   TAccountEncryptedTokenAccount extends string = string,
-  TAccountEncryptedTokenAta extends string = string,
+  TAccountTokenVault extends string = string,
+  TAccountTokenVaultAta extends string = string,
   TAccountUserTokenAccount extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -439,8 +458,10 @@ export type UnwrapEncryptedTokensInput<
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
   encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
-  /** ATA owned by ETA PDA (source of SPL tokens for withdrawal) */
-  encryptedTokenAta: Address<TAccountEncryptedTokenAta>;
+  /** Token vault holding all wrapped tokens */
+  tokenVault: Address<TAccountTokenVault>;
+  /** ATA owned by TokenVault PDA (source of SPL tokens for withdrawal) */
+  tokenVaultAta: Address<TAccountTokenVaultAta>;
   /** Signer's token account (destination for claimed tokens) */
   userTokenAccount: Address<TAccountUserTokenAccount>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
@@ -463,7 +484,8 @@ export function getUnwrapEncryptedTokensInstruction<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
   TAccountEncryptedTokenAccount extends string,
-  TAccountEncryptedTokenAta extends string,
+  TAccountTokenVault extends string,
+  TAccountTokenVaultAta extends string,
   TAccountUserTokenAccount extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -483,7 +505,8 @@ export function getUnwrapEncryptedTokensInstruction<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
+    TAccountTokenVault,
+    TAccountTokenVaultAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -504,7 +527,8 @@ export function getUnwrapEncryptedTokensInstruction<
   TAccountSigner,
   TAccountTokenMint,
   TAccountEncryptedTokenAccount,
-  TAccountEncryptedTokenAta,
+  TAccountTokenVault,
+  TAccountTokenVaultAta,
   TAccountUserTokenAccount,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
@@ -531,10 +555,8 @@ export function getUnwrapEncryptedTokensInstruction<
       value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    encryptedTokenAta: {
-      value: input.encryptedTokenAta ?? null,
-      isWritable: true,
-    },
+    tokenVault: { value: input.tokenVault ?? null, isWritable: false },
+    tokenVaultAta: { value: input.tokenVaultAta ?? null, isWritable: true },
     userTokenAccount: {
       value: input.userTokenAccount ?? null,
       isWritable: true,
@@ -587,7 +609,8 @@ export function getUnwrapEncryptedTokensInstruction<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.encryptedTokenAccount),
-      getAccountMeta(accounts.encryptedTokenAta),
+      getAccountMeta(accounts.tokenVault),
+      getAccountMeta(accounts.tokenVaultAta),
       getAccountMeta(accounts.userTokenAccount),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -611,7 +634,8 @@ export function getUnwrapEncryptedTokensInstruction<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
+    TAccountTokenVault,
+    TAccountTokenVaultAta,
     TAccountUserTokenAccount,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -637,22 +661,24 @@ export type ParsedUnwrapEncryptedTokensInstruction<
     signer: TAccountMetas[0];
     tokenMint: TAccountMetas[1];
     encryptedTokenAccount: TAccountMetas[2];
-    /** ATA owned by ETA PDA (source of SPL tokens for withdrawal) */
-    encryptedTokenAta: TAccountMetas[3];
+    /** Token vault holding all wrapped tokens */
+    tokenVault: TAccountMetas[3];
+    /** ATA owned by TokenVault PDA (source of SPL tokens for withdrawal) */
+    tokenVaultAta: TAccountMetas[4];
     /** Signer's token account (destination for claimed tokens) */
-    userTokenAccount: TAccountMetas[4];
-    signPdaAccount: TAccountMetas[5];
-    mxeAccount: TAccountMetas[6];
-    mempoolAccount: TAccountMetas[7];
-    executingPool: TAccountMetas[8];
-    computationAccount: TAccountMetas[9];
-    compDefAccount: TAccountMetas[10];
-    clusterAccount: TAccountMetas[11];
-    poolAccount: TAccountMetas[12];
-    clockAccount: TAccountMetas[13];
-    systemProgram: TAccountMetas[14];
-    tokenProgram: TAccountMetas[15];
-    arciumProgram: TAccountMetas[16];
+    userTokenAccount: TAccountMetas[5];
+    signPdaAccount: TAccountMetas[6];
+    mxeAccount: TAccountMetas[7];
+    mempoolAccount: TAccountMetas[8];
+    executingPool: TAccountMetas[9];
+    computationAccount: TAccountMetas[10];
+    compDefAccount: TAccountMetas[11];
+    clusterAccount: TAccountMetas[12];
+    poolAccount: TAccountMetas[13];
+    clockAccount: TAccountMetas[14];
+    systemProgram: TAccountMetas[15];
+    tokenProgram: TAccountMetas[16];
+    arciumProgram: TAccountMetas[17];
   };
   data: UnwrapEncryptedTokensInstructionData;
 };
@@ -665,7 +691,7 @@ export function parseUnwrapEncryptedTokensInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedUnwrapEncryptedTokensInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 17) {
+  if (instruction.accounts.length < 18) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -681,7 +707,8 @@ export function parseUnwrapEncryptedTokensInstruction<
       signer: getNextAccount(),
       tokenMint: getNextAccount(),
       encryptedTokenAccount: getNextAccount(),
-      encryptedTokenAta: getNextAccount(),
+      tokenVault: getNextAccount(),
+      tokenVaultAta: getNextAccount(),
       userTokenAccount: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),

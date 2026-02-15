@@ -2,6 +2,13 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
+pub struct TokenVault {
+    pub bump: u8,
+    pub fund_manager: Pubkey,
+}
+
+#[account]
+#[derive(InitSpace)]
 pub struct CentralState {
     pub bump: u8,
 

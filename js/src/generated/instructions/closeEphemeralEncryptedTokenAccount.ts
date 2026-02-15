@@ -57,11 +57,7 @@ export type CloseEphemeralEncryptedTokenAccountInstruction<
   TAccountTokenMint extends string | AccountMeta<string> = string,
   TAccountRegularEncryptedTokenAccount extends string | AccountMeta<string> =
     string,
-  TAccountRegularEncryptedTokenAta extends string | AccountMeta<string> =
-    string,
   TAccountEphemeralEncryptedTokenAccount extends string | AccountMeta<string> =
-    string,
-  TAccountEphemeralEncryptedTokenAta extends string | AccountMeta<string> =
     string,
   TAccountRentRecipient extends string | AccountMeta<string> = string,
   TAccountSignPdaAccount extends string | AccountMeta<string> = string,
@@ -95,15 +91,9 @@ export type CloseEphemeralEncryptedTokenAccountInstruction<
       TAccountRegularEncryptedTokenAccount extends string
         ? WritableAccount<TAccountRegularEncryptedTokenAccount>
         : TAccountRegularEncryptedTokenAccount,
-      TAccountRegularEncryptedTokenAta extends string
-        ? WritableAccount<TAccountRegularEncryptedTokenAta>
-        : TAccountRegularEncryptedTokenAta,
       TAccountEphemeralEncryptedTokenAccount extends string
         ? WritableAccount<TAccountEphemeralEncryptedTokenAccount>
         : TAccountEphemeralEncryptedTokenAccount,
-      TAccountEphemeralEncryptedTokenAta extends string
-        ? WritableAccount<TAccountEphemeralEncryptedTokenAta>
-        : TAccountEphemeralEncryptedTokenAta,
       TAccountRentRecipient extends string
         ? WritableAccount<TAccountRentRecipient>
         : TAccountRentRecipient,
@@ -194,9 +184,7 @@ export type CloseEphemeralEncryptedTokenAccountAsyncInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
   TAccountRegularEncryptedTokenAccount extends string = string,
-  TAccountRegularEncryptedTokenAta extends string = string,
   TAccountEphemeralEncryptedTokenAccount extends string = string,
-  TAccountEphemeralEncryptedTokenAta extends string = string,
   TAccountRentRecipient extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -214,11 +202,8 @@ export type CloseEphemeralEncryptedTokenAccountAsyncInput<
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
   regularEncryptedTokenAccount?: Address<TAccountRegularEncryptedTokenAccount>;
-  regularEncryptedTokenAta?: Address<TAccountRegularEncryptedTokenAta>;
   /** Ephemeral ETA to close (index != 0), must be owned by signer */
   ephemeralEncryptedTokenAccount?: Address<TAccountEphemeralEncryptedTokenAccount>;
-  /** ATA owned by ephemeral ETA PDA */
-  ephemeralEncryptedTokenAta?: Address<TAccountEphemeralEncryptedTokenAta>;
   rentRecipient: Address<TAccountRentRecipient>;
   signPdaAccount?: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -240,9 +225,7 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
   TAccountRegularEncryptedTokenAccount extends string,
-  TAccountRegularEncryptedTokenAta extends string,
   TAccountEphemeralEncryptedTokenAccount extends string,
-  TAccountEphemeralEncryptedTokenAta extends string,
   TAccountRentRecipient extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -262,9 +245,7 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountRegularEncryptedTokenAccount,
-    TAccountRegularEncryptedTokenAta,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
     TAccountRentRecipient,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -286,9 +267,7 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountRegularEncryptedTokenAccount,
-    TAccountRegularEncryptedTokenAta,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
     TAccountRentRecipient,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -316,16 +295,8 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
       value: input.regularEncryptedTokenAccount ?? null,
       isWritable: true,
     },
-    regularEncryptedTokenAta: {
-      value: input.regularEncryptedTokenAta ?? null,
-      isWritable: true,
-    },
     ephemeralEncryptedTokenAccount: {
       value: input.ephemeralEncryptedTokenAccount ?? null,
-      isWritable: true,
-    },
-    ephemeralEncryptedTokenAta: {
-      value: input.ephemeralEncryptedTokenAta ?? null,
       isWritable: true,
     },
     rentRecipient: { value: input.rentRecipient ?? null, isWritable: true },
@@ -371,19 +342,6 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
         ],
       });
   }
-  if (!accounts.regularEncryptedTokenAta.value) {
-    accounts.regularEncryptedTokenAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(
-          expectAddress(accounts.regularEncryptedTokenAccount.value)
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
-      ],
-    });
-  }
   if (!accounts.ephemeralEncryptedTokenAccount.value) {
     accounts.ephemeralEncryptedTokenAccount.value =
       await getProgramDerivedAddress({
@@ -400,19 +358,6 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
           getU64Encoder().encode(expectSome(args.index)),
         ],
       });
-  }
-  if (!accounts.ephemeralEncryptedTokenAta.value) {
-    accounts.ephemeralEncryptedTokenAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(
-          expectAddress(accounts.ephemeralEncryptedTokenAccount.value)
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
-      ],
-    });
   }
   if (!accounts.signPdaAccount.value) {
     accounts.signPdaAccount.value = await getProgramDerivedAddress({
@@ -450,9 +395,7 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.regularEncryptedTokenAccount),
-      getAccountMeta(accounts.regularEncryptedTokenAta),
       getAccountMeta(accounts.ephemeralEncryptedTokenAccount),
-      getAccountMeta(accounts.ephemeralEncryptedTokenAta),
       getAccountMeta(accounts.rentRecipient),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -476,9 +419,7 @@ export async function getCloseEphemeralEncryptedTokenAccountInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountRegularEncryptedTokenAccount,
-    TAccountRegularEncryptedTokenAta,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
     TAccountRentRecipient,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -499,9 +440,7 @@ export type CloseEphemeralEncryptedTokenAccountInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
   TAccountRegularEncryptedTokenAccount extends string = string,
-  TAccountRegularEncryptedTokenAta extends string = string,
   TAccountEphemeralEncryptedTokenAccount extends string = string,
-  TAccountEphemeralEncryptedTokenAta extends string = string,
   TAccountRentRecipient extends string = string,
   TAccountSignPdaAccount extends string = string,
   TAccountMxeAccount extends string = string,
@@ -519,11 +458,8 @@ export type CloseEphemeralEncryptedTokenAccountInput<
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
   regularEncryptedTokenAccount: Address<TAccountRegularEncryptedTokenAccount>;
-  regularEncryptedTokenAta: Address<TAccountRegularEncryptedTokenAta>;
   /** Ephemeral ETA to close (index != 0), must be owned by signer */
   ephemeralEncryptedTokenAccount: Address<TAccountEphemeralEncryptedTokenAccount>;
-  /** ATA owned by ephemeral ETA PDA */
-  ephemeralEncryptedTokenAta: Address<TAccountEphemeralEncryptedTokenAta>;
   rentRecipient: Address<TAccountRentRecipient>;
   signPdaAccount: Address<TAccountSignPdaAccount>;
   mxeAccount: Address<TAccountMxeAccount>;
@@ -545,9 +481,7 @@ export function getCloseEphemeralEncryptedTokenAccountInstruction<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
   TAccountRegularEncryptedTokenAccount extends string,
-  TAccountRegularEncryptedTokenAta extends string,
   TAccountEphemeralEncryptedTokenAccount extends string,
-  TAccountEphemeralEncryptedTokenAta extends string,
   TAccountRentRecipient extends string,
   TAccountSignPdaAccount extends string,
   TAccountMxeAccount extends string,
@@ -567,9 +501,7 @@ export function getCloseEphemeralEncryptedTokenAccountInstruction<
     TAccountSigner,
     TAccountTokenMint,
     TAccountRegularEncryptedTokenAccount,
-    TAccountRegularEncryptedTokenAta,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
     TAccountRentRecipient,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -590,9 +522,7 @@ export function getCloseEphemeralEncryptedTokenAccountInstruction<
   TAccountSigner,
   TAccountTokenMint,
   TAccountRegularEncryptedTokenAccount,
-  TAccountRegularEncryptedTokenAta,
   TAccountEphemeralEncryptedTokenAccount,
-  TAccountEphemeralEncryptedTokenAta,
   TAccountRentRecipient,
   TAccountSignPdaAccount,
   TAccountMxeAccount,
@@ -619,16 +549,8 @@ export function getCloseEphemeralEncryptedTokenAccountInstruction<
       value: input.regularEncryptedTokenAccount ?? null,
       isWritable: true,
     },
-    regularEncryptedTokenAta: {
-      value: input.regularEncryptedTokenAta ?? null,
-      isWritable: true,
-    },
     ephemeralEncryptedTokenAccount: {
       value: input.ephemeralEncryptedTokenAccount ?? null,
-      isWritable: true,
-    },
-    ephemeralEncryptedTokenAta: {
-      value: input.ephemeralEncryptedTokenAta ?? null,
       isWritable: true,
     },
     rentRecipient: { value: input.rentRecipient ?? null, isWritable: true },
@@ -680,9 +602,7 @@ export function getCloseEphemeralEncryptedTokenAccountInstruction<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.regularEncryptedTokenAccount),
-      getAccountMeta(accounts.regularEncryptedTokenAta),
       getAccountMeta(accounts.ephemeralEncryptedTokenAccount),
-      getAccountMeta(accounts.ephemeralEncryptedTokenAta),
       getAccountMeta(accounts.rentRecipient),
       getAccountMeta(accounts.signPdaAccount),
       getAccountMeta(accounts.mxeAccount),
@@ -706,9 +626,7 @@ export function getCloseEphemeralEncryptedTokenAccountInstruction<
     TAccountSigner,
     TAccountTokenMint,
     TAccountRegularEncryptedTokenAccount,
-    TAccountRegularEncryptedTokenAta,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
     TAccountRentRecipient,
     TAccountSignPdaAccount,
     TAccountMxeAccount,
@@ -734,24 +652,21 @@ export type ParsedCloseEphemeralEncryptedTokenAccountInstruction<
     signer: TAccountMetas[0];
     tokenMint: TAccountMetas[1];
     regularEncryptedTokenAccount: TAccountMetas[2];
-    regularEncryptedTokenAta: TAccountMetas[3];
     /** Ephemeral ETA to close (index != 0), must be owned by signer */
-    ephemeralEncryptedTokenAccount: TAccountMetas[4];
-    /** ATA owned by ephemeral ETA PDA */
-    ephemeralEncryptedTokenAta: TAccountMetas[5];
-    rentRecipient: TAccountMetas[6];
-    signPdaAccount: TAccountMetas[7];
-    mxeAccount: TAccountMetas[8];
-    mempoolAccount: TAccountMetas[9];
-    executingPool: TAccountMetas[10];
-    computationAccount: TAccountMetas[11];
-    compDefAccount: TAccountMetas[12];
-    clusterAccount: TAccountMetas[13];
-    poolAccount: TAccountMetas[14];
-    clockAccount: TAccountMetas[15];
-    systemProgram: TAccountMetas[16];
-    tokenProgram: TAccountMetas[17];
-    arciumProgram: TAccountMetas[18];
+    ephemeralEncryptedTokenAccount: TAccountMetas[3];
+    rentRecipient: TAccountMetas[4];
+    signPdaAccount: TAccountMetas[5];
+    mxeAccount: TAccountMetas[6];
+    mempoolAccount: TAccountMetas[7];
+    executingPool: TAccountMetas[8];
+    computationAccount: TAccountMetas[9];
+    compDefAccount: TAccountMetas[10];
+    clusterAccount: TAccountMetas[11];
+    poolAccount: TAccountMetas[12];
+    clockAccount: TAccountMetas[13];
+    systemProgram: TAccountMetas[14];
+    tokenProgram: TAccountMetas[15];
+    arciumProgram: TAccountMetas[16];
   };
   data: CloseEphemeralEncryptedTokenAccountInstructionData;
 };
@@ -767,7 +682,7 @@ export function parseCloseEphemeralEncryptedTokenAccountInstruction<
   TProgram,
   TAccountMetas
 > {
-  if (instruction.accounts.length < 19) {
+  if (instruction.accounts.length < 17) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -783,9 +698,7 @@ export function parseCloseEphemeralEncryptedTokenAccountInstruction<
       signer: getNextAccount(),
       tokenMint: getNextAccount(),
       regularEncryptedTokenAccount: getNextAccount(),
-      regularEncryptedTokenAta: getNextAccount(),
       ephemeralEncryptedTokenAccount: getNextAccount(),
-      ephemeralEncryptedTokenAta: getNextAccount(),
       rentRecipient: getNextAccount(),
       signPdaAccount: getNextAccount(),
       mxeAccount: getNextAccount(),

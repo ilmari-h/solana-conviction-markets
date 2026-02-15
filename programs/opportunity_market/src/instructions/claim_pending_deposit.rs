@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{
     transfer_checked, Mint, TokenAccount, TokenInterface, TransferChecked,
 };
-use crate::instructions::init_encrypted_token_account::ENCRYPTED_TOKEN_ACCOUNT_SEED;
-use crate::state::EncryptedTokenAccount;
+use crate::instructions::init_token_vault::TOKEN_VAULT_SEED;
+use crate::state::{EncryptedTokenAccount, TokenVault};
 use crate::error::ErrorCode;
 
 #[derive(Accounts)]
@@ -20,14 +20,21 @@ pub struct ClaimPendingDeposit<'info> {
     )]
     pub encrypted_token_account: Account<'info, EncryptedTokenAccount>,
 
-    /// ATA owned by ETA PDA (source of pending tokens)
+    /// Token vault holding all wrapped tokens
+    #[account(
+        seeds = [TOKEN_VAULT_SEED],
+        bump = token_vault.bump,
+    )]
+    pub token_vault: Account<'info, TokenVault>,
+
+    /// ATA owned by TokenVault PDA (source of pending tokens)
     #[account(
         mut,
         associated_token::mint = token_mint,
-        associated_token::authority = encrypted_token_account,
+        associated_token::authority = token_vault,
         associated_token::token_program = token_program,
     )]
-    pub encrypted_token_ata: InterfaceAccount<'info, TokenAccount>,
+    pub token_vault_ata: InterfaceAccount<'info, TokenAccount>,
 
     /// Signer's token account (destination for claimed tokens)
     #[account(
@@ -49,27 +56,21 @@ pub fn claim_pending_deposit(ctx: Context<ClaimPendingDeposit>) -> Result<()> {
         return Ok(());
     }
 
-    // Transfer pending tokens from ETA ATA back to signer
-    let mint_key = eta.token_mint;
-    let owner_key = eta.owner;
-    let index_bytes = eta.index.to_le_bytes();
-    let bump = eta.bump;
+    // Transfer pending tokens from TokenVault ATA back to signer
+    let vault_bump = ctx.accounts.token_vault.bump;
     let signer_seeds: &[&[&[u8]]] = &[&[
-        ENCRYPTED_TOKEN_ACCOUNT_SEED,
-        mint_key.as_ref(),
-        owner_key.as_ref(),
-        &index_bytes,
-        &[bump],
+        TOKEN_VAULT_SEED,
+        &[vault_bump],
     ]];
 
     transfer_checked(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             TransferChecked {
-                from: ctx.accounts.encrypted_token_ata.to_account_info(),
+                from: ctx.accounts.token_vault_ata.to_account_info(),
                 mint: ctx.accounts.token_mint.to_account_info(),
                 to: ctx.accounts.signer_token_account.to_account_info(),
-                authority: eta.to_account_info(),
+                authority: ctx.accounts.token_vault.to_account_info(),
             },
             signer_seeds,
         ),

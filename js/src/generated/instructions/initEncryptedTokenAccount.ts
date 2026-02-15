@@ -58,10 +58,6 @@ export type InitEncryptedTokenAccountInstruction<
   TAccountSigner extends string | AccountMeta<string> = string,
   TAccountTokenMint extends string | AccountMeta<string> = string,
   TAccountEncryptedTokenAccount extends string | AccountMeta<string> = string,
-  TAccountEncryptedTokenAta extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends string | AccountMeta<string> = string,
-  TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
-    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   TAccountSystemProgram extends string | AccountMeta<string> =
     '11111111111111111111111111111111',
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -79,15 +75,6 @@ export type InitEncryptedTokenAccountInstruction<
       TAccountEncryptedTokenAccount extends string
         ? WritableAccount<TAccountEncryptedTokenAccount>
         : TAccountEncryptedTokenAccount,
-      TAccountEncryptedTokenAta extends string
-        ? WritableAccount<TAccountEncryptedTokenAta>
-        : TAccountEncryptedTokenAta,
-      TAccountTokenProgram extends string
-        ? ReadonlyAccount<TAccountTokenProgram>
-        : TAccountTokenProgram,
-      TAccountAssociatedTokenProgram extends string
-        ? ReadonlyAccount<TAccountAssociatedTokenProgram>
-        : TAccountAssociatedTokenProgram,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -138,18 +125,11 @@ export type InitEncryptedTokenAccountAsyncInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
   TAccountEncryptedTokenAccount extends string = string,
-  TAccountEncryptedTokenAta extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
   encryptedTokenAccount?: Address<TAccountEncryptedTokenAccount>;
-  /** ATA owned by the ETA PDA, holding the actual SPL tokens */
-  encryptedTokenAta?: Address<TAccountEncryptedTokenAta>;
-  tokenProgram: Address<TAccountTokenProgram>;
-  associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   userPubkey: InitEncryptedTokenAccountInstructionDataArgs['userPubkey'];
 };
@@ -158,9 +138,6 @@ export async function getInitEncryptedTokenAccountInstructionAsync<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
   TAccountEncryptedTokenAccount extends string,
-  TAccountEncryptedTokenAta extends string,
-  TAccountTokenProgram extends string,
-  TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
@@ -168,9 +145,6 @@ export async function getInitEncryptedTokenAccountInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -180,9 +154,6 @@ export async function getInitEncryptedTokenAccountInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >
 > {
@@ -197,15 +168,6 @@ export async function getInitEncryptedTokenAccountInstructionAsync<
     encryptedTokenAccount: {
       value: input.encryptedTokenAccount ?? null,
       isWritable: true,
-    },
-    encryptedTokenAta: {
-      value: input.encryptedTokenAta ?? null,
-      isWritable: true,
-    },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    associatedTokenProgram: {
-      value: input.associatedTokenProgram ?? null,
-      isWritable: false,
     },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
@@ -234,23 +196,6 @@ export async function getInitEncryptedTokenAccountInstructionAsync<
       ],
     });
   }
-  if (!accounts.encryptedTokenAta.value) {
-    accounts.encryptedTokenAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(
-          expectAddress(accounts.encryptedTokenAccount.value)
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
-      ],
-    });
-  }
-  if (!accounts.associatedTokenProgram.value) {
-    accounts.associatedTokenProgram.value =
-      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -262,9 +207,6 @@ export async function getInitEncryptedTokenAccountInstructionAsync<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.encryptedTokenAccount),
-      getAccountMeta(accounts.encryptedTokenAta),
-      getAccountMeta(accounts.tokenProgram),
-      getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getInitEncryptedTokenAccountInstructionDataEncoder().encode(
@@ -276,9 +218,6 @@ export async function getInitEncryptedTokenAccountInstructionAsync<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
@@ -287,18 +226,11 @@ export type InitEncryptedTokenAccountInput<
   TAccountSigner extends string = string,
   TAccountTokenMint extends string = string,
   TAccountEncryptedTokenAccount extends string = string,
-  TAccountEncryptedTokenAta extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
   tokenMint: Address<TAccountTokenMint>;
   encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
-  /** ATA owned by the ETA PDA, holding the actual SPL tokens */
-  encryptedTokenAta: Address<TAccountEncryptedTokenAta>;
-  tokenProgram: Address<TAccountTokenProgram>;
-  associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   userPubkey: InitEncryptedTokenAccountInstructionDataArgs['userPubkey'];
 };
@@ -307,9 +239,6 @@ export function getInitEncryptedTokenAccountInstruction<
   TAccountSigner extends string,
   TAccountTokenMint extends string,
   TAccountEncryptedTokenAccount extends string,
-  TAccountEncryptedTokenAta extends string,
-  TAccountTokenProgram extends string,
-  TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
@@ -317,9 +246,6 @@ export function getInitEncryptedTokenAccountInstruction<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -328,9 +254,6 @@ export function getInitEncryptedTokenAccountInstruction<
   TAccountSigner,
   TAccountTokenMint,
   TAccountEncryptedTokenAccount,
-  TAccountEncryptedTokenAta,
-  TAccountTokenProgram,
-  TAccountAssociatedTokenProgram,
   TAccountSystemProgram
 > {
   // Program address.
@@ -345,15 +268,6 @@ export function getInitEncryptedTokenAccountInstruction<
       value: input.encryptedTokenAccount ?? null,
       isWritable: true,
     },
-    encryptedTokenAta: {
-      value: input.encryptedTokenAta ?? null,
-      isWritable: true,
-    },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    associatedTokenProgram: {
-      value: input.associatedTokenProgram ?? null,
-      isWritable: false,
-    },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -365,10 +279,6 @@ export function getInitEncryptedTokenAccountInstruction<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.associatedTokenProgram.value) {
-    accounts.associatedTokenProgram.value =
-      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -380,9 +290,6 @@ export function getInitEncryptedTokenAccountInstruction<
       getAccountMeta(accounts.signer),
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.encryptedTokenAccount),
-      getAccountMeta(accounts.encryptedTokenAta),
-      getAccountMeta(accounts.tokenProgram),
-      getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getInitEncryptedTokenAccountInstructionDataEncoder().encode(
@@ -394,9 +301,6 @@ export function getInitEncryptedTokenAccountInstruction<
     TAccountSigner,
     TAccountTokenMint,
     TAccountEncryptedTokenAccount,
-    TAccountEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
@@ -410,11 +314,7 @@ export type ParsedInitEncryptedTokenAccountInstruction<
     signer: TAccountMetas[0];
     tokenMint: TAccountMetas[1];
     encryptedTokenAccount: TAccountMetas[2];
-    /** ATA owned by the ETA PDA, holding the actual SPL tokens */
-    encryptedTokenAta: TAccountMetas[3];
-    tokenProgram: TAccountMetas[4];
-    associatedTokenProgram: TAccountMetas[5];
-    systemProgram: TAccountMetas[6];
+    systemProgram: TAccountMetas[3];
   };
   data: InitEncryptedTokenAccountInstructionData;
 };
@@ -427,7 +327,7 @@ export function parseInitEncryptedTokenAccountInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedInitEncryptedTokenAccountInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 4) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -443,9 +343,6 @@ export function parseInitEncryptedTokenAccountInstruction<
       signer: getNextAccount(),
       tokenMint: getNextAccount(),
       encryptedTokenAccount: getNextAccount(),
-      encryptedTokenAta: getNextAccount(),
-      tokenProgram: getNextAccount(),
-      associatedTokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
     data: getInitEncryptedTokenAccountInstructionDataDecoder().decode(

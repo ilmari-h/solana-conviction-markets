@@ -159,6 +159,13 @@ pub mod opportunity_market {
         instructions::init_encrypted_token_account(ctx, user_pubkey)
     }
 
+    pub fn init_token_vault(
+        ctx: Context<InitTokenVault>,
+        fund_manager: Pubkey,
+    ) -> Result<()> {
+        instructions::init_token_vault(ctx, fund_manager)
+    }
+
     pub fn init_ephemeral_encrypted_token_account(
         ctx: Context<InitEphemeralEncryptedTokenAccount>,
         index: u64,

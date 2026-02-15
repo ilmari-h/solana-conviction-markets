@@ -70,12 +70,6 @@ export type CloseEphemeralEncryptedTokenAccountCallbackInstruction<
   TAccountEphemeralEncryptedTokenAccount extends string | AccountMeta<string> =
     string,
   TAccountRentRecipient extends string | AccountMeta<string> = string,
-  TAccountRegularEncryptedTokenAta extends string | AccountMeta<string> =
-    string,
-  TAccountEphemeralEncryptedTokenAta extends string | AccountMeta<string> =
-    string,
-  TAccountTokenMint extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -108,18 +102,6 @@ export type CloseEphemeralEncryptedTokenAccountCallbackInstruction<
       TAccountRentRecipient extends string
         ? WritableAccount<TAccountRentRecipient>
         : TAccountRentRecipient,
-      TAccountRegularEncryptedTokenAta extends string
-        ? WritableAccount<TAccountRegularEncryptedTokenAta>
-        : TAccountRegularEncryptedTokenAta,
-      TAccountEphemeralEncryptedTokenAta extends string
-        ? WritableAccount<TAccountEphemeralEncryptedTokenAta>
-        : TAccountEphemeralEncryptedTokenAta,
-      TAccountTokenMint extends string
-        ? ReadonlyAccount<TAccountTokenMint>
-        : TAccountTokenMint,
-      TAccountTokenProgram extends string
-        ? ReadonlyAccount<TAccountTokenProgram>
-        : TAccountTokenProgram,
       ...TRemainingAccounts,
     ]
   >;
@@ -254,10 +236,6 @@ export type CloseEphemeralEncryptedTokenAccountCallbackInput<
   TAccountRegularEncryptedTokenAccount extends string = string,
   TAccountEphemeralEncryptedTokenAccount extends string = string,
   TAccountRentRecipient extends string = string,
-  TAccountRegularEncryptedTokenAta extends string = string,
-  TAccountEphemeralEncryptedTokenAta extends string = string,
-  TAccountTokenMint extends string = string,
-  TAccountTokenProgram extends string = string,
 > = {
   arciumProgram?: Address<TAccountArciumProgram>;
   compDefAccount: Address<TAccountCompDefAccount>;
@@ -268,14 +246,6 @@ export type CloseEphemeralEncryptedTokenAccountCallbackInput<
   regularEncryptedTokenAccount: Address<TAccountRegularEncryptedTokenAccount>;
   ephemeralEncryptedTokenAccount: Address<TAccountEphemeralEncryptedTokenAccount>;
   rentRecipient: Address<TAccountRentRecipient>;
-  /** Regular ETA's ATA (destination for any SPL tokens) */
-  regularEncryptedTokenAta: Address<TAccountRegularEncryptedTokenAta>;
-  /** Ephemeral ETA's ATA (source of any SPL tokens, will be closed) */
-  ephemeralEncryptedTokenAta: Address<TAccountEphemeralEncryptedTokenAta>;
-  /** Token mint for transfer_checked */
-  tokenMint: Address<TAccountTokenMint>;
-  /** Token program for CPI */
-  tokenProgram: Address<TAccountTokenProgram>;
   output: CloseEphemeralEncryptedTokenAccountCallbackInstructionDataArgs['output'];
 };
 
@@ -289,10 +259,6 @@ export function getCloseEphemeralEncryptedTokenAccountCallbackInstruction<
   TAccountRegularEncryptedTokenAccount extends string,
   TAccountEphemeralEncryptedTokenAccount extends string,
   TAccountRentRecipient extends string,
-  TAccountRegularEncryptedTokenAta extends string,
-  TAccountEphemeralEncryptedTokenAta extends string,
-  TAccountTokenMint extends string,
-  TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
   input: CloseEphemeralEncryptedTokenAccountCallbackInput<
@@ -304,11 +270,7 @@ export function getCloseEphemeralEncryptedTokenAccountCallbackInstruction<
     TAccountInstructionsSysvar,
     TAccountRegularEncryptedTokenAccount,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountRentRecipient,
-    TAccountRegularEncryptedTokenAta,
-    TAccountEphemeralEncryptedTokenAta,
-    TAccountTokenMint,
-    TAccountTokenProgram
+    TAccountRentRecipient
   >,
   config?: { programAddress?: TProgramAddress }
 ): CloseEphemeralEncryptedTokenAccountCallbackInstruction<
@@ -321,11 +283,7 @@ export function getCloseEphemeralEncryptedTokenAccountCallbackInstruction<
   TAccountInstructionsSysvar,
   TAccountRegularEncryptedTokenAccount,
   TAccountEphemeralEncryptedTokenAccount,
-  TAccountRentRecipient,
-  TAccountRegularEncryptedTokenAta,
-  TAccountEphemeralEncryptedTokenAta,
-  TAccountTokenMint,
-  TAccountTokenProgram
+  TAccountRentRecipient
 > {
   // Program address.
   const programAddress =
@@ -354,16 +312,6 @@ export function getCloseEphemeralEncryptedTokenAccountCallbackInstruction<
       isWritable: true,
     },
     rentRecipient: { value: input.rentRecipient ?? null, isWritable: true },
-    regularEncryptedTokenAta: {
-      value: input.regularEncryptedTokenAta ?? null,
-      isWritable: true,
-    },
-    ephemeralEncryptedTokenAta: {
-      value: input.ephemeralEncryptedTokenAta ?? null,
-      isWritable: true,
-    },
-    tokenMint: { value: input.tokenMint ?? null, isWritable: false },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -395,10 +343,6 @@ export function getCloseEphemeralEncryptedTokenAccountCallbackInstruction<
       getAccountMeta(accounts.regularEncryptedTokenAccount),
       getAccountMeta(accounts.ephemeralEncryptedTokenAccount),
       getAccountMeta(accounts.rentRecipient),
-      getAccountMeta(accounts.regularEncryptedTokenAta),
-      getAccountMeta(accounts.ephemeralEncryptedTokenAta),
-      getAccountMeta(accounts.tokenMint),
-      getAccountMeta(accounts.tokenProgram),
     ],
     data: getCloseEphemeralEncryptedTokenAccountCallbackInstructionDataEncoder().encode(
       args as CloseEphemeralEncryptedTokenAccountCallbackInstructionDataArgs
@@ -414,11 +358,7 @@ export function getCloseEphemeralEncryptedTokenAccountCallbackInstruction<
     TAccountInstructionsSysvar,
     TAccountRegularEncryptedTokenAccount,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountRentRecipient,
-    TAccountRegularEncryptedTokenAta,
-    TAccountEphemeralEncryptedTokenAta,
-    TAccountTokenMint,
-    TAccountTokenProgram
+    TAccountRentRecipient
   >);
 }
 
@@ -437,14 +377,6 @@ export type ParsedCloseEphemeralEncryptedTokenAccountCallbackInstruction<
     regularEncryptedTokenAccount: TAccountMetas[6];
     ephemeralEncryptedTokenAccount: TAccountMetas[7];
     rentRecipient: TAccountMetas[8];
-    /** Regular ETA's ATA (destination for any SPL tokens) */
-    regularEncryptedTokenAta: TAccountMetas[9];
-    /** Ephemeral ETA's ATA (source of any SPL tokens, will be closed) */
-    ephemeralEncryptedTokenAta: TAccountMetas[10];
-    /** Token mint for transfer_checked */
-    tokenMint: TAccountMetas[11];
-    /** Token program for CPI */
-    tokenProgram: TAccountMetas[12];
   };
   data: CloseEphemeralEncryptedTokenAccountCallbackInstructionData;
 };
@@ -460,7 +392,7 @@ export function parseCloseEphemeralEncryptedTokenAccountCallbackInstruction<
   TProgram,
   TAccountMetas
 > {
-  if (instruction.accounts.length < 13) {
+  if (instruction.accounts.length < 9) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -482,10 +414,6 @@ export function parseCloseEphemeralEncryptedTokenAccountCallbackInstruction<
       regularEncryptedTokenAccount: getNextAccount(),
       ephemeralEncryptedTokenAccount: getNextAccount(),
       rentRecipient: getNextAccount(),
-      regularEncryptedTokenAta: getNextAccount(),
-      ephemeralEncryptedTokenAta: getNextAccount(),
-      tokenMint: getNextAccount(),
-      tokenProgram: getNextAccount(),
     },
     data: getCloseEphemeralEncryptedTokenAccountCallbackInstructionDataDecoder().decode(
       instruction.data

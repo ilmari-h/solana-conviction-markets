@@ -8,6 +8,7 @@ import {
   generateKeyPairSigner,
   lamports,
   sendAndConfirmTransactionFactory,
+  type Address,
 } from "@solana/kit";
 import { TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
 import {
@@ -21,10 +22,12 @@ import {
   fetchEncryptedTokenAccount,
   getEncryptedTokenAccountAddress,
   getEphemeralEncryptedTokenAccountAddress,
+  getTokenVaultAddress,
+  initTokenVault,
 } from "../js/src";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sendTransaction } from "./utils/transaction";
-import { createMintAndFundAccount } from "./utils/spl-token";
+import { createMintAndFundAccount, createAta } from "./utils/spl-token";
 import { nonceToBytes } from "./utils/nonce";
 import { getArciumEnv, getMXEPublicKey } from "@arcium-hq/client";
 import { OpportunityMarket } from "../target/types/opportunity_market";
@@ -49,12 +52,47 @@ describe("Encrypted Token Account (SPL)", () => {
   const sendAndConfirm = sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions });
 
   let mxePublicKey: Uint8Array;
+  let tokenVaultAddress: Address;
+
+  /**
+   * Creates an ATA for the token vault for a given mint.
+   */
+  async function createTokenVaultAta(
+    payer: Awaited<ReturnType<typeof generateKeyPairSigner>>,
+    mint: Address,
+  ): Promise<Address> {
+    return createAta(rpc, sendAndConfirm, payer, mint, tokenVaultAddress);
+  }
 
   before(async () => {
     const file = fs.readFileSync(`${os.homedir()}/.config/solana/id.json`);
     const secretKey = new Uint8Array(JSON.parse(file.toString()));
     await initializeAllCompDefs(rpc, sendAndConfirm, secretKey, programId);
     mxePublicKey = await getMXEPublicKey(provider, program.programId);
+
+    // Initialize token vault (global, once)
+    [tokenVaultAddress] = await getTokenVaultAddress(programId);
+
+    // Check if token vault already exists
+    const tokenVaultAccount = await rpc.getAccountInfo(tokenVaultAddress).send();
+    if (!tokenVaultAccount.value) {
+      // Create a payer signer for initialization
+      const payer = await generateKeyPairSigner();
+      await airdrop({
+        recipientAddress: payer.address,
+        lamports: lamports(1_000_000_000n),
+        commitment: "confirmed",
+      });
+
+      const initVaultIx = await initTokenVault({
+        payer,
+        fundManager: payer.address,
+      });
+
+      await sendTransaction(rpc, sendAndConfirm, payer, [initVaultIx], {
+        label: "initTokenVault",
+      });
+    }
   });
 
   /**
@@ -97,7 +135,6 @@ describe("Encrypted Token Account (SPL)", () => {
     const initEtaIx = await initEncryptedTokenAccount({
       signer: user,
       tokenMint: mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
       userPubkey: keypair.publicKey,
     });
 
@@ -113,7 +150,10 @@ describe("Encrypted Token Account (SPL)", () => {
     // Means not initialized
     expect(etaAccount.data.stateNonce).to.equal(0n);
 
-    // Wrap encrypted tokens (transfers SPL tokens from user ATA -> ETA's ATA, updates encrypted balance)
+    // Create token vault ATA for this mint before wrapping
+    await createTokenVaultAta(user, mint.address);
+
+    // Wrap encrypted tokens (transfers SPL tokens from user ATA -> token vault ATA, updates encrypted balance)
     const wrapAmount = 50_000_000n;
     const wrapOffset = randomComputationOffset();
 
@@ -204,7 +244,6 @@ describe("Encrypted Token Account (SPL)", () => {
     const initEtaIx = await initEncryptedTokenAccount({
       signer: owner,
       tokenMint: mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
       userPubkey: keypair.publicKey,
     });
 
@@ -218,7 +257,6 @@ describe("Encrypted Token Account (SPL)", () => {
       signer: payer,
       owner: owner.address,
       tokenMint: mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
       index: ephemeralIndex,
     });
 
@@ -236,6 +274,9 @@ describe("Encrypted Token Account (SPL)", () => {
     const ephemeralEta = await fetchEncryptedTokenAccount(rpc, ephemeralEtaAddress);
     expect(ephemeralEta.data.owner).to.equal(owner.address);
     expect(ephemeralEta.data.tokenMint).to.equal(mint.address);
+
+    // Create token vault ATA for this mint before wrapping
+    await createTokenVaultAta(owner, mint.address);
 
     // Owner wraps tokens to their ephemeral ETA
     const wrapAmount = 50_000_000n;
@@ -318,7 +359,6 @@ describe("Encrypted Token Account (SPL)", () => {
       signer: payer,
       owner: owner.address,
       tokenMint: mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
       index: ephemeralIndex,
     });
 
@@ -364,7 +404,6 @@ describe("Encrypted Token Account (SPL)", () => {
     const initEtaIx = await initEncryptedTokenAccount({
       signer: userA,
       tokenMint: mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
       userPubkey: keypair.publicKey,
     });
 
@@ -380,7 +419,6 @@ describe("Encrypted Token Account (SPL)", () => {
       signer: userB,
       owner: userA.address,
       tokenMint: mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
       index: ephemeralIndex,
     });
 
@@ -402,6 +440,9 @@ describe("Encrypted Token Account (SPL)", () => {
       ephemeralIndex,
       programId,
     );
+
+    // Create token vault ATA for this mint before wrapping
+    await createTokenVaultAta(userA, mint.address);
 
     // User A wraps tokens into BOTH ETAs
     const wrapAmountRegular = 30_000_000n;
@@ -482,9 +523,8 @@ describe("Encrypted Token Account (SPL)", () => {
     const regularBalanceAfter = await decryptEtaBalance(regularEtaAddress, keypair.secretKey);
     expect(regularBalanceAfter).to.equal(wrapAmountRegular + wrapAmountEphemeral);
 
-    //Verify user B received the rent lamports back
+    // Verify user B received the rent lamports back
     const userBBalanceAfterClose = await rpc.getBalance(userB.address).send();
-    // User B's balance should have increased (rent refunded)
     expect(userBBalanceAfterClose.value > userBBalanceAfterCreate.value).to.be.true;
 
     // Verify ephemeral ETA no longer exists
