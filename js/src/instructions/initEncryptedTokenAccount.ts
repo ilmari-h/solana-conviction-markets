@@ -9,7 +9,6 @@ export interface InitEncryptedTokenAccountParams {
   /** The signer/payer for the transaction */
   signer: TransactionSigner;
   tokenMint: Address;
-  tokenProgram: Address;
   /** User's x25519 public key (32 bytes) for encryption */
   userPubkey: ByteArray;
 }
@@ -17,12 +16,11 @@ export interface InitEncryptedTokenAccountParams {
 export async function initEncryptedTokenAccount(
   input: InitEncryptedTokenAccountParams
 ): Promise<InitEncryptedTokenAccountInstruction> {
-  const { signer, tokenMint, tokenProgram, userPubkey } = input;
+  const { signer, tokenMint, userPubkey } = input;
 
   return getInitEncryptedTokenAccountInstructionAsync({
     signer,
     tokenMint,
-    tokenProgram,
     userPubkey: toNumberArray(userPubkey),
   });
 }

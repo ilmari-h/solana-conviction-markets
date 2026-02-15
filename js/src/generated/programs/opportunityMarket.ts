@@ -31,6 +31,7 @@ import {
   type ParsedInitEncryptedTokenAccountInstruction,
   type ParsedInitEphemeralEncryptedTokenAccountInstruction,
   type ParsedInitShareAccountInstruction,
+  type ParsedInitTokenVaultInstruction,
   type ParsedOpenMarketInstruction,
   type ParsedRevealSharesCallbackInstruction,
   type ParsedRevealSharesCompDefInstruction,
@@ -65,6 +66,7 @@ export enum OpportunityMarketAccount {
   OpportunityMarket,
   OpportunityMarketOption,
   ShareAccount,
+  TokenVault,
 }
 
 export function identifyOpportunityMarketAccount(
@@ -192,6 +194,17 @@ export function identifyOpportunityMarketAccount(
   ) {
     return OpportunityMarketAccount.ShareAccount;
   }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([121, 7, 84, 254, 151, 228, 43, 144])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketAccount.TokenVault;
+  }
   throw new Error(
     'The provided account could not be identified as a opportunityMarket account.'
   );
@@ -215,6 +228,7 @@ export enum OpportunityMarketInstruction {
   InitEncryptedTokenAccount,
   InitEphemeralEncryptedTokenAccount,
   InitShareAccount,
+  InitTokenVault,
   OpenMarket,
   RevealShares,
   RevealSharesCallback,
@@ -424,6 +438,17 @@ export function identifyOpportunityMarketInstruction(
     )
   ) {
     return OpportunityMarketInstruction.InitShareAccount;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([203, 26, 194, 169, 252, 226, 179, 180])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.InitTokenVault;
   }
   if (
     containsBytes(
@@ -671,6 +696,9 @@ export type ParsedOpportunityMarketInstruction<
   | ({
       instructionType: OpportunityMarketInstruction.InitShareAccount;
     } & ParsedInitShareAccountInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.InitTokenVault;
+    } & ParsedInitTokenVaultInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.OpenMarket;
     } & ParsedOpenMarketInstruction<TProgram>)

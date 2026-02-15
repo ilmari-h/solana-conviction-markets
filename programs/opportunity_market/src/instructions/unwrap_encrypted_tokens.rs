@@ -7,8 +7,8 @@ use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
 use crate::events::EncryptedTokensUnwrappedError;
-use crate::instructions::init_encrypted_token_account::ENCRYPTED_TOKEN_ACCOUNT_SEED;
-use crate::state::EncryptedTokenAccount;
+use crate::instructions::init_token_vault::TOKEN_VAULT_SEED;
+use crate::state::{EncryptedTokenAccount, TokenVault};
 
 use crate::COMP_DEF_OFFSET_UNWRAP_ENCRYPTED_TOKENS;
 use crate::{ID, ID_CONST, ArciumSignerAccount};
@@ -30,14 +30,21 @@ pub struct UnwrapEncryptedTokens<'info> {
     )]
     pub encrypted_token_account: Box<Account<'info, EncryptedTokenAccount>>,
 
-    /// ATA owned by ETA PDA (source of SPL tokens for withdrawal)
+    /// Token vault holding all wrapped tokens
+    #[account(
+        seeds = [TOKEN_VAULT_SEED],
+        bump = token_vault.bump,
+    )]
+    pub token_vault: Box<Account<'info, TokenVault>>,
+
+    /// ATA owned by TokenVault PDA (source of SPL tokens for withdrawal)
     #[account(
         mut,
         associated_token::mint = token_mint,
-        associated_token::authority = encrypted_token_account,
+        associated_token::authority = token_vault,
         associated_token::token_program = token_program,
     )]
-    pub encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub token_vault_ata: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// Signer's token account (destination for claimed tokens)
     #[account(
@@ -121,7 +128,11 @@ pub fn unwrap_encrypted_tokens(
                     is_writable: true,
                 },
                 CallbackAccount {
-                    pubkey: ctx.accounts.encrypted_token_ata.key(),
+                    pubkey: ctx.accounts.token_vault.key(),
+                    is_writable: false,
+                },
+                CallbackAccount {
+                    pubkey: ctx.accounts.token_vault_ata.key(),
                     is_writable: true,
                 },
                 CallbackAccount {
@@ -165,9 +176,12 @@ pub struct UnwrapEncryptedTokensCallback<'info> {
     #[account(mut)]
     pub user_token_account: InterfaceAccount<'info, TokenAccount>,
 
-    /// ETA's ATA holding SPL tokens (source for withdrawal)
+    /// Token vault holding all wrapped tokens
+    pub token_vault: Account<'info, TokenVault>,
+
+    /// TokenVault's ATA holding SPL tokens (source for withdrawal)
     #[account(mut)]
-    pub encrypted_token_ata: InterfaceAccount<'info, TokenAccount>,
+    pub token_vault_ata: InterfaceAccount<'info, TokenAccount>,
 
     /// Token mint for transfer_checked
     pub token_mint: InterfaceAccount<'info, Mint>,
@@ -212,28 +226,22 @@ pub fn unwrap_encrypted_tokens_callback(
     let amount_sold = res.field_1;
     let encrypted_balance = res.field_2;
 
-    // If tokens were sold, transfer SPL tokens from ETA's ATA to user's token account
+    // If tokens were sold, transfer SPL tokens from TokenVault's ATA to user's token account
     if amount_sold > 0 {
-        let mint_key = eta.token_mint;
-        let owner_key = eta.owner;
-        let index_bytes = eta.index.to_le_bytes();
-        let bump = eta.bump;
+        let vault_bump = ctx.accounts.token_vault.bump;
         let signer_seeds: &[&[&[u8]]] = &[&[
-            ENCRYPTED_TOKEN_ACCOUNT_SEED,
-            mint_key.as_ref(),
-            owner_key.as_ref(),
-            &index_bytes,
-            &[bump],
+            TOKEN_VAULT_SEED,
+            &[vault_bump],
         ]];
 
         transfer_checked(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 TransferChecked {
-                    from: ctx.accounts.encrypted_token_ata.to_account_info(),
+                    from: ctx.accounts.token_vault_ata.to_account_info(),
                     mint: ctx.accounts.token_mint.to_account_info(),
                     to: ctx.accounts.user_token_account.to_account_info(),
-                    authority: eta.to_account_info(),
+                    authority: ctx.accounts.token_vault.to_account_info(),
                 },
                 signer_seeds,
             ),

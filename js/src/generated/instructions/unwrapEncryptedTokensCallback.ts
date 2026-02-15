@@ -68,7 +68,8 @@ export type UnwrapEncryptedTokensCallbackInstruction<
     'Sysvar1nstructions1111111111111111111111111',
   TAccountEncryptedTokenAccount extends string | AccountMeta<string> = string,
   TAccountUserTokenAccount extends string | AccountMeta<string> = string,
-  TAccountEncryptedTokenAta extends string | AccountMeta<string> = string,
+  TAccountTokenVault extends string | AccountMeta<string> = string,
+  TAccountTokenVaultAta extends string | AccountMeta<string> = string,
   TAccountTokenMint extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> = string,
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -100,9 +101,12 @@ export type UnwrapEncryptedTokensCallbackInstruction<
       TAccountUserTokenAccount extends string
         ? WritableAccount<TAccountUserTokenAccount>
         : TAccountUserTokenAccount,
-      TAccountEncryptedTokenAta extends string
-        ? WritableAccount<TAccountEncryptedTokenAta>
-        : TAccountEncryptedTokenAta,
+      TAccountTokenVault extends string
+        ? ReadonlyAccount<TAccountTokenVault>
+        : TAccountTokenVault,
+      TAccountTokenVaultAta extends string
+        ? WritableAccount<TAccountTokenVaultAta>
+        : TAccountTokenVaultAta,
       TAccountTokenMint extends string
         ? ReadonlyAccount<TAccountTokenMint>
         : TAccountTokenMint,
@@ -231,7 +235,8 @@ export type UnwrapEncryptedTokensCallbackInput<
   TAccountInstructionsSysvar extends string = string,
   TAccountEncryptedTokenAccount extends string = string,
   TAccountUserTokenAccount extends string = string,
-  TAccountEncryptedTokenAta extends string = string,
+  TAccountTokenVault extends string = string,
+  TAccountTokenVaultAta extends string = string,
   TAccountTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
@@ -244,8 +249,10 @@ export type UnwrapEncryptedTokensCallbackInput<
   encryptedTokenAccount: Address<TAccountEncryptedTokenAccount>;
   /** User's token account to receive claimed SPL tokens */
   userTokenAccount: Address<TAccountUserTokenAccount>;
-  /** ETA's ATA holding SPL tokens (source for withdrawal) */
-  encryptedTokenAta: Address<TAccountEncryptedTokenAta>;
+  /** Token vault holding all wrapped tokens */
+  tokenVault: Address<TAccountTokenVault>;
+  /** TokenVault's ATA holding SPL tokens (source for withdrawal) */
+  tokenVaultAta: Address<TAccountTokenVaultAta>;
   /** Token mint for transfer_checked */
   tokenMint: Address<TAccountTokenMint>;
   /** Token program for CPI */
@@ -262,7 +269,8 @@ export function getUnwrapEncryptedTokensCallbackInstruction<
   TAccountInstructionsSysvar extends string,
   TAccountEncryptedTokenAccount extends string,
   TAccountUserTokenAccount extends string,
-  TAccountEncryptedTokenAta extends string,
+  TAccountTokenVault extends string,
+  TAccountTokenVaultAta extends string,
   TAccountTokenMint extends string,
   TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
@@ -276,7 +284,8 @@ export function getUnwrapEncryptedTokensCallbackInstruction<
     TAccountInstructionsSysvar,
     TAccountEncryptedTokenAccount,
     TAccountUserTokenAccount,
-    TAccountEncryptedTokenAta,
+    TAccountTokenVault,
+    TAccountTokenVaultAta,
     TAccountTokenMint,
     TAccountTokenProgram
   >,
@@ -291,7 +300,8 @@ export function getUnwrapEncryptedTokensCallbackInstruction<
   TAccountInstructionsSysvar,
   TAccountEncryptedTokenAccount,
   TAccountUserTokenAccount,
-  TAccountEncryptedTokenAta,
+  TAccountTokenVault,
+  TAccountTokenVaultAta,
   TAccountTokenMint,
   TAccountTokenProgram
 > {
@@ -321,10 +331,8 @@ export function getUnwrapEncryptedTokensCallbackInstruction<
       value: input.userTokenAccount ?? null,
       isWritable: true,
     },
-    encryptedTokenAta: {
-      value: input.encryptedTokenAta ?? null,
-      isWritable: true,
-    },
+    tokenVault: { value: input.tokenVault ?? null, isWritable: false },
+    tokenVaultAta: { value: input.tokenVaultAta ?? null, isWritable: true },
     tokenMint: { value: input.tokenMint ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
@@ -357,7 +365,8 @@ export function getUnwrapEncryptedTokensCallbackInstruction<
       getAccountMeta(accounts.instructionsSysvar),
       getAccountMeta(accounts.encryptedTokenAccount),
       getAccountMeta(accounts.userTokenAccount),
-      getAccountMeta(accounts.encryptedTokenAta),
+      getAccountMeta(accounts.tokenVault),
+      getAccountMeta(accounts.tokenVaultAta),
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.tokenProgram),
     ],
@@ -375,7 +384,8 @@ export function getUnwrapEncryptedTokensCallbackInstruction<
     TAccountInstructionsSysvar,
     TAccountEncryptedTokenAccount,
     TAccountUserTokenAccount,
-    TAccountEncryptedTokenAta,
+    TAccountTokenVault,
+    TAccountTokenVaultAta,
     TAccountTokenMint,
     TAccountTokenProgram
   >);
@@ -396,12 +406,14 @@ export type ParsedUnwrapEncryptedTokensCallbackInstruction<
     encryptedTokenAccount: TAccountMetas[6];
     /** User's token account to receive claimed SPL tokens */
     userTokenAccount: TAccountMetas[7];
-    /** ETA's ATA holding SPL tokens (source for withdrawal) */
-    encryptedTokenAta: TAccountMetas[8];
+    /** Token vault holding all wrapped tokens */
+    tokenVault: TAccountMetas[8];
+    /** TokenVault's ATA holding SPL tokens (source for withdrawal) */
+    tokenVaultAta: TAccountMetas[9];
     /** Token mint for transfer_checked */
-    tokenMint: TAccountMetas[9];
+    tokenMint: TAccountMetas[10];
     /** Token program for CPI */
-    tokenProgram: TAccountMetas[10];
+    tokenProgram: TAccountMetas[11];
   };
   data: UnwrapEncryptedTokensCallbackInstructionData;
 };
@@ -414,7 +426,7 @@ export function parseUnwrapEncryptedTokensCallbackInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>
 ): ParsedUnwrapEncryptedTokensCallbackInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 11) {
+  if (instruction.accounts.length < 12) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -435,7 +447,8 @@ export function parseUnwrapEncryptedTokensCallbackInstruction<
       instructionsSysvar: getNextAccount(),
       encryptedTokenAccount: getNextAccount(),
       userTokenAccount: getNextAccount(),
-      encryptedTokenAta: getNextAccount(),
+      tokenVault: getNextAccount(),
+      tokenVaultAta: getNextAccount(),
       tokenMint: getNextAccount(),
       tokenProgram: getNextAccount(),
     },

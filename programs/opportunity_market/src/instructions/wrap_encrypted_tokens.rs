@@ -6,7 +6,8 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::state::EncryptedTokenAccount;
+use crate::state::{EncryptedTokenAccount, TokenVault};
+use crate::instructions::init_token_vault::TOKEN_VAULT_SEED;
 use crate::COMP_DEF_OFFSET_WRAP_ENCRYPTED_TOKENS;
 use crate::{ArciumSignerAccount, ID, ID_CONST};
 
@@ -36,14 +37,21 @@ pub struct WrapEncryptedTokens<'info> {
     )]
     pub signer_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    /// ATA owned by the ETA PDA (destination of SPL tokens)
+    /// Token vault holding all wrapped tokens
+    #[account(
+        seeds = [TOKEN_VAULT_SEED],
+        bump = token_vault.bump,
+    )]
+    pub token_vault: Box<Account<'info, TokenVault>>,
+
+    /// ATA owned by the TokenVault PDA (destination of SPL tokens)
     #[account(
         mut,
         associated_token::mint = token_mint,
-        associated_token::authority = encrypted_token_account,
+        associated_token::authority = token_vault,
         associated_token::token_program = token_program,
     )]
-    pub encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub token_vault_ata: Box<InterfaceAccount<'info, TokenAccount>>,
 
     // Arcium accounts
     #[account(
@@ -88,14 +96,14 @@ pub fn wrap_encrypted_tokens(
     let user_pubkey = eta.user_pubkey;
     let eta_pubkey = eta.key();
 
-    // Transfer SPL tokens from signer's token account to ETA's ATA
+    // Transfer SPL tokens from signer's token account to TokenVault's ATA
     transfer_checked(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             TransferChecked {
                 from: ctx.accounts.signer_token_account.to_account_info(),
                 mint: ctx.accounts.token_mint.to_account_info(),
-                to: ctx.accounts.encrypted_token_ata.to_account_info(),
+                to: ctx.accounts.token_vault_ata.to_account_info(),
                 authority: ctx.accounts.signer.to_account_info(),
             },
         ),

@@ -10,7 +10,6 @@ export interface InitEphemeralEncryptedTokenAccountParams {
   /** The owner of the ETA (does not need to sign) */
   owner: Address;
   tokenMint: Address;
-  tokenProgram: Address;
   /** The index for the ephemeral ETA (must be non-zero) */
   index: bigint;
 }
@@ -18,13 +17,12 @@ export interface InitEphemeralEncryptedTokenAccountParams {
 export async function initEphemeralEncryptedTokenAccount(
   input: InitEphemeralEncryptedTokenAccountParams
 ): Promise<InitEphemeralEncryptedTokenAccountInstruction> {
-  const { signer, owner, tokenMint, tokenProgram, index } = input;
+  const { signer, owner, tokenMint, index } = input;
 
   return getInitEphemeralEncryptedTokenAccountInstructionAsync({
     signer,
     owner,
     tokenMint,
-    tokenProgram,
     index,
   });
 }

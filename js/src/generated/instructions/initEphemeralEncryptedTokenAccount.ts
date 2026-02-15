@@ -60,11 +60,6 @@ export type InitEphemeralEncryptedTokenAccountInstruction<
     string,
   TAccountEphemeralEncryptedTokenAccount extends string | AccountMeta<string> =
     string,
-  TAccountEphemeralEncryptedTokenAta extends string | AccountMeta<string> =
-    string,
-  TAccountTokenProgram extends string | AccountMeta<string> = string,
-  TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
-    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   TAccountSystemProgram extends string | AccountMeta<string> =
     '11111111111111111111111111111111',
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -88,15 +83,6 @@ export type InitEphemeralEncryptedTokenAccountInstruction<
       TAccountEphemeralEncryptedTokenAccount extends string
         ? WritableAccount<TAccountEphemeralEncryptedTokenAccount>
         : TAccountEphemeralEncryptedTokenAccount,
-      TAccountEphemeralEncryptedTokenAta extends string
-        ? WritableAccount<TAccountEphemeralEncryptedTokenAta>
-        : TAccountEphemeralEncryptedTokenAta,
-      TAccountTokenProgram extends string
-        ? ReadonlyAccount<TAccountTokenProgram>
-        : TAccountTokenProgram,
-      TAccountAssociatedTokenProgram extends string
-        ? ReadonlyAccount<TAccountAssociatedTokenProgram>
-        : TAccountAssociatedTokenProgram,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -149,9 +135,6 @@ export type InitEphemeralEncryptedTokenAccountAsyncInput<
   TAccountTokenMint extends string = string,
   TAccountSourceEncryptedTokenAccount extends string = string,
   TAccountEphemeralEncryptedTokenAccount extends string = string,
-  TAccountEphemeralEncryptedTokenAta extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
@@ -161,10 +144,6 @@ export type InitEphemeralEncryptedTokenAccountAsyncInput<
   sourceEncryptedTokenAccount?: Address<TAccountSourceEncryptedTokenAccount>;
   /** New ephemeral ETA - derived with index in seed */
   ephemeralEncryptedTokenAccount?: Address<TAccountEphemeralEncryptedTokenAccount>;
-  /** ATA owned by the ephemeral ETA PDA */
-  ephemeralEncryptedTokenAta?: Address<TAccountEphemeralEncryptedTokenAta>;
-  tokenProgram: Address<TAccountTokenProgram>;
-  associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   index: InitEphemeralEncryptedTokenAccountInstructionDataArgs['index'];
 };
@@ -175,9 +154,6 @@ export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
   TAccountTokenMint extends string,
   TAccountSourceEncryptedTokenAccount extends string,
   TAccountEphemeralEncryptedTokenAccount extends string,
-  TAccountEphemeralEncryptedTokenAta extends string,
-  TAccountTokenProgram extends string,
-  TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
@@ -187,9 +163,6 @@ export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
     TAccountTokenMint,
     TAccountSourceEncryptedTokenAccount,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -201,9 +174,6 @@ export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
     TAccountTokenMint,
     TAccountSourceEncryptedTokenAccount,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >
 > {
@@ -223,15 +193,6 @@ export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
     ephemeralEncryptedTokenAccount: {
       value: input.ephemeralEncryptedTokenAccount ?? null,
       isWritable: true,
-    },
-    ephemeralEncryptedTokenAta: {
-      value: input.ephemeralEncryptedTokenAta ?? null,
-      isWritable: true,
-    },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    associatedTokenProgram: {
-      value: input.associatedTokenProgram ?? null,
-      isWritable: false,
     },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
@@ -279,23 +240,6 @@ export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
         ],
       });
   }
-  if (!accounts.ephemeralEncryptedTokenAta.value) {
-    accounts.ephemeralEncryptedTokenAta.value = await getProgramDerivedAddress({
-      programAddress:
-        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>,
-      seeds: [
-        getAddressEncoder().encode(
-          expectAddress(accounts.ephemeralEncryptedTokenAccount.value)
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.tokenProgram.value)),
-        getAddressEncoder().encode(expectAddress(accounts.tokenMint.value)),
-      ],
-    });
-  }
-  if (!accounts.associatedTokenProgram.value) {
-    accounts.associatedTokenProgram.value =
-      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -309,9 +253,6 @@ export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.sourceEncryptedTokenAccount),
       getAccountMeta(accounts.ephemeralEncryptedTokenAccount),
-      getAccountMeta(accounts.ephemeralEncryptedTokenAta),
-      getAccountMeta(accounts.tokenProgram),
-      getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getInitEphemeralEncryptedTokenAccountInstructionDataEncoder().encode(
@@ -325,9 +266,6 @@ export async function getInitEphemeralEncryptedTokenAccountInstructionAsync<
     TAccountTokenMint,
     TAccountSourceEncryptedTokenAccount,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
@@ -338,9 +276,6 @@ export type InitEphemeralEncryptedTokenAccountInput<
   TAccountTokenMint extends string = string,
   TAccountSourceEncryptedTokenAccount extends string = string,
   TAccountEphemeralEncryptedTokenAccount extends string = string,
-  TAccountEphemeralEncryptedTokenAta extends string = string,
-  TAccountTokenProgram extends string = string,
-  TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
@@ -350,10 +285,6 @@ export type InitEphemeralEncryptedTokenAccountInput<
   sourceEncryptedTokenAccount: Address<TAccountSourceEncryptedTokenAccount>;
   /** New ephemeral ETA - derived with index in seed */
   ephemeralEncryptedTokenAccount: Address<TAccountEphemeralEncryptedTokenAccount>;
-  /** ATA owned by the ephemeral ETA PDA */
-  ephemeralEncryptedTokenAta: Address<TAccountEphemeralEncryptedTokenAta>;
-  tokenProgram: Address<TAccountTokenProgram>;
-  associatedTokenProgram?: Address<TAccountAssociatedTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   index: InitEphemeralEncryptedTokenAccountInstructionDataArgs['index'];
 };
@@ -364,9 +295,6 @@ export function getInitEphemeralEncryptedTokenAccountInstruction<
   TAccountTokenMint extends string,
   TAccountSourceEncryptedTokenAccount extends string,
   TAccountEphemeralEncryptedTokenAccount extends string,
-  TAccountEphemeralEncryptedTokenAta extends string,
-  TAccountTokenProgram extends string,
-  TAccountAssociatedTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof OPPORTUNITY_MARKET_PROGRAM_ADDRESS,
 >(
@@ -376,9 +304,6 @@ export function getInitEphemeralEncryptedTokenAccountInstruction<
     TAccountTokenMint,
     TAccountSourceEncryptedTokenAccount,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -389,9 +314,6 @@ export function getInitEphemeralEncryptedTokenAccountInstruction<
   TAccountTokenMint,
   TAccountSourceEncryptedTokenAccount,
   TAccountEphemeralEncryptedTokenAccount,
-  TAccountEphemeralEncryptedTokenAta,
-  TAccountTokenProgram,
-  TAccountAssociatedTokenProgram,
   TAccountSystemProgram
 > {
   // Program address.
@@ -411,15 +333,6 @@ export function getInitEphemeralEncryptedTokenAccountInstruction<
       value: input.ephemeralEncryptedTokenAccount ?? null,
       isWritable: true,
     },
-    ephemeralEncryptedTokenAta: {
-      value: input.ephemeralEncryptedTokenAta ?? null,
-      isWritable: true,
-    },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-    associatedTokenProgram: {
-      value: input.associatedTokenProgram ?? null,
-      isWritable: false,
-    },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -431,10 +344,6 @@ export function getInitEphemeralEncryptedTokenAccountInstruction<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.associatedTokenProgram.value) {
-    accounts.associatedTokenProgram.value =
-      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address<'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'>;
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -448,9 +357,6 @@ export function getInitEphemeralEncryptedTokenAccountInstruction<
       getAccountMeta(accounts.tokenMint),
       getAccountMeta(accounts.sourceEncryptedTokenAccount),
       getAccountMeta(accounts.ephemeralEncryptedTokenAccount),
-      getAccountMeta(accounts.ephemeralEncryptedTokenAta),
-      getAccountMeta(accounts.tokenProgram),
-      getAccountMeta(accounts.associatedTokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getInitEphemeralEncryptedTokenAccountInstructionDataEncoder().encode(
@@ -464,9 +370,6 @@ export function getInitEphemeralEncryptedTokenAccountInstruction<
     TAccountTokenMint,
     TAccountSourceEncryptedTokenAccount,
     TAccountEphemeralEncryptedTokenAccount,
-    TAccountEphemeralEncryptedTokenAta,
-    TAccountTokenProgram,
-    TAccountAssociatedTokenProgram,
     TAccountSystemProgram
   >);
 }
@@ -484,11 +387,7 @@ export type ParsedInitEphemeralEncryptedTokenAccountInstruction<
     sourceEncryptedTokenAccount: TAccountMetas[3];
     /** New ephemeral ETA - derived with index in seed */
     ephemeralEncryptedTokenAccount: TAccountMetas[4];
-    /** ATA owned by the ephemeral ETA PDA */
-    ephemeralEncryptedTokenAta: TAccountMetas[5];
-    tokenProgram: TAccountMetas[6];
-    associatedTokenProgram: TAccountMetas[7];
-    systemProgram: TAccountMetas[8];
+    systemProgram: TAccountMetas[5];
   };
   data: InitEphemeralEncryptedTokenAccountInstructionData;
 };
@@ -504,7 +403,7 @@ export function parseInitEphemeralEncryptedTokenAccountInstruction<
   TProgram,
   TAccountMetas
 > {
-  if (instruction.accounts.length < 9) {
+  if (instruction.accounts.length < 6) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -522,9 +421,6 @@ export function parseInitEphemeralEncryptedTokenAccountInstruction<
       tokenMint: getNextAccount(),
       sourceEncryptedTokenAccount: getNextAccount(),
       ephemeralEncryptedTokenAccount: getNextAccount(),
-      ephemeralEncryptedTokenAta: getNextAccount(),
-      tokenProgram: getNextAccount(),
-      associatedTokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
     data: getInitEphemeralEncryptedTokenAccountInstructionDataDecoder().decode(

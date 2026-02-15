@@ -29,6 +29,8 @@ import {
   randomComputationOffset,
   getInitCentralStateInstructionAsync,
   initEncryptedTokenAccount,
+  initTokenVault,
+  getTokenVaultAddress,
   wrapEncryptedTokens,
   addMarketOption,
   initShareAccount,
@@ -264,6 +266,33 @@ export class TestRunner {
       creatorAccountBase.keypair.address
     );
     console.log(`  Mint created: ${runner.mint.address}`);
+
+    // Initialize token vault (if not already initialized)
+    const [tokenVaultAddress] = await getTokenVaultAddress(programId);
+    const tokenVaultAccount = await runner.rpc.getAccountInfo(tokenVaultAddress).send();
+    if (!tokenVaultAccount.value) {
+      console.log("Initializing token vault...");
+      const initVaultIx = await initTokenVault({
+        payer: creatorAccountBase.keypair,
+        fundManager: creatorAccountBase.keypair.address,
+      });
+      await sendTransaction(runner.rpc, runner.sendAndConfirm, creatorAccountBase.keypair, [initVaultIx], {
+        label: "Init token vault",
+      });
+      console.log(`  Token vault created: ${tokenVaultAddress}`);
+    } else {
+      console.log("Token vault already exists, skipping initialization...");
+    }
+
+    // Create token vault ATA for this mint
+    console.log("Creating token vault ATA...");
+    await createAta(
+      runner.rpc,
+      runner.sendAndConfirm,
+      creatorAccountBase.keypair,
+      runner.mint.address,
+      tokenVaultAddress
+    );
 
     // Create ATAs and mint tokens for all accounts
     console.log("Creating ATAs and minting tokens...");
@@ -504,7 +533,6 @@ export class TestRunner {
     const ix = await initEncryptedTokenAccount({
       signer: user.solanaKeypair,
       tokenMint: this.mint.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
       userPubkey: user.x25519Keypair.publicKey,
     });
 

@@ -1,8 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_interface::{Mint, TokenAccount, TokenInterface},
-};
+use anchor_spl::token_interface::Mint;
 
 use crate::error::ErrorCode;
 use crate::state::EncryptedTokenAccount;
@@ -38,18 +35,6 @@ pub struct InitEphemeralEncryptedTokenAccount<'info> {
     )]
     pub ephemeral_encrypted_token_account: Box<Account<'info, EncryptedTokenAccount>>,
 
-    /// ATA owned by the ephemeral ETA PDA
-    #[account(
-        init,
-        payer = signer,
-        associated_token::mint = token_mint,
-        associated_token::authority = ephemeral_encrypted_token_account,
-        associated_token::token_program = token_program,
-    )]
-    pub ephemeral_encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
-
-    pub token_program: Interface<'info, TokenInterface>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 

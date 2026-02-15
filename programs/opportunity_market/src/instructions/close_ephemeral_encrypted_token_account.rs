@@ -1,8 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{
-    close_account, transfer_checked, CloseAccount, Mint, TokenAccount, TokenInterface,
-    TransferChecked,
-};
+use anchor_spl::token_interface::{Mint, TokenInterface};
 use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
@@ -32,14 +29,6 @@ pub struct CloseEphemeralEncryptedTokenAccount<'info> {
     )]
     pub regular_encrypted_token_account: Box<Account<'info, EncryptedTokenAccount>>,
 
-    #[account(
-        mut,
-        associated_token::mint = token_mint,
-        associated_token::authority = regular_encrypted_token_account,
-        associated_token::token_program = token_program,
-    )]
-    pub regular_encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
-
     /// Ephemeral ETA to close (index != 0), must be owned by signer
     #[account(
         mut,
@@ -51,15 +40,6 @@ pub struct CloseEphemeralEncryptedTokenAccount<'info> {
         constraint = !ephemeral_encrypted_token_account.locked @ ErrorCode::Locked,
     )]
     pub ephemeral_encrypted_token_account: Box<Account<'info, EncryptedTokenAccount>>,
-
-    /// ATA owned by ephemeral ETA PDA
-    #[account(
-        mut,
-        associated_token::mint = token_mint,
-        associated_token::authority = ephemeral_encrypted_token_account,
-        associated_token::token_program = token_program,
-    )]
-    pub ephemeral_encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// CHECK: Rent recipient - must match rent_payer stored in ephemeral ETA
     #[account(
@@ -161,22 +141,6 @@ pub fn close_ephemeral_encrypted_token_account(
                     pubkey: ctx.accounts.rent_recipient.key(),
                     is_writable: true,
                 },
-                CallbackAccount {
-                    pubkey: ctx.accounts.regular_encrypted_token_ata.key(),
-                    is_writable: true,
-                },
-                CallbackAccount {
-                    pubkey: ctx.accounts.ephemeral_encrypted_token_ata.key(),
-                    is_writable: true,
-                },
-                CallbackAccount {
-                    pubkey: ctx.accounts.token_mint.key(),
-                    is_writable: false,
-                },
-                CallbackAccount {
-                    pubkey: ctx.accounts.token_program.key(),
-                    is_writable: false,
-                },
             ],
         )?],
         1,
@@ -212,20 +176,6 @@ pub struct CloseEphemeralEncryptedTokenAccountCallback<'info> {
     /// CHECK: Receives rent from closed ephemeral ETA
     #[account(mut)]
     pub rent_recipient: UncheckedAccount<'info>,
-
-    /// Regular ETA's ATA (destination for any SPL tokens)
-    #[account(mut)]
-    pub regular_encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
-
-    /// Ephemeral ETA's ATA (source of any SPL tokens, will be closed)
-    #[account(mut)]
-    pub ephemeral_encrypted_token_ata: Box<InterfaceAccount<'info, TokenAccount>>,
-
-    /// Token mint for transfer_checked
-    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
-
-    /// Token program for CPI
-    pub token_program: Interface<'info, TokenInterface>,
 }
 
 pub fn close_ephemeral_encrypted_token_account_callback(
@@ -251,51 +201,9 @@ pub fn close_ephemeral_encrypted_token_account_callback(
     };
 
     // Update regular ETA with new balance (ephemeral balance transferred in)
+    // No SPL token transfer needed - tokens are already in the common TokenVault
     regular_eta.state_nonce = res.nonce;
     regular_eta.encrypted_state = res.ciphertexts;
-
-    // Build signer seeds for ephemeral ETA PDA
-    let mint_key = ephemeral_eta.token_mint;
-    let owner_key = ephemeral_eta.owner;
-    let index_bytes = ephemeral_eta.index.to_le_bytes();
-    let bump = ephemeral_eta.bump;
-    let signer_seeds: &[&[&[u8]]] = &[&[
-        ENCRYPTED_TOKEN_ACCOUNT_SEED,
-        mint_key.as_ref(),
-        owner_key.as_ref(),
-        &index_bytes,
-        &[bump],
-    ]];
-
-    // Transfer any SPL tokens from ephemeral ATA to regular ATA
-    let ephemeral_ata_balance = ctx.accounts.ephemeral_encrypted_token_ata.amount;
-    if ephemeral_ata_balance > 0 {
-        transfer_checked(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                TransferChecked {
-                    from: ctx.accounts.ephemeral_encrypted_token_ata.to_account_info(),
-                    mint: ctx.accounts.token_mint.to_account_info(),
-                    to: ctx.accounts.regular_encrypted_token_ata.to_account_info(),
-                    authority: ephemeral_eta.to_account_info(),
-                },
-                signer_seeds,
-            ),
-            ephemeral_ata_balance,
-            ctx.accounts.token_mint.decimals,
-        )?;
-    }
-
-    // Close ephemeral ATA (rent to rent_recipient)
-    close_account(CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        CloseAccount {
-            account: ctx.accounts.ephemeral_encrypted_token_ata.to_account_info(),
-            destination: ctx.accounts.rent_recipient.to_account_info(),
-            authority: ephemeral_eta.to_account_info(),
-        },
-        signer_seeds,
-    ))?;
 
     // Close ephemeral ETA account (rent to rent_recipient)
     let ephemeral_eta_info = ephemeral_eta.to_account_info();

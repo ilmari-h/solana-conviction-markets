@@ -23,6 +23,7 @@ export * from './initCentralState';
 export * from './initEncryptedTokenAccount';
 export * from './initEphemeralEncryptedTokenAccount';
 export * from './initShareAccount';
+export * from './initTokenVault';
 export * from './openMarket';
 export * from './revealShares';
 export * from './revealSharesCallback';
