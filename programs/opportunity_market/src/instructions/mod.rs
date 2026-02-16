@@ -1,4 +1,5 @@
 pub mod add_market_option;
+pub mod add_market_option_as_creator;
 pub mod stake;
 pub mod claim_pending_deposit;
 pub mod close_ephemeral_encrypted_token_account;
@@ -22,6 +23,7 @@ pub mod unstake_early;
 pub mod update_central_state;
 
 pub use add_market_option::*;
+pub use add_market_option_as_creator::*;
 pub use stake::*;
 pub use claim_pending_deposit::*;
 pub use close_ephemeral_encrypted_token_account::*;

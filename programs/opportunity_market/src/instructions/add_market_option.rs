@@ -19,7 +19,6 @@ pub struct AddMarketOption<'info> {
     #[account(
         mut,
         constraint = market.selected_option.is_none() @ ErrorCode::WinnerAlreadySelected,
-        constraint = market.open_timestamp.is_some() @ ErrorCode::MarketNotOpen,
     )]
     pub market: Box<Account<'info, OpportunityMarket>>,
 
@@ -108,16 +107,16 @@ pub fn add_market_option(
         ErrorCode::InvalidOptionIndex
     );
 
-    // Enforce staking period is active
-    let open_timestamp = market.open_timestamp.ok_or_else(|| ErrorCode::MarketNotOpen)?;
+    // Enforce staking period is not over (if market is open)
     let clock = Clock::get()?;
     let current_timestamp = clock.unix_timestamp as u64;
-    let stake_end_timestamp = open_timestamp + market.time_to_stake;
-
-    require!(
-        current_timestamp >= open_timestamp && current_timestamp <= stake_end_timestamp,
-        ErrorCode::StakingNotActive
-    );
+    if let Some(open_timestamp) = market.open_timestamp {
+        let stake_end_timestamp = open_timestamp + market.time_to_stake;
+        require!(
+            current_timestamp <= stake_end_timestamp,
+            ErrorCode::StakingNotActive
+        );
+    }
 
     // Increment total options
     market.total_options = option_index;

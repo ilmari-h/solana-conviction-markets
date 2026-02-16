@@ -14,6 +14,7 @@ import {
   type ReadonlyUint8Array,
 } from '@solana/kit';
 import {
+  type ParsedAddMarketOptionAsCreatorInstruction,
   type ParsedAddMarketOptionInstruction,
   type ParsedAddOptionStakeCallbackInstruction,
   type ParsedAddOptionStakeCompDefInstruction,
@@ -212,6 +213,7 @@ export function identifyOpportunityMarketAccount(
 
 export enum OpportunityMarketInstruction {
   AddMarketOption,
+  AddMarketOptionAsCreator,
   AddOptionStakeCallback,
   AddOptionStakeCompDef,
   BuyOpportunityMarketSharesCallback,
@@ -262,6 +264,17 @@ export function identifyOpportunityMarketInstruction(
     )
   ) {
     return OpportunityMarketInstruction.AddMarketOption;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([216, 154, 167, 90, 134, 172, 43, 68])
+      ),
+      0
+    )
+  ) {
+    return OpportunityMarketInstruction.AddMarketOptionAsCreator;
   }
   if (
     containsBytes(
@@ -648,6 +661,9 @@ export type ParsedOpportunityMarketInstruction<
   | ({
       instructionType: OpportunityMarketInstruction.AddMarketOption;
     } & ParsedAddMarketOptionInstruction<TProgram>)
+  | ({
+      instructionType: OpportunityMarketInstruction.AddMarketOptionAsCreator;
+    } & ParsedAddMarketOptionAsCreatorInstruction<TProgram>)
   | ({
       instructionType: OpportunityMarketInstruction.AddOptionStakeCallback;
     } & ParsedAddOptionStakeCallbackInstruction<TProgram>)

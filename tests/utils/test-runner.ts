@@ -33,6 +33,7 @@ import {
   getTokenVaultAddress,
   wrapEncryptedTokens,
   addMarketOption,
+  addMarketOptionAsCreator,
   initShareAccount,
   stake,
   selectOption,
@@ -574,6 +575,31 @@ export class TestRunner {
   // Option Management
   // ============================================================================
 
+  /**
+   * Add a market option as the market creator.
+   * Simple instruction with no MPC computation and no stake required.
+   */
+  async addOptionAsCreator(name: string): Promise<{ optionIndex: number }> {
+    const optionIndex = ++this.optionCount;
+
+    const addOptionIx = await addMarketOptionAsCreator({
+      creator: this.marketCreator.solanaKeypair,
+      market: this.marketAddress,
+      optionIndex,
+      name,
+    });
+
+    await sendTransaction(this.rpc, this.sendAndConfirm, this.marketCreator.solanaKeypair, [addOptionIx], {
+      label: `Add option "${name}" (as creator)`,
+    });
+
+    return { optionIndex };
+  }
+
+  /**
+   * Add a market option as a regular user with an initial stake.
+   * Uses MPC computation and creates a share account.
+   */
   async addMarketOption(
     userId: Address,
     name: string,
@@ -583,8 +609,8 @@ export class TestRunner {
     const user = this.getUser(userId);
     this.assertEtaInitialized(user);
 
-    const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
     const optionIndex = ++this.optionCount;
+    const cipher = createCipher(user.x25519Keypair.secretKey, this.mxePublicKey);
     const shareAccountId = this.getNextShareAccountId(user);
     const shareAccountNonce = deserializeLE(randomBytes(16));
 

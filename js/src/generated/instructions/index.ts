@@ -7,6 +7,7 @@
  */
 
 export * from './addMarketOption';
+export * from './addMarketOptionAsCreator';
 export * from './addOptionStakeCallback';
 export * from './addOptionStakeCompDef';
 export * from './buyOpportunityMarketSharesCallback';

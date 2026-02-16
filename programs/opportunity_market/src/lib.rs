@@ -112,6 +112,14 @@ pub mod opportunity_market {
         )
     }
 
+    pub fn add_market_option_as_creator(
+        ctx: Context<AddMarketOptionAsCreator>,
+        option_index: u16,
+        name: String,
+    ) -> Result<()> {
+        instructions::add_market_option_as_creator(ctx, option_index, name)
+    }
+
     #[arcium_callback(encrypted_ix = "add_option_stake")]
     pub fn add_option_stake_callback(
         ctx: Context<AddOptionStakeCallback>,

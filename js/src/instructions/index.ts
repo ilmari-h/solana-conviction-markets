@@ -9,6 +9,7 @@ export * from "./wrapEncryptedTokens";
 export * from "./unwrapEncryptedTokens";
 export * from "./revealShares";
 export * from "./addMarketOption";
+export * from "./addMarketOptionAsCreator";
 export * from "./openMarket";
 export * from "./selectOption";
 export * from "./extendRevealPeriod";

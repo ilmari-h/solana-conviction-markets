@@ -43,7 +43,6 @@ describe("OpportunityMarket", () => {
   it("passes full opportunity market flow", async () => {
     const marketFundingAmount = 1_000_000_000n;
     const numParticipants = 4;
-    const minDeposit = 1n;
 
     // Initialize TestRunner with all accounts and market
     const runner = await TestRunner.initialize(provider, programId, {
@@ -70,16 +69,12 @@ describe("OpportunityMarket", () => {
       await runner.wrapEncryptedTokens(userId, wrapAmount);
     }
 
-    // Creator also needs ETA to add options
-    await runner.initEncryptedTokenAccount(runner.creator);
-    await runner.wrapEncryptedTokens(runner.creator, 100n);
+    // Add two options
+    const { optionIndex: optionA } = await runner.addOptionAsCreator("Option A");
+    const { optionIndex: optionB } = await runner.addOptionAsCreator("Option B");
 
     // Wait for market staking period to be active
     await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
-
-    // Add two options (creator deposits minDeposit for each)
-    const { optionIndex: optionA } = await runner.addMarketOption(runner.creator, "Option A", minDeposit);
-    const { optionIndex: optionB } = await runner.addMarketOption(runner.creator, "Option B", minDeposit);
 
     // Define voting: first half vote Option A (winning), second half vote Option B
     const winningOptionIndex = optionA;
@@ -130,25 +125,12 @@ describe("OpportunityMarket", () => {
       winners.map((userId, i) => ({ userId, shareAccountId: winnerShareAccounts[i].id }))
     );
 
-    // Reveal creator's share accounts
-    const creatorShareAccounts = runner.getUserShareAccounts(runner.creator);
-    await runner.revealSharesBatch(
-      creatorShareAccounts.map((sa) => ({ userId: runner.creator, shareAccountId: sa.id }))
-    );
-
     // Verify revealed shares for winners
     for (let i = 0; i < winners.length; i++) {
       const sa = winnerShareAccounts[i];
       const shareAccount = await runner.fetchShareAccountData(winners[i], sa.id);
       expect(shareAccount.data.revealedAmount).to.deep.equal(some(sa.amount));
       expect(shareAccount.data.revealedOption).to.deep.equal(some(winningOptionIndex));
-    }
-
-    // Verify creator's revealed shares
-    for (const sa of creatorShareAccounts) {
-      const shareAccount = await runner.fetchShareAccountData(runner.creator, sa.id);
-      expect(shareAccount.data.revealedAmount).to.deep.equal(some(sa.amount));
-      expect(shareAccount.data.revealedOption).to.deep.equal(some(sa.optionIndex));
     }
 
     // Increment option tally for winners
@@ -160,17 +142,8 @@ describe("OpportunityMarket", () => {
       }))
     );
 
-    // Increment tally for creator's share accounts
-    await runner.incrementOptionTallyBatch(
-      creatorShareAccounts.map((sa) => ({
-        userId: runner.creator,
-        optionIndex: sa.optionIndex,
-        shareAccountId: sa.id,
-      }))
-    );
-
     // Verify option tally
-    const totalWinningShares = winnerShareAccounts.reduce((sum, sa) => sum + sa.amount, 0n) + minDeposit;
+    const totalWinningShares = winnerShareAccounts.reduce((sum, sa) => sum + sa.amount, 0n);
     const optionAccount = await runner.fetchOptionData(winningOptionIndex);
     expect(optionAccount.data.totalShares).to.deep.equal(some(totalWinningShares));
 
@@ -206,8 +179,6 @@ describe("OpportunityMarket", () => {
         balance: (await fetchToken(rpc, runner.getUserTokenAccount(userId))).data.amount,
       }))
     );
-    const creatorBalanceBefore = (await fetchToken(rpc, runner.getUserTokenAccount(runner.creator)))
-      .data.amount;
     const marketBalanceBefore = (await fetchToken(rpc, marketAta)).data.amount;
 
     // Close share accounts for winners
@@ -216,15 +187,6 @@ describe("OpportunityMarket", () => {
         userId,
         optionIndex: winningOptionIndex,
         shareAccountId: winnerShareAccounts[i].id,
-      }))
-    );
-
-    // Close creator's share accounts
-    await runner.closeShareAccountBatch(
-      creatorShareAccounts.map((sa) => ({
-        userId: runner.creator,
-        optionIndex: sa.optionIndex,
-        shareAccountId: sa.id,
       }))
     );
 
@@ -242,8 +204,6 @@ describe("OpportunityMarket", () => {
         balance: (await fetchToken(rpc, runner.getUserTokenAccount(userId))).data.amount,
       }))
     );
-    const creatorBalanceAfter = (await fetchToken(rpc, runner.getUserTokenAccount(runner.creator)))
-      .data.amount;
     const marketBalanceAfter = (await fetchToken(rpc, marketAta)).data.amount;
 
     // Calculate gains
@@ -252,7 +212,6 @@ describe("OpportunityMarket", () => {
       gain: balancesAfter[i].balance - balancesBefore[i].balance,
       shares: winnerShareAccounts[i].amount,
     }));
-    const creatorGain = creatorBalanceAfter - creatorBalanceBefore;
 
     // All winners should have gained funds
     for (const { gain } of gains) {
@@ -282,7 +241,7 @@ describe("OpportunityMarket", () => {
     );
 
     // Verify total gains equal reward amount
-    const totalGains = gains.reduce((sum, { gain }) => sum + gain, 0n) + creatorGain;
+    const totalGains = gains.reduce((sum, { gain }) => sum + gain, 0n);
     expect(totalGains >= marketFundingAmount - 2n).to.be.true;
     expect(totalGains <= marketFundingAmount).to.be.true;
   });
