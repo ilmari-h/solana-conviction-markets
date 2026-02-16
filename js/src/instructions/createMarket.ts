@@ -3,6 +3,7 @@ import {
   getCreateMarketInstructionAsync,
   type CreateMarketInstruction,
 } from "../generated";
+import { type ByteArray, toNumberArray } from "../utils";
 
 export interface CreateMarketParams {
   creator: TransactionSigner;
@@ -14,6 +15,7 @@ export interface CreateMarketParams {
   timeToReveal: bigint;
   marketAuthority: Address | null;
   unstakeDelaySeconds: bigint;
+  authorizedReaderPubkey: ByteArray;
 }
 
 export async function createMarket(
@@ -29,6 +31,7 @@ export async function createMarket(
     timeToStake,
     marketAuthority,
     unstakeDelaySeconds,
+    authorizedReaderPubkey,
   } = input;
 
   return getCreateMarketInstructionAsync({
@@ -41,5 +44,6 @@ export async function createMarket(
     timeToReveal,
     marketAuthority,
     unstakeDelaySeconds,
+    authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
   });
 }

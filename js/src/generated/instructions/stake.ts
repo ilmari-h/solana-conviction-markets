@@ -141,7 +141,6 @@ export type StakeInstructionData = {
   amountCiphertext: Array<number>;
   selectedOptionCiphertext: Array<number>;
   inputNonce: bigint;
-  authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: bigint;
 };
 
@@ -151,7 +150,6 @@ export type StakeInstructionDataArgs = {
   amountCiphertext: Array<number>;
   selectedOptionCiphertext: Array<number>;
   inputNonce: number | bigint;
-  authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: number | bigint;
 };
 
@@ -167,7 +165,6 @@ export function getStakeInstructionDataEncoder(): FixedSizeEncoder<StakeInstruct
         getArrayEncoder(getU8Encoder(), { size: 32 }),
       ],
       ['inputNonce', getU128Encoder()],
-      ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['authorizedReaderNonce', getU128Encoder()],
     ]),
     (value) => ({ ...value, discriminator: STAKE_DISCRIMINATOR })
@@ -182,7 +179,6 @@ export function getStakeInstructionDataDecoder(): FixedSizeDecoder<StakeInstruct
     ['amountCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['selectedOptionCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['inputNonce', getU128Decoder()],
-    ['authorizedReaderPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['authorizedReaderNonce', getU128Decoder()],
   ]);
 }
@@ -234,7 +230,6 @@ export type StakeAsyncInput<
   amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
   selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
   inputNonce: StakeInstructionDataArgs['inputNonce'];
-  authorizedReaderPubkey: StakeInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: StakeInstructionDataArgs['authorizedReaderNonce'];
 };
 
@@ -453,7 +448,6 @@ export type StakeInput<
   amountCiphertext: StakeInstructionDataArgs['amountCiphertext'];
   selectedOptionCiphertext: StakeInstructionDataArgs['selectedOptionCiphertext'];
   inputNonce: StakeInstructionDataArgs['inputNonce'];
-  authorizedReaderPubkey: StakeInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: StakeInstructionDataArgs['authorizedReaderNonce'];
 };
 

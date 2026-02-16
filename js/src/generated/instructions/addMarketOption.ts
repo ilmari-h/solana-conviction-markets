@@ -158,7 +158,6 @@ export type AddMarketOptionInstructionData = {
   name: string;
   amountCiphertext: Array<number>;
   inputNonce: bigint;
-  authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: bigint;
 };
 
@@ -169,7 +168,6 @@ export type AddMarketOptionInstructionDataArgs = {
   name: string;
   amountCiphertext: Array<number>;
   inputNonce: number | bigint;
-  authorizedReaderPubkey: Array<number>;
   authorizedReaderNonce: number | bigint;
 };
 
@@ -183,7 +181,6 @@ export function getAddMarketOptionInstructionDataEncoder(): Encoder<AddMarketOpt
       ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['amountCiphertext', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['inputNonce', getU128Encoder()],
-      ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
       ['authorizedReaderNonce', getU128Encoder()],
     ]),
     (value) => ({ ...value, discriminator: ADD_MARKET_OPTION_DISCRIMINATOR })
@@ -199,7 +196,6 @@ export function getAddMarketOptionInstructionDataDecoder(): Decoder<AddMarketOpt
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['amountCiphertext', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['inputNonce', getU128Decoder()],
-    ['authorizedReaderPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['authorizedReaderNonce', getU128Decoder()],
   ]);
 }
@@ -256,7 +252,6 @@ export type AddMarketOptionAsyncInput<
   name: AddMarketOptionInstructionDataArgs['name'];
   amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
   inputNonce: AddMarketOptionInstructionDataArgs['inputNonce'];
-  authorizedReaderPubkey: AddMarketOptionInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: AddMarketOptionInstructionDataArgs['authorizedReaderNonce'];
 };
 
@@ -516,7 +511,6 @@ export type AddMarketOptionInput<
   name: AddMarketOptionInstructionDataArgs['name'];
   amountCiphertext: AddMarketOptionInstructionDataArgs['amountCiphertext'];
   inputNonce: AddMarketOptionInstructionDataArgs['inputNonce'];
-  authorizedReaderPubkey: AddMarketOptionInstructionDataArgs['authorizedReaderPubkey'];
   authorizedReaderNonce: AddMarketOptionInstructionDataArgs['authorizedReaderNonce'];
 };
 

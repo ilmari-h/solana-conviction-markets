@@ -88,6 +88,7 @@ interface MarketConfig {
   timeToStake: bigint;
   timeToReveal: bigint;
   unstakeDelaySeconds: bigint;
+  authorizedReaderPubkey: Uint8Array;
 }
 
 export interface TestRunnerConfig {
@@ -390,6 +391,7 @@ export class TestRunner {
       timeToReveal: marketConfig.timeToReveal,
       marketAuthority: null,
       unstakeDelaySeconds: marketConfig.unstakeDelaySeconds,
+      authorizedReaderPubkey: marketConfig.authorizedReaderPubkey,
     });
 
     await sendTransaction(runner.rpc, runner.sendAndConfirm, runner.marketCreator.solanaKeypair, [createMarketIx], {
@@ -609,8 +611,7 @@ export class TestRunner {
   async addMarketOption(
     userId: Address,
     name: string,
-    depositAmount: bigint,
-    authorizedReaderPubkey?: Uint8Array
+    depositAmount: bigint
   ): Promise<{ optionIndex: number; shareAccountId: number }> {
     const user = this.getUser(userId);
     this.assertEtaInitialized(user);
@@ -635,9 +636,6 @@ export class TestRunner {
     const amountCiphertext = cipher.encrypt([depositAmount], inputNonce);
     const offset = randomComputationOffset();
 
-    // Use provided authorized reader or default to user's own pubkey
-    const readerPubkey = authorizedReaderPubkey ?? user.x25519Keypair.publicKey;
-
     // Add market option instruction
     const addOptionIx = await addMarketOption(
       {
@@ -650,7 +648,6 @@ export class TestRunner {
         name,
         amountCiphertext: amountCiphertext[0],
         inputNonce: deserializeLE(inputNonce),
-        authorizedReaderPubkey: readerPubkey,
         authorizedReaderNonce: deserializeLE(randomBytes(16)),
       },
       this.getArciumConfig(offset)
@@ -686,8 +683,7 @@ export class TestRunner {
   // ============================================================================
 
   async stakeOnOptionBatch(
-    purchases: SharePurchase[],
-    authorizedReaderPubkey?: Uint8Array
+    purchases: SharePurchase[]
   ): Promise<number[]> {
     // Group purchases by user to handle ETA locking correctly
     // Each stake locks the ETA until callback completes, so same-user stakes must be sequential
@@ -733,9 +729,6 @@ export class TestRunner {
 
           const [userEta] = await getEncryptedTokenAccountAddress(this.mint.address, p.userId);
 
-          // Use provided authorized reader or default to user's own pubkey
-          const readerPubkey = authorizedReaderPubkey ?? user.x25519Keypair.publicKey;
-
           const stakeIx = await stake(
             {
               signer: user.solanaKeypair,
@@ -745,7 +738,6 @@ export class TestRunner {
               amountCiphertext: ciphertexts[0],
               selectedOptionCiphertext: ciphertexts[1],
               inputNonce: deserializeLE(inputNonce),
-              authorizedReaderPubkey: readerPubkey,
               authorizedReaderNonce: deserializeLE(randomBytes(16)),
             },
             this.getArciumConfig(computationOffset)
@@ -788,10 +780,9 @@ export class TestRunner {
   async stakeOnOption(
     userId: Address,
     amount: bigint,
-    optionIndex: number,
-    authorizedReaderPubkey?: Uint8Array
+    optionIndex: number
   ): Promise<number> {
-    const [shareAccountId] = await this.stakeOnOptionBatch([{ userId, amount, optionIndex }], authorizedReaderPubkey);
+    const [shareAccountId] = await this.stakeOnOptionBatch([{ userId, amount, optionIndex }]);
     return shareAccountId;
   }
 

@@ -271,6 +271,7 @@ export async function createTestEnvironment(
     timeToReveal: marketConfig.timeToReveal,
     marketAuthority: null,
     unstakeDelaySeconds: marketConfig.unstakeDelaySeconds,
+    authorizedReaderPubkey: creatorAccount.x25519Keypair.publicKey,
   });
 
   // Get latest blockhash

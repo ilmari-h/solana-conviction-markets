@@ -16,7 +16,6 @@ export interface AddMarketOptionParams {
   name: string;
   amountCiphertext: ByteArray;
   inputNonce: bigint;
-  authorizedReaderPubkey: ByteArray;
   authorizedReaderNonce: bigint;
 }
 
@@ -34,7 +33,6 @@ export async function addMarketOption(
     name,
     amountCiphertext,
     inputNonce,
-    authorizedReaderPubkey,
     authorizedReaderNonce,
   } = input;
 
@@ -49,7 +47,6 @@ export async function addMarketOption(
     name,
     amountCiphertext: toNumberArray(amountCiphertext),
     inputNonce,
-    authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
     authorizedReaderNonce,
   });
 }

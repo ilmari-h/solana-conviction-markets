@@ -95,11 +95,11 @@ pub fn add_market_option(
     name: String,
     amount_ciphertext: [u8; 32],
     input_nonce: u128,
-    authorized_reader_pubkey: [u8; 32],
     authorized_reader_nonce: u128,
 ) -> Result<()> {
     let user_pubkey = ctx.accounts.source_eta.user_pubkey;
     let market = &mut ctx.accounts.market;
+    let authorized_reader_pubkey = market.authorized_reader_pubkey;
 
     // Option index must match total_options + 1
     require!(

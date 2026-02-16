@@ -79,12 +79,7 @@ pub fn stake(
     _share_account_id: u32,
     amount_ciphertext: [u8; 32],
     selected_option_ciphertext: [u8; 32],
-
     input_nonce: u128,
-
-    // Optional voluntary disclosure - to opt out, pass user's own pubkey or of deleted keypair.
-    // TODO: set this at market level
-    authorized_reader_pubkey: [u8; 32],
     authorized_reader_nonce: u128,
 ) -> Result<()> {
     let user_pubkey = ctx.accounts.user_eta.user_pubkey;
@@ -93,6 +88,7 @@ pub fn stake(
 
     // Enforce staking period is active
     let market = &ctx.accounts.market;
+    let authorized_reader_pubkey = market.authorized_reader_pubkey;
     let open_timestamp = market.open_timestamp.ok_or_else(|| ErrorCode::MarketNotOpen)?;
     let clock = Clock::get()?;
     let current_timestamp = clock.unix_timestamp as u64;

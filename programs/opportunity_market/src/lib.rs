@@ -78,6 +78,7 @@ pub mod opportunity_market {
         time_to_reveal: u64,
         market_authority: Option<Pubkey>,
         unstake_delay_seconds: u64,
+        authorized_reader_pubkey: [u8; 32],
     ) -> Result<()> {
         instructions::create_market(
             ctx,
@@ -87,6 +88,7 @@ pub mod opportunity_market {
             time_to_reveal,
             market_authority,
             unstake_delay_seconds,
+            authorized_reader_pubkey,
         )
     }
 
@@ -98,7 +100,6 @@ pub mod opportunity_market {
         name: String,
         amount_ciphertext: [u8; 32],
         input_nonce: u128,
-        authorized_reader_pubkey: [u8; 32],
         authorized_reader_nonce: u128,
     ) -> Result<()> {
         instructions::add_market_option(
@@ -109,7 +110,6 @@ pub mod opportunity_market {
             name,
             amount_ciphertext,
             input_nonce,
-            authorized_reader_pubkey,
             authorized_reader_nonce,
         )
     }
@@ -226,8 +226,6 @@ pub mod opportunity_market {
         amount_ciphertext: [u8; 32],
         selected_option_ciphertext: [u8; 32],
         input_nonce: u128,
-
-        authorized_reader_pubkey: [u8; 32],
         authorized_reader_nonce: u128,
     ) -> Result<()> {
         instructions::stake(
@@ -237,7 +235,6 @@ pub mod opportunity_market {
             amount_ciphertext,
             selected_option_ciphertext,
             input_nonce,
-            authorized_reader_pubkey,
             authorized_reader_nonce,
         )
     }

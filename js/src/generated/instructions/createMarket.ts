@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
+  getArrayDecoder,
+  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getOptionDecoder,
@@ -21,6 +23,8 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -111,6 +115,7 @@ export type CreateMarketInstructionData = {
   timeToReveal: bigint;
   marketAuthority: Option<Address>;
   unstakeDelaySeconds: bigint;
+  authorizedReaderPubkey: Array<number>;
 };
 
 export type CreateMarketInstructionDataArgs = {
@@ -120,6 +125,7 @@ export type CreateMarketInstructionDataArgs = {
   timeToReveal: number | bigint;
   marketAuthority: OptionOrNullable<Address>;
   unstakeDelaySeconds: number | bigint;
+  authorizedReaderPubkey: Array<number>;
 };
 
 export function getCreateMarketInstructionDataEncoder(): Encoder<CreateMarketInstructionDataArgs> {
@@ -132,6 +138,7 @@ export function getCreateMarketInstructionDataEncoder(): Encoder<CreateMarketIns
       ['timeToReveal', getU64Encoder()],
       ['marketAuthority', getOptionEncoder(getAddressEncoder())],
       ['unstakeDelaySeconds', getU64Encoder()],
+      ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
     ]),
     (value) => ({ ...value, discriminator: CREATE_MARKET_DISCRIMINATOR })
   );
@@ -146,6 +153,7 @@ export function getCreateMarketInstructionDataDecoder(): Decoder<CreateMarketIns
     ['timeToReveal', getU64Decoder()],
     ['marketAuthority', getOptionDecoder(getAddressDecoder())],
     ['unstakeDelaySeconds', getU64Decoder()],
+    ['authorizedReaderPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
   ]);
 }
 
@@ -184,6 +192,7 @@ export type CreateMarketAsyncInput<
   timeToReveal: CreateMarketInstructionDataArgs['timeToReveal'];
   marketAuthority: CreateMarketInstructionDataArgs['marketAuthority'];
   unstakeDelaySeconds: CreateMarketInstructionDataArgs['unstakeDelaySeconds'];
+  authorizedReaderPubkey: CreateMarketInstructionDataArgs['authorizedReaderPubkey'];
 };
 
 export async function getCreateMarketInstructionAsync<
@@ -349,6 +358,7 @@ export type CreateMarketInput<
   timeToReveal: CreateMarketInstructionDataArgs['timeToReveal'];
   marketAuthority: CreateMarketInstructionDataArgs['marketAuthority'];
   unstakeDelaySeconds: CreateMarketInstructionDataArgs['unstakeDelaySeconds'];
+  authorizedReaderPubkey: CreateMarketInstructionDataArgs['authorizedReaderPubkey'];
 };
 
 export function getCreateMarketInstruction<

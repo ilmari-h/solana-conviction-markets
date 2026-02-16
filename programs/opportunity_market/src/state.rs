@@ -56,7 +56,10 @@ pub struct OpportunityMarket {
     pub earliness_cutoff_seconds: u64,
 
     // Unstake delay seconds
-    pub unstake_delay_seconds: u64
+    pub unstake_delay_seconds: u64,
+
+    // Public key for voluntary disclosure of encrypted stake data
+    pub authorized_reader_pubkey: [u8; 32],
 }
 
 #[account]

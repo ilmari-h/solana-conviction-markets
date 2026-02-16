@@ -227,15 +227,6 @@
           "type": "u128"
         },
         {
-          "name": "authorized_reader_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        },
-        {
           "name": "authorized_reader_nonce",
           "type": "u128"
         }
@@ -1336,6 +1327,15 @@
         {
           "name": "unstake_delay_seconds",
           "type": "u64"
+        },
+        {
+          "name": "authorized_reader_pubkey",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
         }
       ]
     },
@@ -2604,15 +2604,6 @@
         {
           "name": "input_nonce",
           "type": "u128"
-        },
-        {
-          "name": "authorized_reader_pubkey",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
         },
         {
           "name": "authorized_reader_nonce",
@@ -4889,6 +4880,15 @@
           {
             "name": "unstake_delay_seconds",
             "type": "u64"
+          },
+          {
+            "name": "authorized_reader_pubkey",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }

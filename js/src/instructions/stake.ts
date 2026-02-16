@@ -14,7 +14,6 @@ export interface StakeParams {
   amountCiphertext: ByteArray;
   selectedOptionCiphertext: ByteArray;
   inputNonce: bigint;
-  authorizedReaderPubkey: ByteArray;
   authorizedReaderNonce: bigint;
 }
 
@@ -30,7 +29,6 @@ export async function stake(
     amountCiphertext,
     selectedOptionCiphertext,
     inputNonce,
-    authorizedReaderPubkey,
     authorizedReaderNonce,
   } = input;
 
@@ -43,7 +41,6 @@ export async function stake(
     amountCiphertext: toNumberArray(amountCiphertext),
     selectedOptionCiphertext: toNumberArray(selectedOptionCiphertext),
     inputNonce,
-    authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
     authorizedReaderNonce,
   });
 }

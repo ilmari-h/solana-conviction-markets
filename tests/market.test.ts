@@ -44,6 +44,9 @@ describe("OpportunityMarket", () => {
     const marketFundingAmount = 1_000_000_000n;
     const numParticipants = 4;
 
+    // Create an observer keypair that can read stakes.
+    const observer = generateX25519Keypair();
+
     // Initialize TestRunner with all accounts and market
     const runner = await TestRunner.initialize(provider, programId, {
       rpcUrl: RPC_URL,
@@ -55,6 +58,7 @@ describe("OpportunityMarket", () => {
         rewardAmount: marketFundingAmount,
         timeToStake: 120n,
         timeToReveal: 20n,
+        authorizedReaderPubkey: observer.publicKey,
       },
     });
 
@@ -80,16 +84,13 @@ describe("OpportunityMarket", () => {
     const winningOptionIndex = optionA;
     const buySharesAmounts = [50n, 75n, 100n, 60n];
 
-    // Create an observer keypair that can read stakes.
-    const observer = generateX25519Keypair();
-
-    // Buy shares for all participants, with observer as authorized reader
+    // Buy shares for all participants (authorized reader is set at market creation)
     const purchases = runner.participants.map((userId, idx) => ({
       userId,
       amount: buySharesAmounts[idx],
       optionIndex: idx < numParticipants / 2 ? optionA : optionB,
     }));
-    const shareAccountIds = await runner.stakeOnOptionBatch(purchases, observer.publicKey);
+    const shareAccountIds = await runner.stakeOnOptionBatch(purchases);
 
     // Verify user can decrypt their own stake
     purchases.forEach((purchase, i) => {
@@ -250,6 +251,9 @@ describe("OpportunityMarket", () => {
     const marketFundingAmount = 1_000_000_000n;
     const numParticipants = 1;
 
+    // Create an observer keypair that can read stakes
+    const observer = generateX25519Keypair();
+
     // Initialize TestRunner with 1 participant
     const runner = await TestRunner.initialize(provider, programId, {
       rpcUrl: RPC_URL,
@@ -261,6 +265,7 @@ describe("OpportunityMarket", () => {
         rewardAmount: marketFundingAmount,
         timeToStake: 120n,
         timeToReveal: 20n,
+        authorizedReaderPubkey: observer.publicKey,
       },
     });
 
@@ -282,20 +287,17 @@ describe("OpportunityMarket", () => {
     // Wait for market staking period to be active
     await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
 
-    // Create an observer keypair that can read stakes
-    const observer = generateX25519Keypair();
-
     // User adds 2 options, staking 1/4 of wrapped tokens for each
-    // This creates share accounts 0 and 1
-    const { optionIndex: optionA, shareAccountId: sa0 } = await runner.addMarketOption(user, "Option A", quarterAmount, observer.publicKey);
-    const { optionIndex: optionB, shareAccountId: sa1 } = await runner.addMarketOption(user, "Option B", quarterAmount, observer.publicKey);
+    // This creates share accounts 0 and 1 (authorized reader is set at market creation)
+    const { optionIndex: optionA, shareAccountId: sa0 } = await runner.addMarketOption(user, "Option A", quarterAmount);
+    const { optionIndex: optionB, shareAccountId: sa1 } = await runner.addMarketOption(user, "Option B", quarterAmount);
 
     // User explicitly stakes more shares for both options (1/4 each)
     // This creates share accounts 2 and 3
     const [sa2, sa3] = await runner.stakeOnOptionBatch([
       { userId: user, amount: quarterAmount, optionIndex: optionA },
       { userId: user, amount: quarterAmount, optionIndex: optionB },
-    ], observer.publicKey);
+    ]);
 
     // User now has 4 share accounts, with all wrapped tokens staked
     const userShareAccounts = runner.getUserShareAccounts(user);
@@ -402,6 +404,9 @@ describe("OpportunityMarket", () => {
     const unstakeDelaySeconds = 10n;
     const timeToStake = 30n;
 
+    // Create an observer keypair for authorized reading
+    const observer = generateX25519Keypair();
+
     const runner = await TestRunner.initialize(provider, programId, {
       rpcUrl: RPC_URL,
       wsUrl: WS_URL,
@@ -413,6 +418,7 @@ describe("OpportunityMarket", () => {
         timeToStake,
         timeToReveal: 20n,
         unstakeDelaySeconds,
+        authorizedReaderPubkey: observer.publicKey,
       },
     });
 
