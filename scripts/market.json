@@ -1,0 +1,11 @@
+{
+  "marketIndex": 0,
+  "tokenMint": "J35dBGv6dMD5fX4wSAfHNTMDshFMpFVQNoUWMWgnS5Hi",
+  "rewardAmount": 1000000000,
+  "timeToStake": 120,
+  "timeToReveal": 60,
+  "unstakeDelaySeconds": 10,
+  "authorizedReaderKeypairPath": "./example-x25519-keypair.json",
+  "allowClosingEarly": true,
+  "marketAuthority": null
+}

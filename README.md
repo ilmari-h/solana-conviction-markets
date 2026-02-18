@@ -40,30 +40,23 @@ arcium test
 3. Run `arcium build with --skip-keys-sync` (last argument ensures step 2. isn't overwritten)
 4. Make sure in your Anchor.toml file, the `opportunity_market` address matches address of step 2 (in the `[programs.localnet]` section if you have no devnet config there!)
 
-Run `arcium deploy` with the correct parameters.
+Set the following environment variables.
 
 ```bash
-arcium deploy --cluster-offset 456 \
-  --recovery-set-size 4 \
-  --keypair-path <PAYER KEYPAIR> \
-  --rpc-url <YOUR RPC URL> \
-  --program-keypair  <PROGRAM KEYPAIR > \
-  --program-name "opportunity_market"
+DEPLOYER_KEYPAIR_PATH="/path/to/your/keypair.json"
+RPC_URL="https://your-rpc-url"
+PROGRAM_KEYPAIR_PATH="/path/to/program-keypair.json"
+PROGRAM_ID="your_program_id"
 ```
 
-Run the compute defs script to initialize compute definitions.
+Deploy the program:
 
 ```bash
-PROGRAM_ID=<YOUR PROGRAM ID> \
-ARCIUM_CLUSTER_OFFSET=456 \
-KEYPAIR_PATH=<PAYER KEYPAIR> \
-RPC_URL=<YOUR RPC URL> \
-npx ts-node scripts/compute-defs.ts
+./deploy.sh
 ```
 
-## Structure
+Initialize compute definitions:
 
-- `programs/opportunity_market/` - Anchor program
-- `encrypted-ixs/` - MPC circuits
-- `tests/` - Integration tests
-- `demo-app/` - A NextJS demo application
+```bash
+npx tsx scripts/init-compute-defs.ts
+```

@@ -17,6 +17,7 @@ export interface CreateMarketParams {
   unstakeDelaySeconds: bigint;
   authorizedReaderPubkey: ByteArray;
   allowClosingEarly: boolean;
+  programAddress?: Address;
 }
 
 export async function createMarket(
@@ -34,19 +35,23 @@ export async function createMarket(
     unstakeDelaySeconds,
     authorizedReaderPubkey,
     allowClosingEarly,
+    programAddress,
   } = input;
 
-  return getCreateMarketInstructionAsync({
-    creator,
-    tokenMint,
-    tokenProgram,
-    marketIndex,
-    rewardAmount,
-    timeToStake,
-    timeToReveal,
-    marketAuthority,
-    unstakeDelaySeconds,
-    authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
-    allowClosingEarly,
-  });
+  return getCreateMarketInstructionAsync(
+    {
+      creator,
+      tokenMint,
+      tokenProgram,
+      marketIndex,
+      rewardAmount,
+      timeToStake,
+      timeToReveal,
+      marketAuthority,
+      unstakeDelaySeconds,
+      authorizedReaderPubkey: toNumberArray(authorizedReaderPubkey),
+      allowClosingEarly,
+    },
+    programAddress ? { programAddress } : undefined
+  );
 }
