@@ -35,6 +35,8 @@ import * as fs from "fs";
 import * as os from "os";
 import { generateX25519Keypair, createCipher } from "../js/src/x25519/keypair";
 import { expect } from "chai";
+import { shouldThrowCustomError } from "./utils/errors";
+import { OPPORTUNITY_MARKET_ERROR__ADD_OPTION_STAKE_FAILED } from "../js/src/generated/errors/index"
 
 const RPC_URL = process.env.ANCHOR_PROVIDER_URL || "http://127.0.0.1:8899";
 const WS_URL = RPC_URL.replace("http", "ws").replace(":8899", ":8900");
@@ -361,13 +363,12 @@ describe("Encrypted Token Account (SPL)", () => {
       tokenMint: mint.address,
       index: ephemeralIndex,
     });
-
-    try {
-      await sendTransaction(rpc, sendAndConfirm, payer, [initEphemeralIx], {
+    await shouldThrowCustomError(
+      () =>  sendTransaction(rpc, sendAndConfirm, payer, [initEphemeralIx], {
         label: "initEphemeralEncryptedTokenAccount (should fail)",
-      });
-      expect(false, "Should throw")
-    } catch {}
+      }),
+      3012 // Account not initialized
+    );
   });
 
   it("can close ephemeral ETA and transfer balance", async () => {

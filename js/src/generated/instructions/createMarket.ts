@@ -14,6 +14,8 @@ import {
   getAddressEncoder,
   getArrayDecoder,
   getArrayEncoder,
+  getBooleanDecoder,
+  getBooleanEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getOptionDecoder,
@@ -116,6 +118,7 @@ export type CreateMarketInstructionData = {
   marketAuthority: Option<Address>;
   unstakeDelaySeconds: bigint;
   authorizedReaderPubkey: Array<number>;
+  allowClosingEarly: boolean;
 };
 
 export type CreateMarketInstructionDataArgs = {
@@ -126,6 +129,7 @@ export type CreateMarketInstructionDataArgs = {
   marketAuthority: OptionOrNullable<Address>;
   unstakeDelaySeconds: number | bigint;
   authorizedReaderPubkey: Array<number>;
+  allowClosingEarly: boolean;
 };
 
 export function getCreateMarketInstructionDataEncoder(): Encoder<CreateMarketInstructionDataArgs> {
@@ -139,6 +143,7 @@ export function getCreateMarketInstructionDataEncoder(): Encoder<CreateMarketIns
       ['marketAuthority', getOptionEncoder(getAddressEncoder())],
       ['unstakeDelaySeconds', getU64Encoder()],
       ['authorizedReaderPubkey', getArrayEncoder(getU8Encoder(), { size: 32 })],
+      ['allowClosingEarly', getBooleanEncoder()],
     ]),
     (value) => ({ ...value, discriminator: CREATE_MARKET_DISCRIMINATOR })
   );
@@ -154,6 +159,7 @@ export function getCreateMarketInstructionDataDecoder(): Decoder<CreateMarketIns
     ['marketAuthority', getOptionDecoder(getAddressDecoder())],
     ['unstakeDelaySeconds', getU64Decoder()],
     ['authorizedReaderPubkey', getArrayDecoder(getU8Decoder(), { size: 32 })],
+    ['allowClosingEarly', getBooleanDecoder()],
   ]);
 }
 
@@ -193,6 +199,7 @@ export type CreateMarketAsyncInput<
   marketAuthority: CreateMarketInstructionDataArgs['marketAuthority'];
   unstakeDelaySeconds: CreateMarketInstructionDataArgs['unstakeDelaySeconds'];
   authorizedReaderPubkey: CreateMarketInstructionDataArgs['authorizedReaderPubkey'];
+  allowClosingEarly: CreateMarketInstructionDataArgs['allowClosingEarly'];
 };
 
 export async function getCreateMarketInstructionAsync<
@@ -359,6 +366,7 @@ export type CreateMarketInput<
   marketAuthority: CreateMarketInstructionDataArgs['marketAuthority'];
   unstakeDelaySeconds: CreateMarketInstructionDataArgs['unstakeDelaySeconds'];
   authorizedReaderPubkey: CreateMarketInstructionDataArgs['authorizedReaderPubkey'];
+  allowClosingEarly: CreateMarketInstructionDataArgs['allowClosingEarly'];
 };
 
 export function getCreateMarketInstruction<

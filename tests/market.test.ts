@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { address, some, isSome, createSolanaRpc, createSolanaRpcSubscriptions, sendAndConfirmTransactionFactory  } from "@solana/kit";
+import { address, some, isSome, isNone, createSolanaRpc, createSolanaRpcSubscriptions, sendAndConfirmTransactionFactory  } from "@solana/kit";
 import { fetchToken } from "@solana-program/token";
 import { expect } from "chai";
 
@@ -8,7 +8,12 @@ import { OpportunityMarket } from "../target/types/opportunity_market";
 import { TestRunner } from "./utils/test-runner";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sleepUntilOnChainTimestamp } from "./utils/sleep";
+import { shouldThrowCustomError } from "./utils/errors";
 import { generateX25519Keypair } from "../js/src/x25519/keypair";
+import {
+  OPPORTUNITY_MARKET_ERROR__CLOSING_EARLY_NOT_ALLOWED,
+  OPPORTUNITY_MARKET_ERROR__UNSTAKE_DELAY_NOT_MET,
+} from "../js/src/generated/errors/opportunityMarket";
 
 import * as fs from "fs";
 import * as os from "os";
@@ -460,10 +465,10 @@ describe("OpportunityMarket", () => {
     expect(isSome(shareAccount.data.unstakedAtTimestamp)).to.be.false;
 
     // Execute unstake too early, should throw
-    try {
-      await runner.doUnstakeEarly(executor, staker, shareAccountId);
-      expect(false, "Should trhow");
-    } catch { }
+    await shouldThrowCustomError(
+      () => runner.doUnstakeEarly(executor, staker, shareAccountId),
+      OPPORTUNITY_MARKET_ERROR__UNSTAKE_DELAY_NOT_MET
+    );
 
     // Wait for unstake delay to pass
     if (!isSome(shareAccount.data.unstakeableAtTimestamp)) throw new Error()
@@ -490,6 +495,61 @@ describe("OpportunityMarket", () => {
     shareAccount = await runner.fetchShareAccountData(staker, shareAccountId);
     expect(shareAccount.data.revealedAmount).to.deep.equal(some(stakeAmount));
     expect(shareAccount.data.revealedOption).to.deep.equal(some(optionA));
+  });
+
+  it("prevents closing market early when not allowed", async () => {
+    const marketFundingAmount = 1_000_000_000n;
+    const timeToStake = 10n;
+
+    // Create an observer keypair
+    const observer = generateX25519Keypair();
+
+    const runner = await TestRunner.initialize(provider, programId, {
+      rpcUrl: RPC_URL,
+      wsUrl: WS_URL,
+      numParticipants: 1,
+      airdropLamports: 2_000_000_000n,
+      initialTokenAmount: 2_000_000_000n,
+      marketConfig: {
+        rewardAmount: marketFundingAmount,
+        timeToStake,
+        timeToReveal: 20n,
+        authorizedReaderPubkey: observer.publicKey,
+        allowClosingEarly: false,
+      },
+    });
+
+    // Fund and open market
+    await runner.fundMarket();
+    const openTimestamp = await runner.openMarket();
+
+    // Add options as creator
+    const { optionIndex: optionA } = await runner.addOptionAsCreator("Option A");
+    await runner.addOptionAsCreator("Option B");
+
+    // Wait for staking period to be active
+    await sleepUntilOnChainTimestamp(Number(openTimestamp) + ONCHAIN_TIMESTAMP_BUFFER_SECONDS);
+
+    // Try to select option before stake period ends - should fail
+    await shouldThrowCustomError(
+      () => runner.selectOption(optionA),
+      OPPORTUNITY_MARKET_ERROR__CLOSING_EARLY_NOT_ALLOWED
+    );
+
+    // Verify market is still open (no selected option)
+    let market = await runner.fetchMarket();
+    expect(isNone(market.data.selectedOption)).to.be.true;
+
+    // Wait for stake period to end
+    const stakeEndTimestamp = Number(openTimestamp) + Number(timeToStake);
+    await sleepUntilOnChainTimestamp(stakeEndTimestamp + 1);
+
+    // Now selecting option should succeed
+    await runner.selectOption(optionA);
+
+    // Verify option was selected
+    market = await runner.fetchMarket();
+    expect(market.data.selectedOption).to.deep.equal(some(optionA));
   });
 
 });

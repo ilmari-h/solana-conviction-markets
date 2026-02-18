@@ -1336,6 +1336,10 @@
               32
             ]
           }
+        },
+        {
+          "name": "allow_closing_early",
+          "type": "bool"
         }
       ]
     },
@@ -3950,6 +3954,11 @@
       "code": 6025,
       "name": "UnstakeNotInitiated",
       "msg": "Unstake has not been initiated"
+    },
+    {
+      "code": 6026,
+      "name": "ClosingEarlyNotAllowed",
+      "msg": "Market cannot be closed before stake period ends"
     }
   ],
   "types": [
@@ -4889,6 +4898,10 @@
                 32
               ]
             }
+          },
+          {
+            "name": "allow_closing_early",
+            "type": "bool"
           }
         ]
       }

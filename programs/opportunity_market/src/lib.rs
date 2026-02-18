@@ -79,6 +79,7 @@ pub mod opportunity_market {
         market_authority: Option<Pubkey>,
         unstake_delay_seconds: u64,
         authorized_reader_pubkey: [u8; 32],
+        allow_closing_early: bool,
     ) -> Result<()> {
         instructions::create_market(
             ctx,
@@ -89,6 +90,7 @@ pub mod opportunity_market {
             market_authority,
             unstake_delay_seconds,
             authorized_reader_pubkey,
+            allow_closing_early,
         )
     }
 

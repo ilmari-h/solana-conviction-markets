@@ -2,6 +2,7 @@ import {
   type Instruction,
   type TransactionSigner,
   type Signature,
+  type TransactionError,
   pipe,
   createTransactionMessage,
   setTransactionMessageFeePayer,
@@ -14,9 +15,27 @@ import {
   sendAndConfirmTransactionFactory,
 } from "@solana/kit";
 
-/** JSON.stringify replacer that handles BigInt values */
-function bigIntReplacer(_key: string, value: unknown): unknown {
-  return typeof value === "bigint" ? value.toString() : value;
+/**
+ * Custom error type for on-chain transaction failures.
+ * Error format: { InstructionError: [ 0, { Custom: 6026 } ] }
+ */
+export class OnChainError extends Error {
+  readonly code: number | null;
+
+  constructor(err: TransactionError) {
+    let code: number | null = null;
+
+    if (typeof err === "object" && "InstructionError" in err) {
+      const inner = err.InstructionError[1];
+      if (typeof inner === "object" && "Custom" in inner) {
+        code = Number(inner.Custom);
+      }
+    }
+
+    super(`OnChainError: ${code}`);
+    this.name = "OnChainError";
+    this.code = code;
+  }
 }
 
 export type RpcClient = ReturnType<typeof createSolanaRpc>;
@@ -90,7 +109,7 @@ export async function sendTransaction(
 
   const logs = simResult.value.logs;
 
-  if (printLogs || simResult.value.err) {
+  if (printLogs) {
     const logFunc = simResult.value.err ? console.error : console.log
       logFunc(`${logPrefix}Simulation:`, simResult.value.err);
     if (logs) {
@@ -100,9 +119,7 @@ export async function sendTransaction(
   }
 
   if (simResult.value.err) {
-    throw new Error(
-      `${label ? `${label}: ` : ""}Simulation failed: ${JSON.stringify(simResult.value.err, bigIntReplacer)}`
-    );
+    throw new OnChainError(simResult.value.err);
   }
 
   // Send and confirm
@@ -121,13 +138,7 @@ export async function sendTransaction(
   }).send();
 
   if (txResult?.meta?.err) {
-    const txLogs = txResult.meta.logMessages || [];
-    console.error(`${logPrefix}Transaction confirmed but instruction failed!`);
-    console.error(`${logPrefix}Error:`, txResult.meta.err);
-    txLogs.forEach((log) => console.error(`${logPrefix}  ${log}`));
-    throw new Error(
-      `${label ? `${label}: ` : ""}Instruction failed: ${JSON.stringify(txResult.meta.err, bigIntReplacer)}`
-    );
+    throw new OnChainError(txResult.meta.err);
   }
 
   if (printLogs) {

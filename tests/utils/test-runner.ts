@@ -89,6 +89,7 @@ interface MarketConfig {
   timeToReveal: bigint;
   unstakeDelaySeconds: bigint;
   authorizedReaderPubkey: Uint8Array;
+  allowClosingEarly: boolean;
 }
 
 export interface TestRunnerConfig {
@@ -139,6 +140,7 @@ const DEFAULT_CONFIG: Required<TestRunnerConfig> = {
     timeToStake: 120n, // 2 minutes
     timeToReveal: 60n, // 1 minute
     unstakeDelaySeconds: 10n, // 10 seconds
+    allowClosingEarly: true, // Allow market to be closed before stake period ends
   },
 };
 
@@ -392,6 +394,7 @@ export class TestRunner {
       marketAuthority: null,
       unstakeDelaySeconds: marketConfig.unstakeDelaySeconds,
       authorizedReaderPubkey: marketConfig.authorizedReaderPubkey,
+      allowClosingEarly: marketConfig.allowClosingEarly,
     });
 
     await sendTransaction(runner.rpc, runner.sendAndConfirm, runner.marketCreator.solanaKeypair, [createMarketIx], {

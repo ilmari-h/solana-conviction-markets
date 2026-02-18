@@ -33,8 +33,16 @@ pub fn select_option(ctx: Context<SelectOption>, option_index: u16) -> Result<()
         ErrorCode::InvalidTimestamp
     );
 
-    // If staking is still open, close it by setting time_to_stake to end now
+    // Check if closing early is allowed
     let stake_end_timestamp = open_timestamp + market.time_to_stake;
+    if !market.allow_closing_early {
+        require!(
+            current_timestamp >= stake_end_timestamp,
+            ErrorCode::ClosingEarlyNotAllowed
+        );
+    }
+
+    // If staking is still open, close it by setting time_to_stake to end now
     if current_timestamp < stake_end_timestamp {
         market.time_to_stake = (current_timestamp - open_timestamp).saturating_sub(1);
     }

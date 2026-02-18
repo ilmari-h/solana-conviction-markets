@@ -66,6 +66,8 @@ export const OPPORTUNITY_MARKET_ERROR__INVALID_ACCOUNT_STATE = 0x1787; // 6023
 export const OPPORTUNITY_MARKET_ERROR__UNSTAKE_DELAY_NOT_MET = 0x1788; // 6024
 /** UnstakeNotInitiated: Unstake has not been initiated */
 export const OPPORTUNITY_MARKET_ERROR__UNSTAKE_NOT_INITIATED = 0x1789; // 6025
+/** ClosingEarlyNotAllowed: Market cannot be closed before stake period ends */
+export const OPPORTUNITY_MARKET_ERROR__CLOSING_EARLY_NOT_ALLOWED = 0x178a; // 6026
 
 export type OpportunityMarketError =
   | typeof OPPORTUNITY_MARKET_ERROR__ABORTED_COMPUTATION
@@ -73,6 +75,7 @@ export type OpportunityMarketError =
   | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_PURCHASED
   | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_REVEALED
   | typeof OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED
+  | typeof OPPORTUNITY_MARKET_ERROR__CLOSING_EARLY_NOT_ALLOWED
   | typeof OPPORTUNITY_MARKET_ERROR__CLUSTER_NOT_SET
   | typeof OPPORTUNITY_MARKET_ERROR__DEPOSIT_BELOW_MINIMUM
   | typeof OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_BALANCE
@@ -105,6 +108,7 @@ if (process.env.NODE_ENV !== 'production') {
     [OPPORTUNITY_MARKET_ERROR__ALREADY_PURCHASED]: `Shares already purchased for this share account`,
     [OPPORTUNITY_MARKET_ERROR__ALREADY_REVEALED]: `Shares already revealed`,
     [OPPORTUNITY_MARKET_ERROR__ALREADY_UNSTAKED]: `Shares already unstaked`,
+    [OPPORTUNITY_MARKET_ERROR__CLOSING_EARLY_NOT_ALLOWED]: `Market cannot be closed before stake period ends`,
     [OPPORTUNITY_MARKET_ERROR__CLUSTER_NOT_SET]: `Cluster not set`,
     [OPPORTUNITY_MARKET_ERROR__DEPOSIT_BELOW_MINIMUM]: `Deposit amount below minimum required for option creation`,
     [OPPORTUNITY_MARKET_ERROR__INSUFFICIENT_BALANCE]: `Insufficient balance`,

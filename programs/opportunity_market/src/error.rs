@@ -54,4 +54,6 @@ pub enum ErrorCode {
     UnstakeDelayNotMet,
     #[msg("Unstake has not been initiated")]
     UnstakeNotInitiated,
+    #[msg("Market cannot be closed before stake period ends")]
+    ClosingEarlyNotAllowed,
 }
