@@ -21,7 +21,7 @@ See [this document](./docs/market-life-cycle.md) for detailed documentation of t
 
 ## Build & Test
 
-Arcium v0.6.3 required.
+Arcium v0.8.0 required.
 
 Before testing, make sure you build without the feature `hosted-compdefs`.
 In `programs/opportunity_market/Cargo.toml` make sure it's not in the defaults array.
