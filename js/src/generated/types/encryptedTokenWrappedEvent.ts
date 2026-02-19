@@ -10,6 +10,8 @@ import {
   combineCodec,
   getAddressDecoder,
   getAddressEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -24,12 +26,14 @@ export type EncryptedTokenWrappedEvent = {
   encryptedTokenAccount: Address;
   buyer: Address;
   lamportsSpent: bigint;
+  timestamp: bigint;
 };
 
 export type EncryptedTokenWrappedEventArgs = {
   encryptedTokenAccount: Address;
   buyer: Address;
   lamportsSpent: number | bigint;
+  timestamp: number | bigint;
 };
 
 export function getEncryptedTokenWrappedEventEncoder(): FixedSizeEncoder<EncryptedTokenWrappedEventArgs> {
@@ -37,6 +41,7 @@ export function getEncryptedTokenWrappedEventEncoder(): FixedSizeEncoder<Encrypt
     ['encryptedTokenAccount', getAddressEncoder()],
     ['buyer', getAddressEncoder()],
     ['lamportsSpent', getU64Encoder()],
+    ['timestamp', getI64Encoder()],
   ]);
 }
 
@@ -45,6 +50,7 @@ export function getEncryptedTokenWrappedEventDecoder(): FixedSizeDecoder<Encrypt
     ['encryptedTokenAccount', getAddressDecoder()],
     ['buyer', getAddressDecoder()],
     ['lamportsSpent', getU64Decoder()],
+    ['timestamp', getI64Decoder()],
   ]);
 }
 

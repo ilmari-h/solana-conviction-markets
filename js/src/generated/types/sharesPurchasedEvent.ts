@@ -12,6 +12,8 @@ import {
   getAddressEncoder,
   getArrayDecoder,
   getArrayEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   getU128Decoder,
@@ -28,12 +30,14 @@ export type SharesPurchasedEvent = {
   buyer: Address;
   encryptedDisclosedAmount: Array<number>;
   nonce: bigint;
+  timestamp: bigint;
 };
 
 export type SharesPurchasedEventArgs = {
   buyer: Address;
   encryptedDisclosedAmount: Array<number>;
   nonce: number | bigint;
+  timestamp: number | bigint;
 };
 
 export function getSharesPurchasedEventEncoder(): FixedSizeEncoder<SharesPurchasedEventArgs> {
@@ -41,6 +45,7 @@ export function getSharesPurchasedEventEncoder(): FixedSizeEncoder<SharesPurchas
     ['buyer', getAddressEncoder()],
     ['encryptedDisclosedAmount', getArrayEncoder(getU8Encoder(), { size: 32 })],
     ['nonce', getU128Encoder()],
+    ['timestamp', getI64Encoder()],
   ]);
 }
 
@@ -49,6 +54,7 @@ export function getSharesPurchasedEventDecoder(): FixedSizeDecoder<SharesPurchas
     ['buyer', getAddressDecoder()],
     ['encryptedDisclosedAmount', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['nonce', getU128Decoder()],
+    ['timestamp', getI64Decoder()],
   ]);
 }
 

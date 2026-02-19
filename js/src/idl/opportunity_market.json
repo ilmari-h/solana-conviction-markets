@@ -4562,6 +4562,10 @@
           {
             "name": "lamports_spent",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -4574,6 +4578,10 @@
           {
             "name": "user",
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -4710,6 +4718,10 @@
           {
             "name": "index",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -5305,6 +5317,10 @@
           {
             "name": "user",
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -5330,6 +5346,10 @@
           {
             "name": "nonce",
             "type": "u128"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -5342,6 +5362,10 @@
           {
             "name": "user",
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -5362,6 +5386,10 @@
           {
             "name": "selected_option",
             "type": "u16"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -5374,6 +5402,10 @@
           {
             "name": "user",
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -5390,6 +5422,10 @@
           {
             "name": "market",
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }

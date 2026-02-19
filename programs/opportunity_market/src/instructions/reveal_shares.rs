@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::{SharesRevealedError, SharesRevealedEvent};
+use crate::events::{emit_ts, SharesRevealedError, SharesRevealedEvent};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::state::{OpportunityMarket, ShareAccount, EncryptedTokenAccount};
 use crate::COMP_DEF_OFFSET_REVEAL_SHARES;
@@ -193,7 +193,7 @@ pub fn reveal_shares_callback(
     ) {
         Ok(RevealSharesOutput { field_0 }) => field_0,
         Err(_) => {
-            emit!(SharesRevealedError {
+            emit_ts!(SharesRevealedError {
                 user: ctx.accounts.user_eta.owner,
             });
             return Ok(());
@@ -214,7 +214,7 @@ pub fn reveal_shares_callback(
         ctx.accounts.user_eta.encrypted_state = new_user_balance.ciphertexts;
     }
 
-    emit!(SharesRevealedEvent {
+    emit_ts!(SharesRevealedEvent {
         buyer: ctx.accounts.user_eta.owner,
         shares_amount: revealed_amount,
         selected_option: revealed_option,

@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::{SharesUnstakedError, SharesUnstakedEvent};
+use crate::events::{emit_ts, SharesUnstakedError, SharesUnstakedEvent};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::state::{OpportunityMarket, ShareAccount, EncryptedTokenAccount};
 use crate::COMP_DEF_OFFSET_UNSTAKE_EARLY;
@@ -195,7 +195,7 @@ pub fn unstake_early_callback(
     ) {
         Ok(UnstakeEarlyOutput { field_0 }) => field_0,
         Err(_) => {
-            emit!(SharesUnstakedError {
+            emit_ts!(SharesUnstakedError {
                 user: ctx.accounts.user_eta.owner,
             });
             return Ok(());
@@ -210,7 +210,7 @@ pub fn unstake_early_callback(
     ctx.accounts.user_eta.state_nonce = new_user_balance.nonce;
     ctx.accounts.user_eta.encrypted_state = new_user_balance.ciphertexts;
 
-    emit!(SharesUnstakedEvent {
+    emit_ts!(SharesUnstakedEvent {
         buyer: ctx.accounts.user_eta.owner,
         market: ctx.accounts.share_account.market,
     });

@@ -10,6 +10,8 @@ import {
   combineCodec,
   getAddressDecoder,
   getAddressEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   getU16Decoder,
@@ -26,12 +28,14 @@ export type SharesRevealedEvent = {
   buyer: Address;
   sharesAmount: bigint;
   selectedOption: number;
+  timestamp: bigint;
 };
 
 export type SharesRevealedEventArgs = {
   buyer: Address;
   sharesAmount: number | bigint;
   selectedOption: number;
+  timestamp: number | bigint;
 };
 
 export function getSharesRevealedEventEncoder(): FixedSizeEncoder<SharesRevealedEventArgs> {
@@ -39,6 +43,7 @@ export function getSharesRevealedEventEncoder(): FixedSizeEncoder<SharesRevealed
     ['buyer', getAddressEncoder()],
     ['sharesAmount', getU64Encoder()],
     ['selectedOption', getU16Encoder()],
+    ['timestamp', getI64Encoder()],
   ]);
 }
 
@@ -47,6 +52,7 @@ export function getSharesRevealedEventDecoder(): FixedSizeDecoder<SharesRevealed
     ['buyer', getAddressDecoder()],
     ['sharesAmount', getU64Decoder()],
     ['selectedOption', getU16Decoder()],
+    ['timestamp', getI64Decoder()],
   ]);
 }
 

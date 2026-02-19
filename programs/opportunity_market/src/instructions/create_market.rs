@@ -5,7 +5,7 @@ use anchor_spl::{
 };
 
 use crate::state::{CentralState, OpportunityMarket};
-use crate::events::MarketCreatedEvent;
+use crate::events::{emit_ts, MarketCreatedEvent};
 
 #[derive(Accounts)]
 #[instruction(market_index: u64)]
@@ -72,7 +72,7 @@ pub fn create_market(
     market.authorized_reader_pubkey = authorized_reader_pubkey;
     market.allow_closing_early = allow_closing_early;
 
-    emit!(MarketCreatedEvent {
+    emit_ts!(MarketCreatedEvent {
         market: ctx.accounts.market.key(),
         creator: ctx.accounts.creator.key(),
         index: market_index,

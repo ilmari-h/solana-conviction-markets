@@ -10,6 +10,8 @@ import {
   combineCodec,
   getAddressDecoder,
   getAddressEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   type Address,
@@ -18,14 +20,23 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type SharesUnstakedEvent = { buyer: Address; market: Address };
+export type SharesUnstakedEvent = {
+  buyer: Address;
+  market: Address;
+  timestamp: bigint;
+};
 
-export type SharesUnstakedEventArgs = SharesUnstakedEvent;
+export type SharesUnstakedEventArgs = {
+  buyer: Address;
+  market: Address;
+  timestamp: number | bigint;
+};
 
 export function getSharesUnstakedEventEncoder(): FixedSizeEncoder<SharesUnstakedEventArgs> {
   return getStructEncoder([
     ['buyer', getAddressEncoder()],
     ['market', getAddressEncoder()],
+    ['timestamp', getI64Encoder()],
   ]);
 }
 
@@ -33,6 +44,7 @@ export function getSharesUnstakedEventDecoder(): FixedSizeDecoder<SharesUnstaked
   return getStructDecoder([
     ['buyer', getAddressDecoder()],
     ['market', getAddressDecoder()],
+    ['timestamp', getI64Decoder()],
   ]);
 }
 

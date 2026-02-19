@@ -10,6 +10,8 @@ import {
   combineCodec,
   getAddressDecoder,
   getAddressEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   type Address,
@@ -18,16 +20,28 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type EncryptedTokensUnwrappedError = { user: Address };
+export type EncryptedTokensUnwrappedError = {
+  user: Address;
+  timestamp: bigint;
+};
 
-export type EncryptedTokensUnwrappedErrorArgs = EncryptedTokensUnwrappedError;
+export type EncryptedTokensUnwrappedErrorArgs = {
+  user: Address;
+  timestamp: number | bigint;
+};
 
 export function getEncryptedTokensUnwrappedErrorEncoder(): FixedSizeEncoder<EncryptedTokensUnwrappedErrorArgs> {
-  return getStructEncoder([['user', getAddressEncoder()]]);
+  return getStructEncoder([
+    ['user', getAddressEncoder()],
+    ['timestamp', getI64Encoder()],
+  ]);
 }
 
 export function getEncryptedTokensUnwrappedErrorDecoder(): FixedSizeDecoder<EncryptedTokensUnwrappedError> {
-  return getStructDecoder([['user', getAddressDecoder()]]);
+  return getStructDecoder([
+    ['user', getAddressDecoder()],
+    ['timestamp', getI64Decoder()],
+  ]);
 }
 
 export function getEncryptedTokensUnwrappedErrorCodec(): FixedSizeCodec<

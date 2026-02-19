@@ -10,6 +10,8 @@ import {
   combineCodec,
   getAddressDecoder,
   getAddressEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -24,12 +26,14 @@ export type MarketCreatedEvent = {
   market: Address;
   creator: Address;
   index: bigint;
+  timestamp: bigint;
 };
 
 export type MarketCreatedEventArgs = {
   market: Address;
   creator: Address;
   index: number | bigint;
+  timestamp: number | bigint;
 };
 
 export function getMarketCreatedEventEncoder(): FixedSizeEncoder<MarketCreatedEventArgs> {
@@ -37,6 +41,7 @@ export function getMarketCreatedEventEncoder(): FixedSizeEncoder<MarketCreatedEv
     ['market', getAddressEncoder()],
     ['creator', getAddressEncoder()],
     ['index', getU64Encoder()],
+    ['timestamp', getI64Encoder()],
   ]);
 }
 
@@ -45,6 +50,7 @@ export function getMarketCreatedEventDecoder(): FixedSizeDecoder<MarketCreatedEv
     ['market', getAddressDecoder()],
     ['creator', getAddressDecoder()],
     ['index', getU64Decoder()],
+    ['timestamp', getI64Decoder()],
   ]);
 }
 

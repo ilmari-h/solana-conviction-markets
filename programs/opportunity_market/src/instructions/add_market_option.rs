@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::{SharesPurchasedError, SharesPurchasedEvent};
+use crate::events::{emit_ts, SharesPurchasedError, SharesPurchasedEvent};
 use crate::state::{CentralState, OpportunityMarket, OpportunityMarketOption, ShareAccount, EncryptedTokenAccount};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::COMP_DEF_OFFSET_ADD_OPTION_STAKE;
@@ -235,7 +235,7 @@ pub fn add_market_option_callback(
         Err(_) => {
             // Rollback
             ctx.accounts.share_account.staked_at_timestamp = None;
-            emit!(SharesPurchasedError {
+            emit_ts!(SharesPurchasedError {
                 user: ctx.accounts.source_eta.owner,
             });
             return Ok(());
@@ -245,7 +245,7 @@ pub fn add_market_option_callback(
     if res.field_0 {
         // Rollback
         ctx.accounts.share_account.staked_at_timestamp = None;
-        emit!(SharesPurchasedError {
+        emit_ts!(SharesPurchasedError {
             user: ctx.accounts.source_eta.owner,
         });
         return Ok(());
@@ -265,10 +265,10 @@ pub fn add_market_option_callback(
     ctx.accounts.share_account.state_nonce_disclosure = bought_shares_shared.nonce;
     ctx.accounts.share_account.encrypted_state_disclosure = bought_shares_shared.ciphertexts;
 
-    emit!(SharesPurchasedEvent {
+    emit_ts!(SharesPurchasedEvent {
         buyer: ctx.accounts.source_eta.owner,
         encrypted_disclosed_amount: bought_shares_shared.ciphertexts[0],
-        nonce: bought_shares_shared.nonce
+        nonce: bought_shares_shared.nonce,
     });
 
     Ok(())

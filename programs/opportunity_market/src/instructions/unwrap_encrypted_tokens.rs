@@ -6,7 +6,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::EncryptedTokensUnwrappedError;
+use crate::events::{emit_ts, EncryptedTokensUnwrappedError};
 use crate::instructions::init_token_vault::TOKEN_VAULT_SEED;
 use crate::state::{EncryptedTokenAccount, TokenVault};
 
@@ -209,7 +209,7 @@ pub fn unwrap_encrypted_tokens_callback(
     ) {
         Ok(UnwrapEncryptedTokensOutput { field_0 }) => field_0,
         Err(_) => {
-            emit!(EncryptedTokensUnwrappedError {
+            emit_ts!(EncryptedTokensUnwrappedError {
                 user: eta.owner,
             });
             return Ok(());
@@ -217,7 +217,7 @@ pub fn unwrap_encrypted_tokens_callback(
     };
 
     if res.field_0 {
-        emit!(EncryptedTokensUnwrappedError {
+        emit_ts!(EncryptedTokensUnwrappedError {
             user: eta.owner,
         });
         return Ok(());

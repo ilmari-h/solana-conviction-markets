@@ -10,6 +10,8 @@ import {
   combineCodec,
   getAddressDecoder,
   getAddressEncoder,
+  getI64Decoder,
+  getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   type Address,
@@ -18,16 +20,25 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type SharesPurchasedError = { user: Address };
+export type SharesPurchasedError = { user: Address; timestamp: bigint };
 
-export type SharesPurchasedErrorArgs = SharesPurchasedError;
+export type SharesPurchasedErrorArgs = {
+  user: Address;
+  timestamp: number | bigint;
+};
 
 export function getSharesPurchasedErrorEncoder(): FixedSizeEncoder<SharesPurchasedErrorArgs> {
-  return getStructEncoder([['user', getAddressEncoder()]]);
+  return getStructEncoder([
+    ['user', getAddressEncoder()],
+    ['timestamp', getI64Encoder()],
+  ]);
 }
 
 export function getSharesPurchasedErrorDecoder(): FixedSizeDecoder<SharesPurchasedError> {
-  return getStructDecoder([['user', getAddressDecoder()]]);
+  return getStructDecoder([
+    ['user', getAddressDecoder()],
+    ['timestamp', getI64Decoder()],
+  ]);
 }
 
 export function getSharesPurchasedErrorCodec(): FixedSizeCodec<
