@@ -31,7 +31,7 @@ import {
 } from '@solana/kit';
 
 export type SharesRevealedEvent = {
-  buyer: Address;
+  user: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
   sharesAmount: bigint;
@@ -42,7 +42,7 @@ export type SharesRevealedEvent = {
 };
 
 export type SharesRevealedEventArgs = {
-  buyer: Address;
+  user: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
   sharesAmount: number | bigint;
@@ -54,7 +54,7 @@ export type SharesRevealedEventArgs = {
 
 export function getSharesRevealedEventEncoder(): FixedSizeEncoder<SharesRevealedEventArgs> {
   return getStructEncoder([
-    ['buyer', getAddressEncoder()],
+    ['user', getAddressEncoder()],
     ['encryptedTokenAccount', getAddressEncoder()],
     ['shareAccount', getAddressEncoder()],
     ['sharesAmount', getU64Encoder()],
@@ -67,7 +67,7 @@ export function getSharesRevealedEventEncoder(): FixedSizeEncoder<SharesRevealed
 
 export function getSharesRevealedEventDecoder(): FixedSizeDecoder<SharesRevealedEvent> {
   return getStructDecoder([
-    ['buyer', getAddressDecoder()],
+    ['user', getAddressDecoder()],
     ['encryptedTokenAccount', getAddressDecoder()],
     ['shareAccount', getAddressDecoder()],
     ['sharesAmount', getU64Decoder()],

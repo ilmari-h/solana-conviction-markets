@@ -49,7 +49,7 @@ pub fn unstake_early(
     ctx.accounts.share_account.unstakeable_at_timestamp = Some(unstakeable_at);
 
     emit_ts!(UnstakeInitiatedEvent {
-        buyer: ctx.accounts.signer.key(),
+        user: ctx.accounts.signer.key(),
         market: market.key(),
         share_account: ctx.accounts.share_account.key(),
         unstakeable_at_timestamp: unstakeable_at,

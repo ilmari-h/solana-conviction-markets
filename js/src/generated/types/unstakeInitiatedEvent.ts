@@ -23,7 +23,7 @@ import {
 } from '@solana/kit';
 
 export type UnstakeInitiatedEvent = {
-  buyer: Address;
+  user: Address;
   market: Address;
   shareAccount: Address;
   unstakeableAtTimestamp: bigint;
@@ -31,7 +31,7 @@ export type UnstakeInitiatedEvent = {
 };
 
 export type UnstakeInitiatedEventArgs = {
-  buyer: Address;
+  user: Address;
   market: Address;
   shareAccount: Address;
   unstakeableAtTimestamp: number | bigint;
@@ -40,7 +40,7 @@ export type UnstakeInitiatedEventArgs = {
 
 export function getUnstakeInitiatedEventEncoder(): FixedSizeEncoder<UnstakeInitiatedEventArgs> {
   return getStructEncoder([
-    ['buyer', getAddressEncoder()],
+    ['user', getAddressEncoder()],
     ['market', getAddressEncoder()],
     ['shareAccount', getAddressEncoder()],
     ['unstakeableAtTimestamp', getU64Encoder()],
@@ -50,7 +50,7 @@ export function getUnstakeInitiatedEventEncoder(): FixedSizeEncoder<UnstakeIniti
 
 export function getUnstakeInitiatedEventDecoder(): FixedSizeDecoder<UnstakeInitiatedEvent> {
   return getStructDecoder([
-    ['buyer', getAddressDecoder()],
+    ['user', getAddressDecoder()],
     ['market', getAddressDecoder()],
     ['shareAccount', getAddressDecoder()],
     ['unstakeableAtTimestamp', getU64Decoder()],

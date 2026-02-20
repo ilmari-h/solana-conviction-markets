@@ -230,7 +230,7 @@ pub fn buy_opportunity_market_shares_callback(
     ctx.accounts.share_account.encrypted_state_disclosure = bought_shares_shared.ciphertexts;
 
     emit_ts!(StakedEvent {
-        buyer: ctx.accounts.user_encrypted_token_account.owner,
+        user: ctx.accounts.user_encrypted_token_account.owner,
         encrypted_token_account: ctx.accounts.user_encrypted_token_account.key(),
         share_account: ctx.accounts.share_account.key(),
         share_encrypted_state: bought_shares_mxe.ciphertexts,

@@ -266,7 +266,7 @@ pub fn add_market_option_callback(
     ctx.accounts.share_account.encrypted_state_disclosure =bought_shares_disclosed.ciphertexts;
 
     emit_ts!(StakedEvent {
-        buyer: ctx.accounts.source_eta.owner,
+        user: ctx.accounts.source_eta.owner,
         encrypted_token_account: ctx.accounts.source_eta.key(),
         share_account: ctx.accounts.share_account.key(),
         share_encrypted_state: bought_shares.ciphertexts,

@@ -24,7 +24,7 @@ pub struct MarketCreatedEvent {
 #[event]
 pub struct EncryptedTokenWrappedEvent {
     pub encrypted_token_account: Pubkey,
-    pub buyer: Pubkey,
+    pub user: Pubkey,
     pub deposit_amount: u64,
     pub encrypted_new_balance: [u8; 32],
     pub nonce: u128,
@@ -33,7 +33,7 @@ pub struct EncryptedTokenWrappedEvent {
 
 #[event]
 pub struct StakedEvent {
-    pub buyer: Pubkey,
+    pub user: Pubkey,
     pub encrypted_token_account: Pubkey,
     pub share_account: Pubkey,
     pub share_encrypted_state: [[u8; 32]; 2],
@@ -47,7 +47,7 @@ pub struct StakedEvent {
 
 #[event]
 pub struct SharesRevealedEvent {
-    pub buyer: Pubkey,
+    pub user: Pubkey,
     pub encrypted_token_account: Pubkey,
     pub share_account: Pubkey,
     pub shares_amount: u64,
@@ -59,7 +59,7 @@ pub struct SharesRevealedEvent {
 
 #[event]
 pub struct SharesUnstakedEvent {
-    pub buyer: Pubkey,
+    pub user: Pubkey,
     pub market: Pubkey,
     pub encrypted_token_account: Pubkey,
     pub share_account: Pubkey,
@@ -172,7 +172,7 @@ pub struct EphemeralAccountClosedError {
 
 #[event]
 pub struct UnstakeInitiatedEvent {
-    pub buyer: Pubkey,
+    pub user: Pubkey,
     pub market: Pubkey,
     pub share_account: Pubkey,
     pub unstakeable_at_timestamp: u64,

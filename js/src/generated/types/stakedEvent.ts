@@ -27,7 +27,7 @@ import {
 } from '@solana/kit';
 
 export type StakedEvent = {
-  buyer: Address;
+  user: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
   shareEncryptedState: Array<Array<number>>;
@@ -40,7 +40,7 @@ export type StakedEvent = {
 };
 
 export type StakedEventArgs = {
-  buyer: Address;
+  user: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
   shareEncryptedState: Array<Array<number>>;
@@ -54,7 +54,7 @@ export type StakedEventArgs = {
 
 export function getStakedEventEncoder(): FixedSizeEncoder<StakedEventArgs> {
   return getStructEncoder([
-    ['buyer', getAddressEncoder()],
+    ['user', getAddressEncoder()],
     ['encryptedTokenAccount', getAddressEncoder()],
     ['shareAccount', getAddressEncoder()],
     [
@@ -79,7 +79,7 @@ export function getStakedEventEncoder(): FixedSizeEncoder<StakedEventArgs> {
 
 export function getStakedEventDecoder(): FixedSizeDecoder<StakedEvent> {
   return getStructDecoder([
-    ['buyer', getAddressDecoder()],
+    ['user', getAddressDecoder()],
     ['encryptedTokenAccount', getAddressDecoder()],
     ['shareAccount', getAddressDecoder()],
     [

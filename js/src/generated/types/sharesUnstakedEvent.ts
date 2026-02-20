@@ -27,7 +27,7 @@ import {
 } from '@solana/kit';
 
 export type SharesUnstakedEvent = {
-  buyer: Address;
+  user: Address;
   market: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
@@ -37,7 +37,7 @@ export type SharesUnstakedEvent = {
 };
 
 export type SharesUnstakedEventArgs = {
-  buyer: Address;
+  user: Address;
   market: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
@@ -48,7 +48,7 @@ export type SharesUnstakedEventArgs = {
 
 export function getSharesUnstakedEventEncoder(): FixedSizeEncoder<SharesUnstakedEventArgs> {
   return getStructEncoder([
-    ['buyer', getAddressEncoder()],
+    ['user', getAddressEncoder()],
     ['market', getAddressEncoder()],
     ['encryptedTokenAccount', getAddressEncoder()],
     ['shareAccount', getAddressEncoder()],
@@ -60,7 +60,7 @@ export function getSharesUnstakedEventEncoder(): FixedSizeEncoder<SharesUnstaked
 
 export function getSharesUnstakedEventDecoder(): FixedSizeDecoder<SharesUnstakedEvent> {
   return getStructDecoder([
-    ['buyer', getAddressDecoder()],
+    ['user', getAddressDecoder()],
     ['market', getAddressDecoder()],
     ['encryptedTokenAccount', getAddressDecoder()],
     ['shareAccount', getAddressDecoder()],

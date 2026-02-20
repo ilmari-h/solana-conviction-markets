@@ -30,7 +30,7 @@ import {
 
 export type EncryptedTokenWrappedEvent = {
   encryptedTokenAccount: Address;
-  buyer: Address;
+  user: Address;
   depositAmount: bigint;
   encryptedNewBalance: Array<number>;
   nonce: bigint;
@@ -39,7 +39,7 @@ export type EncryptedTokenWrappedEvent = {
 
 export type EncryptedTokenWrappedEventArgs = {
   encryptedTokenAccount: Address;
-  buyer: Address;
+  user: Address;
   depositAmount: number | bigint;
   encryptedNewBalance: Array<number>;
   nonce: number | bigint;
@@ -49,7 +49,7 @@ export type EncryptedTokenWrappedEventArgs = {
 export function getEncryptedTokenWrappedEventEncoder(): FixedSizeEncoder<EncryptedTokenWrappedEventArgs> {
   return getStructEncoder([
     ['encryptedTokenAccount', getAddressEncoder()],
-    ['buyer', getAddressEncoder()],
+    ['user', getAddressEncoder()],
     ['depositAmount', getU64Encoder()],
     ['encryptedNewBalance', getArrayEncoder(getU8Encoder(), { size: 32 })],
     ['nonce', getU128Encoder()],
@@ -60,7 +60,7 @@ export function getEncryptedTokenWrappedEventEncoder(): FixedSizeEncoder<Encrypt
 export function getEncryptedTokenWrappedEventDecoder(): FixedSizeDecoder<EncryptedTokenWrappedEvent> {
   return getStructDecoder([
     ['encryptedTokenAccount', getAddressDecoder()],
-    ['buyer', getAddressDecoder()],
+    ['user', getAddressDecoder()],
     ['depositAmount', getU64Decoder()],
     ['encryptedNewBalance', getArrayDecoder(getU8Decoder(), { size: 32 })],
     ['nonce', getU128Decoder()],

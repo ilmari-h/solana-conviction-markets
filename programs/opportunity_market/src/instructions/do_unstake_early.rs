@@ -211,7 +211,7 @@ pub fn unstake_early_callback(
     ctx.accounts.user_eta.encrypted_state = new_user_balance.ciphertexts;
 
     emit_ts!(SharesUnstakedEvent {
-        buyer: ctx.accounts.user_eta.owner,
+        user: ctx.accounts.user_eta.owner,
         market: ctx.accounts.share_account.market,
         encrypted_token_account: ctx.accounts.user_eta.key(),
         share_account: ctx.accounts.share_account.key(),

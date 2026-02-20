@@ -206,7 +206,7 @@ pub fn wrap_encrypted_tokens_callback(
 
     emit_ts!(EncryptedTokenWrappedEvent {
         encrypted_token_account: eta.key(),
-        buyer: eta.owner,
+        user: eta.owner,
         deposit_amount: deposit_amount,
         encrypted_new_balance: encrypted_balance.ciphertexts[0],
         nonce: encrypted_balance.nonce,

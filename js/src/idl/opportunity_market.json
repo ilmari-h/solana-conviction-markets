@@ -4749,7 +4749,7 @@
             "type": "pubkey"
           },
           {
-            "name": "buyer",
+            "name": "user",
             "type": "pubkey"
           },
           {
@@ -5807,7 +5807,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "buyer",
+            "name": "user",
             "type": "pubkey"
           },
           {
@@ -5868,7 +5868,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "buyer",
+            "name": "user",
             "type": "pubkey"
           },
           {
@@ -5964,7 +5964,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "buyer",
+            "name": "user",
             "type": "pubkey"
           },
           {
@@ -6127,7 +6127,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "buyer",
+            "name": "user",
             "type": "pubkey"
           },
           {
