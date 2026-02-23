@@ -145,6 +145,11 @@ export async function sendTransaction(
     console.log(`${logPrefix}Confirmed: ${signature.slice(0, 20)}...`);
   }
 
+  if (process.env.PRINT_TX_TIMES) {
+    const ts = txResult?.blockTime ? new Date(Number(txResult.blockTime) * 1000).toISOString() : new Date().toISOString();
+    console.log(`${ts}: ${signature}`);
+  }
+
   return { signature, logs };
 }
 
