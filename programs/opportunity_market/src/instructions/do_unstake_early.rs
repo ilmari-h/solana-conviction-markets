@@ -216,7 +216,6 @@ pub fn unstake_early_callback(
         market: ctx.accounts.share_account.market,
         encrypted_token_account: ctx.accounts.user_eta.key(),
         share_account: ctx.accounts.share_account.key(),
-        nonce: new_user_balance.nonce,
     });
 
     Ok(())

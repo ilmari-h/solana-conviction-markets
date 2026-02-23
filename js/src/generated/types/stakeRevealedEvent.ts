@@ -14,8 +14,6 @@ import {
   getI64Encoder,
   getStructDecoder,
   getStructEncoder,
-  getU128Decoder,
-  getU128Encoder,
   getU16Decoder,
   getU16Encoder,
   getU64Decoder,
@@ -33,7 +31,6 @@ export type StakeRevealedEvent = {
   shareAccount: Address;
   sharesAmount: bigint;
   selectedOption: number;
-  nonce: bigint;
   timestamp: bigint;
 };
 
@@ -44,7 +41,6 @@ export type StakeRevealedEventArgs = {
   shareAccount: Address;
   sharesAmount: number | bigint;
   selectedOption: number;
-  nonce: number | bigint;
   timestamp: number | bigint;
 };
 
@@ -56,7 +52,6 @@ export function getStakeRevealedEventEncoder(): FixedSizeEncoder<StakeRevealedEv
     ['shareAccount', getAddressEncoder()],
     ['sharesAmount', getU64Encoder()],
     ['selectedOption', getU16Encoder()],
-    ['nonce', getU128Encoder()],
     ['timestamp', getI64Encoder()],
   ]);
 }
@@ -69,7 +64,6 @@ export function getStakeRevealedEventDecoder(): FixedSizeDecoder<StakeRevealedEv
     ['shareAccount', getAddressDecoder()],
     ['sharesAmount', getU64Decoder()],
     ['selectedOption', getU16Decoder()],
-    ['nonce', getU128Decoder()],
     ['timestamp', getI64Decoder()],
   ]);
 }

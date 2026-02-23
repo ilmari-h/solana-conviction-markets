@@ -54,7 +54,6 @@ pub struct StakeRevealedEvent {
     pub share_account: Pubkey,
     pub shares_amount: u64,
     pub selected_option: u16,
-    pub nonce: u128,
     pub timestamp: i64,
 }
 
@@ -64,7 +63,6 @@ pub struct UnstakedEvent {
     pub market: Pubkey,
     pub encrypted_token_account: Pubkey,
     pub share_account: Pubkey,
-    pub nonce: u128,
     pub timestamp: i64,
 }
 

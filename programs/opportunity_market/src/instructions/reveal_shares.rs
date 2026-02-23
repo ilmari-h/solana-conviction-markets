@@ -222,7 +222,6 @@ pub fn reveal_shares_callback(
         share_account: ctx.accounts.share_account.key(),
         shares_amount: revealed_amount,
         selected_option: revealed_option,
-        nonce: new_user_balance.nonce,
     });
 
     Ok(())

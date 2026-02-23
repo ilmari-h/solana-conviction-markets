@@ -5882,10 +5882,6 @@
             "type": "u16"
           },
           {
-            "name": "nonce",
-            "type": "u128"
-          },
-          {
             "name": "timestamp",
             "type": "i64"
           }
@@ -6139,10 +6135,6 @@
           {
             "name": "share_account",
             "type": "pubkey"
-          },
-          {
-            "name": "nonce",
-            "type": "u128"
           },
           {
             "name": "timestamp",
