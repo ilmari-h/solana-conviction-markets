@@ -10,72 +10,76 @@ import {
   combineCodec,
   getAddressDecoder,
   getAddressEncoder,
-  getArrayDecoder,
-  getArrayEncoder,
   getI64Decoder,
   getI64Encoder,
   getStructDecoder,
   getStructEncoder,
   getU128Decoder,
   getU128Encoder,
-  getU8Decoder,
-  getU8Encoder,
+  getU16Decoder,
+  getU16Encoder,
+  getU64Decoder,
+  getU64Encoder,
   type Address,
   type FixedSizeCodec,
   type FixedSizeDecoder,
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type SharesUnstakedEvent = {
+export type StakeRevealedEvent = {
   user: Address;
   market: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
-  encryptedNewBalance: Array<number>;
+  sharesAmount: bigint;
+  selectedOption: number;
   nonce: bigint;
   timestamp: bigint;
 };
 
-export type SharesUnstakedEventArgs = {
+export type StakeRevealedEventArgs = {
   user: Address;
   market: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
-  encryptedNewBalance: Array<number>;
+  sharesAmount: number | bigint;
+  selectedOption: number;
   nonce: number | bigint;
   timestamp: number | bigint;
 };
 
-export function getSharesUnstakedEventEncoder(): FixedSizeEncoder<SharesUnstakedEventArgs> {
+export function getStakeRevealedEventEncoder(): FixedSizeEncoder<StakeRevealedEventArgs> {
   return getStructEncoder([
     ['user', getAddressEncoder()],
     ['market', getAddressEncoder()],
     ['encryptedTokenAccount', getAddressEncoder()],
     ['shareAccount', getAddressEncoder()],
-    ['encryptedNewBalance', getArrayEncoder(getU8Encoder(), { size: 32 })],
+    ['sharesAmount', getU64Encoder()],
+    ['selectedOption', getU16Encoder()],
     ['nonce', getU128Encoder()],
     ['timestamp', getI64Encoder()],
   ]);
 }
 
-export function getSharesUnstakedEventDecoder(): FixedSizeDecoder<SharesUnstakedEvent> {
+export function getStakeRevealedEventDecoder(): FixedSizeDecoder<StakeRevealedEvent> {
   return getStructDecoder([
     ['user', getAddressDecoder()],
     ['market', getAddressDecoder()],
     ['encryptedTokenAccount', getAddressDecoder()],
     ['shareAccount', getAddressDecoder()],
-    ['encryptedNewBalance', getArrayDecoder(getU8Decoder(), { size: 32 })],
+    ['sharesAmount', getU64Decoder()],
+    ['selectedOption', getU16Decoder()],
     ['nonce', getU128Decoder()],
     ['timestamp', getI64Decoder()],
   ]);
 }
 
-export function getSharesUnstakedEventCodec(): FixedSizeCodec<
-  SharesUnstakedEventArgs,
-  SharesUnstakedEvent
+export function getStakeRevealedEventCodec(): FixedSizeCodec<
+  StakeRevealedEventArgs,
+  StakeRevealedEvent
 > {
   return combineCodec(
-    getSharesUnstakedEventEncoder(),
-    getSharesUnstakedEventDecoder()
+    getStakeRevealedEventEncoder(),
+    getStakeRevealedEventDecoder()
   );
 }

@@ -6,7 +6,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::{emit_ts, EncryptedTokenWrappedEvent};
+use crate::events::{emit_ts, EncryptedTokensWrappedEvent};
 use crate::state::{EncryptedTokenAccount, TokenVault};
 use crate::instructions::init_token_vault::TOKEN_VAULT_SEED;
 use crate::COMP_DEF_OFFSET_WRAP_ENCRYPTED_TOKENS;
@@ -205,7 +205,7 @@ pub fn wrap_encrypted_tokens_callback(
     eta.encrypted_state = encrypted_balance.ciphertexts;
     eta.is_initialized = true;
 
-    emit_ts!(EncryptedTokenWrappedEvent {
+    emit_ts!(EncryptedTokensWrappedEvent {
         encrypted_token_account: eta.key(),
         user: eta.owner,
         deposit_amount: deposit_amount,

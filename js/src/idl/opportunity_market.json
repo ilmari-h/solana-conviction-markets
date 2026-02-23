@@ -3728,19 +3728,6 @@
       ]
     },
     {
-      "name": "EncryptedTokenWrappedEvent",
-      "discriminator": [
-        7,
-        96,
-        215,
-        148,
-        4,
-        208,
-        238,
-        85
-      ]
-    },
-    {
       "name": "EncryptedTokensUnwrappedError",
       "discriminator": [
         153,
@@ -3764,6 +3751,19 @@
         174,
         44,
         51
+      ]
+    },
+    {
+      "name": "EncryptedTokensWrappedEvent",
+      "discriminator": [
+        86,
+        90,
+        17,
+        55,
+        3,
+        17,
+        143,
+        67
       ]
     },
     {
@@ -3897,55 +3897,29 @@
       ]
     },
     {
-      "name": "SharesRevealedError",
+      "name": "StakeRevealedError",
       "discriminator": [
-        30,
-        253,
-        212,
-        117,
-        156,
-        93,
-        221,
-        42
+        169,
+        109,
+        247,
+        140,
+        147,
+        140,
+        228,
+        164
       ]
     },
     {
-      "name": "SharesRevealedEvent",
+      "name": "StakeRevealedEvent",
       "discriminator": [
-        103,
-        9,
-        217,
-        69,
-        233,
-        96,
-        61,
-        81
-      ]
-    },
-    {
-      "name": "SharesUnstakedError",
-      "discriminator": [
-        237,
-        68,
-        70,
-        188,
-        33,
-        97,
-        250,
-        31
-      ]
-    },
-    {
-      "name": "SharesUnstakedEvent",
-      "discriminator": [
-        35,
-        192,
-        145,
-        204,
-        234,
-        75,
-        241,
-        235
+        251,
+        67,
+        27,
+        236,
+        153,
+        24,
+        248,
+        211
       ]
     },
     {
@@ -3998,6 +3972,32 @@
         12,
         177,
         9
+      ]
+    },
+    {
+      "name": "UnstakedError",
+      "discriminator": [
+        155,
+        86,
+        205,
+        124,
+        177,
+        215,
+        208,
+        126
+      ]
+    },
+    {
+      "name": "UnstakedEvent",
+      "discriminator": [
+        186,
+        174,
+        247,
+        231,
+        242,
+        159,
+        68,
+        128
       ]
     }
   ],
@@ -4752,43 +4752,6 @@
       }
     },
     {
-      "name": "EncryptedTokenWrappedEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "encrypted_token_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "deposit_amount",
-            "type": "u64"
-          },
-          {
-            "name": "encrypted_new_balance",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "nonce",
-            "type": "u128"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
       "name": "EncryptedTokensUnwrappedError",
       "type": {
         "kind": "struct",
@@ -4819,6 +4782,43 @@
           },
           {
             "name": "amount_withdrawn",
+            "type": "u64"
+          },
+          {
+            "name": "encrypted_new_balance",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u128"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EncryptedTokensWrappedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "encrypted_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "deposit_amount",
             "type": "u64"
           },
           {
@@ -5798,124 +5798,6 @@
       }
     },
     {
-      "name": "SharesRevealedError",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SharesRevealedEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "encrypted_token_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "share_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "shares_amount",
-            "type": "u64"
-          },
-          {
-            "name": "selected_option",
-            "type": "u16"
-          },
-          {
-            "name": "encrypted_new_balance",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "nonce",
-            "type": "u128"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SharesUnstakedError",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SharesUnstakedEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "market",
-            "type": "pubkey"
-          },
-          {
-            "name": "encrypted_token_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "share_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "encrypted_new_balance",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "nonce",
-            "type": "u128"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
       "name": "SignedComputationOutputs",
       "generics": [
         {
@@ -5955,6 +5837,62 @@
       }
     },
     {
+      "name": "StakeRevealedError",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeRevealedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "encrypted_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "share_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "shares_amount",
+            "type": "u64"
+          },
+          {
+            "name": "selected_option",
+            "type": "u16"
+          },
+          {
+            "name": "nonce",
+            "type": "u128"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "StakedError",
       "type": {
         "kind": "struct",
@@ -5977,6 +5915,10 @@
         "fields": [
           {
             "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
             "type": "pubkey"
           },
           {
@@ -6153,6 +6095,54 @@
           {
             "name": "unstakeable_at_timestamp",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakedError",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "encrypted_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "share_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "nonce",
+            "type": "u128"
           },
           {
             "name": "timestamp",

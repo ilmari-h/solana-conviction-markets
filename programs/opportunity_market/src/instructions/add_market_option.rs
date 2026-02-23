@@ -268,6 +268,7 @@ pub fn add_market_option_callback(
 
     emit_ts!(StakedEvent {
         user: ctx.accounts.source_eta.owner,
+        market: ctx.accounts.share_account.market,
         encrypted_token_account: ctx.accounts.source_eta.key(),
         share_account: ctx.accounts.share_account.key(),
         share_encrypted_state: bought_shares.ciphertexts,

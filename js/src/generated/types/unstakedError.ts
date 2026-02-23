@@ -20,33 +20,27 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type SharesRevealedError = { user: Address; timestamp: bigint };
+export type UnstakedError = { user: Address; timestamp: bigint };
 
-export type SharesRevealedErrorArgs = {
-  user: Address;
-  timestamp: number | bigint;
-};
+export type UnstakedErrorArgs = { user: Address; timestamp: number | bigint };
 
-export function getSharesRevealedErrorEncoder(): FixedSizeEncoder<SharesRevealedErrorArgs> {
+export function getUnstakedErrorEncoder(): FixedSizeEncoder<UnstakedErrorArgs> {
   return getStructEncoder([
     ['user', getAddressEncoder()],
     ['timestamp', getI64Encoder()],
   ]);
 }
 
-export function getSharesRevealedErrorDecoder(): FixedSizeDecoder<SharesRevealedError> {
+export function getUnstakedErrorDecoder(): FixedSizeDecoder<UnstakedError> {
   return getStructDecoder([
     ['user', getAddressDecoder()],
     ['timestamp', getI64Decoder()],
   ]);
 }
 
-export function getSharesRevealedErrorCodec(): FixedSizeCodec<
-  SharesRevealedErrorArgs,
-  SharesRevealedError
+export function getUnstakedErrorCodec(): FixedSizeCodec<
+  UnstakedErrorArgs,
+  UnstakedError
 > {
-  return combineCodec(
-    getSharesRevealedErrorEncoder(),
-    getSharesRevealedErrorDecoder()
-  );
+  return combineCodec(getUnstakedErrorEncoder(), getUnstakedErrorDecoder());
 }

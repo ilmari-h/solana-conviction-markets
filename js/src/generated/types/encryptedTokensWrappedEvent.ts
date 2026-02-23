@@ -28,7 +28,7 @@ import {
   type FixedSizeEncoder,
 } from '@solana/kit';
 
-export type EncryptedTokenWrappedEvent = {
+export type EncryptedTokensWrappedEvent = {
   encryptedTokenAccount: Address;
   user: Address;
   depositAmount: bigint;
@@ -37,7 +37,7 @@ export type EncryptedTokenWrappedEvent = {
   timestamp: bigint;
 };
 
-export type EncryptedTokenWrappedEventArgs = {
+export type EncryptedTokensWrappedEventArgs = {
   encryptedTokenAccount: Address;
   user: Address;
   depositAmount: number | bigint;
@@ -46,7 +46,7 @@ export type EncryptedTokenWrappedEventArgs = {
   timestamp: number | bigint;
 };
 
-export function getEncryptedTokenWrappedEventEncoder(): FixedSizeEncoder<EncryptedTokenWrappedEventArgs> {
+export function getEncryptedTokensWrappedEventEncoder(): FixedSizeEncoder<EncryptedTokensWrappedEventArgs> {
   return getStructEncoder([
     ['encryptedTokenAccount', getAddressEncoder()],
     ['user', getAddressEncoder()],
@@ -57,7 +57,7 @@ export function getEncryptedTokenWrappedEventEncoder(): FixedSizeEncoder<Encrypt
   ]);
 }
 
-export function getEncryptedTokenWrappedEventDecoder(): FixedSizeDecoder<EncryptedTokenWrappedEvent> {
+export function getEncryptedTokensWrappedEventDecoder(): FixedSizeDecoder<EncryptedTokensWrappedEvent> {
   return getStructDecoder([
     ['encryptedTokenAccount', getAddressDecoder()],
     ['user', getAddressDecoder()],
@@ -68,12 +68,12 @@ export function getEncryptedTokenWrappedEventDecoder(): FixedSizeDecoder<Encrypt
   ]);
 }
 
-export function getEncryptedTokenWrappedEventCodec(): FixedSizeCodec<
-  EncryptedTokenWrappedEventArgs,
-  EncryptedTokenWrappedEvent
+export function getEncryptedTokensWrappedEventCodec(): FixedSizeCodec<
+  EncryptedTokensWrappedEventArgs,
+  EncryptedTokensWrappedEvent
 > {
   return combineCodec(
-    getEncryptedTokenWrappedEventEncoder(),
-    getEncryptedTokenWrappedEventDecoder()
+    getEncryptedTokensWrappedEventEncoder(),
+    getEncryptedTokensWrappedEventDecoder()
   );
 }

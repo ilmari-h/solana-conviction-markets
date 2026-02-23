@@ -9,7 +9,7 @@ import { TestRunner } from "./utils/test-runner";
 import { initializeAllCompDefs } from "./utils/comp-defs";
 import { sleepUntilOnChainTimestamp } from "./utils/sleep";
 import { shouldThrowCustomError } from "./utils/errors";
-import { generateX25519Keypair } from "../js/src/x25519/keypair";
+import { generateX25519Keypair, X25519Keypair } from "../js/src/x25519/keypair";
 import {
   OPPORTUNITY_MARKET_ERROR__CLOSING_EARLY_NOT_ALLOWED,
   OPPORTUNITY_MARKET_ERROR__UNSTAKE_DELAY_NOT_MET,
@@ -23,6 +23,18 @@ const ONCHAIN_TIMESTAMP_BUFFER_SECONDS = 6;
 // Environment setup
 const RPC_URL = process.env.ANCHOR_PROVIDER_URL || "http://127.0.0.1:8899";
 const WS_URL = RPC_URL.replace("http", "ws").replace(":8899", ":8900");
+
+function loadObserverKeypair(): X25519Keypair {
+  const keyfilePath = process.env.TEST_OBSERVER_KEYPAIR;
+  if (keyfilePath) {
+    const data = JSON.parse(fs.readFileSync(keyfilePath, "utf-8"));
+    return {
+      secretKey: new Uint8Array(data.secretKey),
+      publicKey: new Uint8Array(data.publicKey),
+    };
+  }
+  return generateX25519Keypair();
+}
 
 describe("OpportunityMarket", () => {
   // Anchor setup (still needed for buildFinalizeCompDefTx)
@@ -50,7 +62,7 @@ describe("OpportunityMarket", () => {
     const numParticipants = 4;
 
     // Create an observer keypair that can read stakes.
-    const observer = generateX25519Keypair();
+    const observer = loadObserverKeypair();
 
     // Initialize TestRunner with all accounts and market
     const runner = await TestRunner.initialize(provider, programId, {
@@ -257,7 +269,7 @@ describe("OpportunityMarket", () => {
     const numParticipants = 1;
 
     // Create an observer keypair that can read stakes
-    const observer = generateX25519Keypair();
+    const observer = loadObserverKeypair();
 
     // Initialize TestRunner with 1 participant
     const runner = await TestRunner.initialize(provider, programId, {
@@ -410,7 +422,7 @@ describe("OpportunityMarket", () => {
     const timeToStake = 30n;
 
     // Create an observer keypair for authorized reading
-    const observer = generateX25519Keypair();
+    const observer = loadObserverKeypair();
 
     const runner = await TestRunner.initialize(provider, programId, {
       rpcUrl: RPC_URL,
@@ -502,7 +514,7 @@ describe("OpportunityMarket", () => {
     const timeToStake = 10n;
 
     // Create an observer keypair
-    const observer = generateX25519Keypair();
+    const observer = loadObserverKeypair();
 
     const runner = await TestRunner.initialize(provider, programId, {
       rpcUrl: RPC_URL,

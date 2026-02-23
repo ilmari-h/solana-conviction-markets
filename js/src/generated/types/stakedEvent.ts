@@ -28,6 +28,7 @@ import {
 
 export type StakedEvent = {
   user: Address;
+  market: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
   shareEncryptedState: Array<Array<number>>;
@@ -41,6 +42,7 @@ export type StakedEvent = {
 
 export type StakedEventArgs = {
   user: Address;
+  market: Address;
   encryptedTokenAccount: Address;
   shareAccount: Address;
   shareEncryptedState: Array<Array<number>>;
@@ -55,6 +57,7 @@ export type StakedEventArgs = {
 export function getStakedEventEncoder(): FixedSizeEncoder<StakedEventArgs> {
   return getStructEncoder([
     ['user', getAddressEncoder()],
+    ['market', getAddressEncoder()],
     ['encryptedTokenAccount', getAddressEncoder()],
     ['shareAccount', getAddressEncoder()],
     [
@@ -80,6 +83,7 @@ export function getStakedEventEncoder(): FixedSizeEncoder<StakedEventArgs> {
 export function getStakedEventDecoder(): FixedSizeDecoder<StakedEvent> {
   return getStructDecoder([
     ['user', getAddressDecoder()],
+    ['market', getAddressDecoder()],
     ['encryptedTokenAccount', getAddressDecoder()],
     ['shareAccount', getAddressDecoder()],
     [

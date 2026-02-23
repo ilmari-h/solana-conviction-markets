@@ -22,7 +22,7 @@ pub struct MarketCreatedEvent {
 }
 
 #[event]
-pub struct EncryptedTokenWrappedEvent {
+pub struct EncryptedTokensWrappedEvent {
     pub encrypted_token_account: Pubkey,
     pub user: Pubkey,
     pub deposit_amount: u64,
@@ -34,6 +34,7 @@ pub struct EncryptedTokenWrappedEvent {
 #[event]
 pub struct StakedEvent {
     pub user: Pubkey,
+    pub market: Pubkey,
     pub encrypted_token_account: Pubkey,
     pub share_account: Pubkey,
     pub share_encrypted_state: [[u8; 32]; 2],
@@ -46,30 +47,29 @@ pub struct StakedEvent {
 }
 
 #[event]
-pub struct SharesRevealedEvent {
-    pub user: Pubkey,
-    pub encrypted_token_account: Pubkey,
-    pub share_account: Pubkey,
-    pub shares_amount: u64,
-    pub selected_option: u16,
-    pub encrypted_new_balance: [u8; 32],
-    pub nonce: u128,
-    pub timestamp: i64,
-}
-
-#[event]
-pub struct SharesUnstakedEvent {
+pub struct StakeRevealedEvent {
     pub user: Pubkey,
     pub market: Pubkey,
     pub encrypted_token_account: Pubkey,
     pub share_account: Pubkey,
-    pub encrypted_new_balance: [u8; 32],
+    pub shares_amount: u64,
+    pub selected_option: u16,
     pub nonce: u128,
     pub timestamp: i64,
 }
 
 #[event]
-pub struct SharesRevealedError {
+pub struct UnstakedEvent {
+    pub user: Pubkey,
+    pub market: Pubkey,
+    pub encrypted_token_account: Pubkey,
+    pub share_account: Pubkey,
+    pub nonce: u128,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct StakeRevealedError {
     pub user: Pubkey,
     pub timestamp: i64,
 }
@@ -81,7 +81,7 @@ pub struct StakedError {
 }
 
 #[event]
-pub struct SharesUnstakedError {
+pub struct UnstakedError {
     pub user: Pubkey,
     pub timestamp: i64,
 }
