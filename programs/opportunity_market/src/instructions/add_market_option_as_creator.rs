@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::error::ErrorCode;
 use crate::state::{OpportunityMarket, OpportunityMarketOption};
+use crate::events::{emit_ts, MarketOptionCreatedEvent};
 
 #[derive(Accounts)]
 #[instruction(option_index: u16)]
@@ -58,10 +59,20 @@ pub fn add_market_option_as_creator(
     // Initialize the option account
     let option = &mut ctx.accounts.option;
     option.bump = ctx.bumps.option;
+    option.index = option_index;
     option.name = name;
     option.total_shares = None;
     option.total_score = None;
     option.creator = ctx.accounts.creator.key();
+    option.initialized = true;
+
+    emit_ts!(MarketOptionCreatedEvent {
+        option: option.key(),
+        market: market.key(),
+        index: option.index,
+        name: option.name.clone(),
+        by_market_creator: false
+    });
 
     Ok(())
 }

@@ -22,6 +22,15 @@ pub struct MarketCreatedEvent {
 }
 
 #[event]
+pub struct MarketOptionCreatedEvent {
+    pub option: Pubkey,
+    pub market: Pubkey,
+    pub by_market_creator: bool, 
+    pub index: u16, pub name: String,
+    pub timestamp: i64,
+}
+
+#[event]
 pub struct EncryptedTokensWrappedEvent {
     pub encrypted_token_account: Pubkey,
     pub user: Pubkey,

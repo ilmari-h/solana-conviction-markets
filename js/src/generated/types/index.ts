@@ -27,6 +27,7 @@ export * from './epoch';
 export * from './localCircuitSource';
 export * from './marketCreatedEvent';
 export * from './marketOpenedEvent';
+export * from './marketOptionCreatedEvent';
 export * from './mxeStatus';
 export * from './nodeMetadata';
 export * from './nodeRef';

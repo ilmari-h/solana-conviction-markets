@@ -19,12 +19,16 @@ import {
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
+  getBooleanDecoder,
+  getBooleanEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getOptionDecoder,
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU16Decoder,
+  getU16Encoder,
   getU32Decoder,
   getU32Encoder,
   getU64Decoder,
@@ -63,21 +67,25 @@ export type OpportunityMarketOption = {
   discriminator: ReadonlyUint8Array;
   bump: number;
   creator: Address;
+  index: number;
   /** Name of the option */
   name: string;
   /** Total shares bought for this option (tally) */
   totalShares: Option<bigint>;
   totalScore: Option<bigint>;
+  initialized: boolean;
 };
 
 export type OpportunityMarketOptionArgs = {
   bump: number;
   creator: Address;
+  index: number;
   /** Name of the option */
   name: string;
   /** Total shares bought for this option (tally) */
   totalShares: OptionOrNullable<number | bigint>;
   totalScore: OptionOrNullable<number | bigint>;
+  initialized: boolean;
 };
 
 export function getOpportunityMarketOptionEncoder(): Encoder<OpportunityMarketOptionArgs> {
@@ -86,9 +94,11 @@ export function getOpportunityMarketOptionEncoder(): Encoder<OpportunityMarketOp
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['bump', getU8Encoder()],
       ['creator', getAddressEncoder()],
+      ['index', getU16Encoder()],
       ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
       ['totalShares', getOptionEncoder(getU64Encoder())],
       ['totalScore', getOptionEncoder(getU64Encoder())],
+      ['initialized', getBooleanEncoder()],
     ]),
     (value) => ({
       ...value,
@@ -102,9 +112,11 @@ export function getOpportunityMarketOptionDecoder(): Decoder<OpportunityMarketOp
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['bump', getU8Decoder()],
     ['creator', getAddressDecoder()],
+    ['index', getU16Decoder()],
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
     ['totalShares', getOptionDecoder(getU64Decoder())],
     ['totalScore', getOptionDecoder(getU64Decoder())],
+    ['initialized', getBooleanDecoder()],
   ]);
 }
 

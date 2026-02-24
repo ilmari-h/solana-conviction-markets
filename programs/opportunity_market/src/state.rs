@@ -122,6 +122,7 @@ pub struct ShareAccount {
 pub struct OpportunityMarketOption {
     pub bump: u8,
     pub creator: Pubkey,
+    pub index: u16,
 
     /// Name of the option
     #[max_len(50)]
@@ -131,7 +132,10 @@ pub struct OpportunityMarketOption {
     pub total_shares: Option<u64>,
 
     // Scales by time-in-market
-    pub total_score: Option<u64>
+    pub total_score: Option<u64>,
+
+    // Whether this option has been fully initialized (set true in MPC callback)
+    pub initialized: bool,
 }
 
 #[account]

@@ -337,6 +337,10 @@
         {
           "name": "share_account",
           "writable": true
+        },
+        {
+          "name": "option",
+          "writable": true
         }
       ],
       "args": [
@@ -3832,6 +3836,19 @@
       ]
     },
     {
+      "name": "MarketOptionCreatedEvent",
+      "discriminator": [
+        58,
+        206,
+        164,
+        178,
+        26,
+        53,
+        78,
+        24
+      ]
+    },
+    {
       "name": "OptionSelectedEvent",
       "discriminator": [
         159,
@@ -5087,6 +5104,38 @@
       }
     },
     {
+      "name": "MarketOptionCreatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "option",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "by_market_creator",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u16"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "MxeStatus",
       "docs": [
         "The status of an MXE."
@@ -5292,6 +5341,10 @@
             "type": "pubkey"
           },
           {
+            "name": "index",
+            "type": "u16"
+          },
+          {
             "name": "name",
             "docs": [
               "Name of the option"
@@ -5312,6 +5365,10 @@
             "type": {
               "option": "u64"
             }
+          },
+          {
+            "name": "initialized",
+            "type": "bool"
           }
         ]
       }

@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::CallbackAccount;
 
 use crate::error::ErrorCode;
-use crate::events::{emit_ts, StakedError, StakedEvent};
+use crate::events::{emit_ts, MarketOptionCreatedEvent, StakedError, StakedEvent};
 use crate::state::{CentralState, OpportunityMarket, OpportunityMarketOption, ShareAccount, EncryptedTokenAccount};
 use crate::instructions::stake::SHARE_ACCOUNT_SEED;
 use crate::COMP_DEF_OFFSET_ADD_OPTION_STAKE;
@@ -124,10 +124,12 @@ pub fn add_market_option(
     // Initialize the option account
     let option = &mut ctx.accounts.option;
     option.bump = ctx.bumps.option;
+    option.index = option_index;
     option.name = name;
     option.total_shares = None;
     option.total_score = None;
     option.creator = ctx.accounts.creator.key();
+    option.initialized = false;
 
     // Lock share account and set staked timestamp
     ctx.accounts.share_account.staked_at_timestamp = Some(current_timestamp);
@@ -137,6 +139,7 @@ pub fn add_market_option(
     let source_eta_nonce = ctx.accounts.source_eta.state_nonce;
 
     let share_account_key = ctx.accounts.share_account.key();
+    let option_key = ctx.accounts.option.key();
 
     ctx.accounts.source_eta.locked = true;
 
@@ -185,6 +188,10 @@ pub fn add_market_option(
                     pubkey: share_account_key,
                     is_writable: true,
                 },
+                CallbackAccount {
+                    pubkey: option_key,
+                    is_writable: true,
+                },
             ],
         )?],
         1,
@@ -216,6 +223,9 @@ pub struct AddOptionStakeCallback<'info> {
 
     #[account(mut)]
     pub share_account: Account<'info, ShareAccount>,
+
+    #[account(mut)]
+    pub option: Account<'info, OpportunityMarketOption>,
 }
 
 pub fn add_market_option_callback(
@@ -265,6 +275,17 @@ pub fn add_market_option_callback(
     ctx.accounts.share_account.encrypted_state = bought_shares.ciphertexts;
     ctx.accounts.share_account.state_nonce_disclosure = bought_shares_disclosed.nonce;
     ctx.accounts.share_account.encrypted_state_disclosure =bought_shares_disclosed.ciphertexts;
+
+    // Mark option as initialized
+    ctx.accounts.option.initialized = true;
+
+    emit_ts!(MarketOptionCreatedEvent {
+        option: ctx.accounts.option.key(),
+        market: ctx.accounts.share_account.market,
+        index: ctx.accounts.option.index,
+        name: ctx.accounts.option.name.clone(),
+        by_market_creator: false
+    });
 
     emit_ts!(StakedEvent {
         user: ctx.accounts.source_eta.owner,
