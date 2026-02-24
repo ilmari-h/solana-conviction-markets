@@ -71,7 +71,7 @@ pub fn add_market_option_as_creator(
         market: market.key(),
         index: option.index,
         name: option.name.clone(),
-        by_market_creator: false
+        by_market_creator: true
     });
 
     Ok(())
