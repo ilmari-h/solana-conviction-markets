@@ -46,7 +46,7 @@ pub struct StakedEvent {
     pub market: Pubkey,
     pub encrypted_token_account: Pubkey,
     pub share_account: Pubkey,
-    pub share_encrypted_state: [[u8; 32]; 2],
+    pub share_encrypted_state: [[u8; 32]; 2], // share amount and option
     pub share_state_nonce: u128,
     pub share_encrypted_state_disclosure: [[u8; 32]; 2],
     pub share_state_disclosure_nonce: u128,

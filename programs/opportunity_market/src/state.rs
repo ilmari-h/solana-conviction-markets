@@ -92,7 +92,7 @@ pub struct EncryptedTokenAccount {
 #[account]
 #[derive(InitSpace)]
 pub struct ShareAccount {
-    pub encrypted_state: [[u8; 32]; 2],  // share amount and option
+    pub encrypted_state: [[u8; 32]; 2],  // stake amount and option
     pub state_nonce: u128,
     pub bump: u8,
     pub owner: Pubkey,
