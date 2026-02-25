@@ -8,8 +8,8 @@ Opportunity Markets allow users to influence decision making by staking. Decisio
 
 1. A **decision maker** creates a market with a reward pool
 3. **Participants** stake on their preferred options with encrypted votes and can create new options
-4. The **decision maker** sees individual votes (disclosed to them) but others cannot
-5. After selecting a winner, participants who backed it share the reward proportionally
+4. The **decision maker** sees how much stake there is in each option, but others cannot
+5. The **decision maker** selects a winning option. Participants who backed it share the reward proportionally
 
 The protocol sets itself apart from other voting protocols with **confidential stake-to-vote mechanism** and **an arbitrary number of options**.
 
