@@ -54,7 +54,7 @@ import {
 } from '../instructions';
 
 export const OPPORTUNITY_MARKET_PROGRAM_ADDRESS =
-  'jsK4sUrViFZvKTCFw2ekhyTtCydyntGZ1fdY7PXtbgw' as Address<'jsK4sUrViFZvKTCFw2ekhyTtCydyntGZ1fdY7PXtbgw'>;
+  'opppkAuEoNg8W2bi6WGshmL8NWG2D4ATQWSgyhgTcSz' as Address<'opppkAuEoNg8W2bi6WGshmL8NWG2D4ATQWSgyhgTcSz'>;
 
 export enum OpportunityMarketAccount {
   ArciumSignerAccount,
@@ -669,7 +669,7 @@ export function identifyOpportunityMarketInstruction(
 }
 
 export type ParsedOpportunityMarketInstruction<
-  TProgram extends string = 'jsK4sUrViFZvKTCFw2ekhyTtCydyntGZ1fdY7PXtbgw',
+  TProgram extends string = 'opppkAuEoNg8W2bi6WGshmL8NWG2D4ATQWSgyhgTcSz',
 > =
   | ({
       instructionType: OpportunityMarketInstruction.AddMarketOption;

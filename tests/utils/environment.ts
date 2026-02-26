@@ -18,6 +18,7 @@ import {
   sendAndConfirmTransactionFactory,
   getSignatureFromTransaction,
   getBase64EncodedWireTransaction,
+  assertIsTransactionWithBlockhashLifetime,
 } from "@solana/kit";
 import {
   OpportunityMarket,
@@ -255,6 +256,7 @@ export async function createTestEnvironment(
     (msg) => appendTransactionMessageInstructions([initCentralStateIx], msg)
   );
   const csSignedTx = await signTransactionMessageWithSigners(csTxMessage);
+  assertIsTransactionWithBlockhashLifetime(csSignedTx);
   await sendAndConfirmTransaction(csSignedTx, { commitment: "confirmed" });
   console.log("  Central state initialized");
 
@@ -272,6 +274,7 @@ export async function createTestEnvironment(
     marketAuthority: null,
     unstakeDelaySeconds: marketConfig.unstakeDelaySeconds,
     authorizedReaderPubkey: creatorAccount.x25519Keypair.publicKey,
+    allowClosingEarly: true,
   });
 
   // Get latest blockhash
@@ -305,6 +308,7 @@ export async function createTestEnvironment(
   }
 
   // Send and confirm transaction using Kit RPC
+  assertIsTransactionWithBlockhashLifetime(signedTransaction);
   await sendAndConfirmTransaction(signedTransaction, { commitment: "confirmed" });
   // Get market address from the instruction accounts and fetch from chain
   const marketAddress = createMarketIx.accounts[3].address as Address;

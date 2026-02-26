@@ -70,7 +70,11 @@ describe("Encrypted Token Account (SPL)", () => {
   before(async () => {
     const file = fs.readFileSync(`${os.homedir()}/.config/solana/id.json`);
     const secretKey = new Uint8Array(JSON.parse(file.toString()));
-    await initializeAllCompDefs(rpc, sendAndConfirm, secretKey, programId);
+    await initializeAllCompDefs(rpc, sendAndConfirm, secretKey, programId, [
+      "wrap_encrypted_tokens",
+      "unwrap_encrypted_tokens",
+      "close_ephemeral_encrypted_token_account",
+    ]);
     mxePublicKey = await getMXEPublicKey(provider, program.programId);
 
     // Initialize token vault (global, once)

@@ -26,11 +26,23 @@ Arcium v0.8.0 required.
 Before testing, make sure you build without the feature `hosted-compdefs`.
 In `programs/opportunity_market/Cargo.toml` make sure it's not in the defaults array.
 
+### Program keypair
+
+Tests use a deterministic program keypair. The keypair file must be located at
+`../opppkAuEoNg8W2bi6WGshmL8NWG2D4ATQWSgyhgTcSz.json` (one directory above
+this repo). If you don't have this keypair, generate your own and update the
+following to match:
+
+1. `declare_id!()` in `programs/opportunity_market/src/lib.rs`
+2. `OPPORTUNITY_MARKET_PROGRAM_ADDRESS` in `js/src/generated/programs/opportunityMarket.ts`
+3. `[programs.localnet]` in `Anchor.toml`
+4. Copy your keypair to `target/deploy/opportunity_market-keypair.json`
+
+### Running tests
 
 ```bash
 bun install
-arcium build
-arcium test
+./test.sh
 ```
 
 ## Deployment

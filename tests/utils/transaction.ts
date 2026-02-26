@@ -3,6 +3,7 @@ import {
   type TransactionSigner,
   type Signature,
   type TransactionError,
+  assertIsTransactionWithBlockhashLifetime,
   pipe,
   createTransactionMessage,
   setTransactionMessageFeePayer,
@@ -127,6 +128,7 @@ export async function sendTransaction(
     console.log(`${logPrefix}Sending...`);
   }
 
+  assertIsTransactionWithBlockhashLifetime(signedTransaction);
   await sendAndConfirm(signedTransaction, { commitment });
   const signature = getSignatureFromTransaction(signedTransaction);
 
