@@ -5,7 +5,7 @@
   "timeToStake": 120,
   "timeToReveal": 60,
   "unstakeDelaySeconds": 10,
-  "authorizedReaderKeypairPath": "./example-x25519-keypair.json",
+  "authorizedReaderKeypairPath": "./scripts/example-x25519-keypair.json",
   "allowClosingEarly": true,
   "marketAuthority": null
 }

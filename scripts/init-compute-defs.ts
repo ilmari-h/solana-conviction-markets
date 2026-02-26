@@ -109,8 +109,9 @@ async function main() {
   for (const circuitName of ALL_COMP_DEF_CIRCUITS) {
     try {
       await initCompDef(rpc, payer, circuitName);
-    } catch {
+    } catch(error) {
       console.error(`\nFailed to initialize ${circuitName}, stopping...`);
+      console.error(error)
       process.exit(1);
     }
   }
@@ -137,7 +138,7 @@ async function initCompDef(
 
   console.log(`  Creating comp def account...`);
   const initIx = await getInitCompDefInstruction(rpc, payer, circuitName, {
-    programId: PROGRAM_ID,
+    programAddress: PROGRAM_ID,
   });
 
   const { value: latestBlockhash } = await rpc

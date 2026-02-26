@@ -37,7 +37,7 @@ arcium test
 
 1. Enable the `hosted-compdefs` feature by adding to the  defaults in `programs/opportunity_market/Cargo.toml`
 2. Update the program `declare_id!` macro to use your program keypair's pubkey
-3. Run `arcium build with --skip-keys-sync` (last argument ensures step 2. isn't overwritten)
+3. Run `arcium build --skip-keys-sync` (last argument ensures step 2. isn't overwritten)
 4. Make sure in your Anchor.toml file, the `opportunity_market` address matches address of step 2 (in the `[programs.localnet]` section if you have no devnet config there!)
 
 Set the following environment variables.

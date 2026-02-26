@@ -6,13 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-opportunity_market = "jsK4sUrViFZvKTCFw2ekhyTtCydyntGZ1fdY7PXtbgw"
+opportunity_market = "opppkAuEoNg8W2bi6WGshmL8NWG2D4ATQWSgyhgTcSz"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "https://devnet.helius-rpc.com/?api-key=b30e28f3-db3f-453d-9c9d-fb9ce0235a2e"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
