@@ -11,9 +11,14 @@ Opportunity Markets allow users to influence decision making by staking. Decisio
 5. The decision maker selects a winning option and closes the market
 6. All participants withdraw their stake; those who backed the winner split the reward
 
-**Privacy:** While voting is open, individual votes and stake amounts are hidden from everyone except the decision maker. This prevents herd behavior—participants vote based on their own judgment rather than following the crowd.
+While the market is open, the following information is kept confidential:
 
-Devnet address: `42ubrtyL1uqn4bYi2ahBXAijEX3oRpykydVwYyRHPxAQ`
+1. How much stake each option has
+2. For which option(s) a given user staked and with how much capital
+
+Keeping this information hidden from the public prevents herd behavior — participants vote based on their own judgment rather than following the crowd.
+
+Devnet address: `opppkAuEoNg8W2bi6WGshmL8NWG2D4ATQWSgyhgTcSz`
 
 ## Documentation
 
@@ -70,5 +75,5 @@ Deploy the program:
 Initialize compute definitions:
 
 ```bash
-npx tsx scripts/init-compute-defs.ts
+bun scripts/init-compute-defs.ts
 ```
