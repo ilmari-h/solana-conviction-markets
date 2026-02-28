@@ -76,6 +76,12 @@ pub fn create_market(
         market: ctx.accounts.market.key(),
         creator: ctx.accounts.creator.key(),
         index: market_index,
+        time_to_reveal: time_to_reveal,
+        time_to_stake : time_to_stake,
+        market_authority: market_authority,
+        authorized_reader_pubkey: authorized_reader_pubkey,
+        unstake_delay_seconds: unstake_delay_seconds,
+        allow_closing_early: allow_closing_early,
     });
 
     Ok(())

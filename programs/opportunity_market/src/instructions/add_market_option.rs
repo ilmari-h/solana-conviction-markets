@@ -284,6 +284,7 @@ pub fn add_market_option_callback(
         market: ctx.accounts.share_account.market,
         index: ctx.accounts.option.index,
         name: ctx.accounts.option.name.clone(),
+        creator: ctx.accounts.option.creator,
         by_market_creator: false
     });
 

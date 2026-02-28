@@ -5073,6 +5073,37 @@
             "type": "u64"
           },
           {
+            "name": "time_to_stake",
+            "type": "u64"
+          },
+          {
+            "name": "time_to_reveal",
+            "type": "u64"
+          },
+          {
+            "name": "market_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "authorized_reader_pubkey",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "unstake_delay_seconds",
+            "type": "u64"
+          },
+          {
+            "name": "allow_closing_early",
+            "type": "bool"
+          },
+          {
             "name": "timestamp",
             "type": "i64"
           }
@@ -5114,6 +5145,10 @@
           },
           {
             "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
             "type": "pubkey"
           },
           {

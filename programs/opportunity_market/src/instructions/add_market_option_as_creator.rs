@@ -69,6 +69,7 @@ pub fn add_market_option_as_creator(
     emit_ts!(MarketOptionCreatedEvent {
         option: option.key(),
         market: market.key(),
+        creator: ctx.accounts.creator.key(),
         index: option.index,
         name: option.name.clone(),
         by_market_creator: true

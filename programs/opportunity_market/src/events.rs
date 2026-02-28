@@ -18,6 +18,12 @@ pub struct MarketCreatedEvent {
     pub market: Pubkey,
     pub creator: Pubkey,
     pub index: u64,
+    pub time_to_stake: u64,
+    pub time_to_reveal: u64,
+    pub market_authority: Option<Pubkey>,
+    pub authorized_reader_pubkey: [u8; 32],
+    pub unstake_delay_seconds: u64,
+    pub allow_closing_early: bool,
     pub timestamp: i64,
 }
 
@@ -25,6 +31,7 @@ pub struct MarketCreatedEvent {
 pub struct MarketOptionCreatedEvent {
     pub option: Pubkey,
     pub market: Pubkey,
+    pub creator: Pubkey,
     pub by_market_creator: bool, 
     pub index: u16, pub name: String,
     pub timestamp: i64,

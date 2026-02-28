@@ -33,6 +33,7 @@ import {
 export type MarketOptionCreatedEvent = {
   option: Address;
   market: Address;
+  creator: Address;
   byMarketCreator: boolean;
   index: number;
   name: string;
@@ -42,6 +43,7 @@ export type MarketOptionCreatedEvent = {
 export type MarketOptionCreatedEventArgs = {
   option: Address;
   market: Address;
+  creator: Address;
   byMarketCreator: boolean;
   index: number;
   name: string;
@@ -52,6 +54,7 @@ export function getMarketOptionCreatedEventEncoder(): Encoder<MarketOptionCreate
   return getStructEncoder([
     ['option', getAddressEncoder()],
     ['market', getAddressEncoder()],
+    ['creator', getAddressEncoder()],
     ['byMarketCreator', getBooleanEncoder()],
     ['index', getU16Encoder()],
     ['name', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
@@ -63,6 +66,7 @@ export function getMarketOptionCreatedEventDecoder(): Decoder<MarketOptionCreate
   return getStructDecoder([
     ['option', getAddressDecoder()],
     ['market', getAddressDecoder()],
+    ['creator', getAddressDecoder()],
     ['byMarketCreator', getBooleanDecoder()],
     ['index', getU16Decoder()],
     ['name', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
